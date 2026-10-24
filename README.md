@@ -1,10 +1,13 @@
-# OpenHW Lab · 机器人开源（八界 6 轴机械臂）
+# 科沃思八界机器人（Kewes BaJie）· 开源
 
-一套围绕 **6 轴协作机械臂 + 升降立柱 + 两指夹爪** 的开源控制与数据闭环：
+**当前开源型号：科沃思八界（Kewes BaJie）** —— 6 轴协作机械臂 + 升降立柱 + 两指夹爪。
+
+一套围绕该型号的开源控制与数据闭环：
 3D 真机仿真、可视化控制台、视觉/语音交互、抓取策略、数据采集标注、训练分析与测试验收。
 
 > 智能硬件开放实验室研发 · MIT License
 > 官网：https://www.openhwlab.com/robot.html
+> GitHub：https://github.com/OpenHWLabcom/kewes-bajie-robot
 
 ---
 
