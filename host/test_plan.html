@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>智能硬件开放实验室研发 · 机器人测试与训练计划</title>
+<style>
+  :root{--bg:#070d18;--card:#101c2f;--card2:#0c1830;--line:#22344d;--txt:#e8f2ff;--sub:#8aa9c2;--cyan:#22d3ee;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;--violet:#a78bfa;--pink:#f472b6}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:radial-gradient(1200px 700px at 50% -250px,#12304a 0%,var(--bg) 58%);color:var(--txt);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif}
+  a{color:var(--cyan);text-decoration:none}
+  .wrap{max-width:1400px;margin:0 auto;padding:18px 22px 60px}
+  .labNav{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#0b1729;margin-bottom:16px}
+  .labBrand{font-weight:750;color:var(--cyan);letter-spacing:.5px}.labNavSub{color:var(--sub);font-size:12px}
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+  h1{font-size:27px;margin:0}h1 span{color:var(--cyan)}
+  .sub{color:var(--sub);font-size:12.5px}
+  .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#0e1a2c;color:var(--txt);border-radius:10px;padding:9px 13px;font:600 12.5px ui-monospace,monospace;cursor:pointer}
+  .btn:hover{border-color:#3a5a7a}.btn.primary{background:linear-gradient(180deg,#0e7490,#155e75);border-color:#22d3ee55}
+  .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+  .card{background:linear-gradient(180deg,#12223a,#0d1728);border:1px solid var(--line);border-radius:14px;padding:13px 15px;box-shadow:0 10px 30px #0005}
+  .card .k{color:var(--sub);font-size:11.5px}.card .v{font:700 23px/1.15 ui-monospace,monospace;color:var(--cyan);margin-top:6px}
+  .card .s{color:var(--sub);font-size:11px;margin-top:3px}
+  .progress{height:7px;background:#071322;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-top:9px}
+  .progress i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));width:0}
+  .catGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+  @media(max-width:1000px){.catGrid{grid-template-columns:repeat(2,1fr)}.cards{grid-template-columns:repeat(2,1fr)}}
+  .catCard{background:#0c1830;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .catCard .t{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:#cfe6f8}
+  .catCard .n{font:11px ui-monospace,monospace;color:var(--sub)}
+  .catCard .progress{margin-top:7px}
+  .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+  .bar select,.bar input{background:#0b1729;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:9px 11px;font:12.5px ui-monospace,monospace;outline:none}
+  .bar input{min-width:240px;flex:1}
+  .section{margin-bottom:18px}
+  .section h2{font-size:15px;margin:0 0 8px;display:flex;align-items:center;gap:8px;color:#cfe6f8}
+  .section h2 .tag{font:500 11px/1 ui-monospace,monospace;color:var(--sub);border:1px solid var(--line);border-radius:999px;padding:3px 7px}
+  .items{display:flex;flex-direction:column;gap:8px}
+  .item{display:flex;gap:11px;align-items:flex-start;background:linear-gradient(180deg,#101f35,#0c1728);border:1px solid var(--line);border-left:3px solid #22344d;border-radius:12px;padding:11px 13px;cursor:pointer;transition:border-color .12s,background .12s}
+  .item:hover{border-color:#3a5a7a}
+  .item.done{border-left-color:var(--green);background:linear-gradient(180deg,#0e2230,#0b1a24)}
+  .chk{width:22px;height:22px;flex:0 0 22px;border:2px solid #3a5a7a;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#07121b;background:#0b1729;margin-top:1px}
+  .item.done .chk{background:var(--green);border-color:var(--green);box-shadow:0 0 10px #22c55e66}
+  .item .body{flex:1;min-width:0}
+  .item .title{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:650;font-size:13.5px}
+  .item.done .title{color:#d9ffe9}
+  .item .detail{color:var(--sub);font-size:12px;margin-top:3px}
+  .item .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px;font:10.5px ui-monospace,monospace;color:var(--sub)}
+  .item .meta span{border:1px solid #2b4a66;border-radius:999px;padding:2px 7px}
+  .item .evidence{color:#86efac;font-size:11px;margin-top:5px}
+  .item .local{color:var(--amber);font-size:10.5px}
+  .prio{font:700 10px ui-monospace,monospace;padding:2px 6px;border-radius:5px}
+  .P0{background:#7f1d1d;color:#fecaca}.P1{background:#78350f;color:#fde68a}.P2{background:#1e3a5f;color:#bfdbfe}
+  .empty{color:var(--sub);font-size:12.5px;padding:8px 0}
+  .foot{margin-top:26px;color:var(--sub);font-size:11.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="labNav"><span class="labBrand">智能硬件开放实验室研发</span><span class="labNavSub">机器人测试与训练计划</span><a href="robot_home.html" style="margin-left:auto;font-size:12px">🏠 导航总页</a></nav>
+  <header>
+    <div>
+      <h1>测试与训练 · <span>计划清单</span></h1>
+      <div class="sub" id="hdrSub">运动 / 标定 / 感知 / 数据 / 训练 / 可靠性 · 绿色勾 = 已完成</div>
+    </div>
+    <div style="display:flex;gap:9px;flex-wrap:wrap">
+      <button class="btn" id="resetBtn">↺ 重置勾选</button>
+      <button class="btn" id="exportBtn">⬇ 导出 Markdown</button>
+      <button class="btn" id="fsBtn" title="整页全屏">⛶ 全屏</button>
+      <a class="btn primary" href="robot_home.html">← 返回导航</a>
+    </div>
+  </header>
+
+  <section class="cards">
+    <div class="card"><div class="k">计划项</div><div class="v" id="sumTotal">--</div><div class="s">测试 + 训练</div></div>
+    <div class="card"><div class="k">已完成</div><div class="v" id="sumDone" style="color:var(--green)">--</div><div class="s" id="sumDoneSub">绿色勾</div></div>
+    <div class="card"><div class="k">待完成</div><div class="v" id="sumTodo" style="color:var(--amber)">--</div><div class="s">按优先级推进</div></div>
+    <div class="card"><div class="k">完成率</div><div class="v" id="sumPct">--</div><div class="s" id="sumUpdated">--</div><div class="progress"><i id="sumProg"></i></div></div>
+  </section>
+
+  <section class="catGrid" id="catGrid"></section>
+
+  <div class="bar">
+    <select id="statusFilter"><option value="all">全部状态</option><option value="done">已完成</option><option value="todo">未完成</option></select>
+    <select id="catFilter"><option value="all">全部类别</option></select>
+    <input id="search" placeholder="搜索测试项 / 指标 / 证据"/>
+    <span class="sub" id="count">--</span>
+  </div>
+
+  <div id="sections"></div>
+
+  <div class="foot">智能硬件开放实验室研发 · 测试计划基于 <code>test_plan.json</code>；点击条目可本地切换勾选（不修改原始计划）</div>
+</div>
+<script src="nav.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const OVKEY='robotTestOverrides';
+let DATA=null, OV={};
+try{ OV=JSON.parse(localStorage.getItem(OVKEY)||'{}')||{}; }catch(e){ OV={}; }
+function isDone(it){ return Object.prototype.hasOwnProperty.call(OV,it.id)?!!OV[it.id]:!!it.done; }
+function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function allItems(){ return (DATA?DATA.categories:[]).flatMap(c=>c.items.map(it=>({...it,cat:c.name,catId:c.id}))); }
+function stats(){
+  const all=allItems(); const done=all.filter(isDone).length;
+  return {total:all.length,done,todo:all.length-done,pct:all.length?done/all.length*100:0,all};
+}
+function renderSummary(){
+  const s=stats();
+  $('sumTotal').textContent=s.total;
+  $('sumDone').textContent=s.done;
+  $('sumDoneSub').textContent=s.done?('已完成 '+s.done+' 项'):'还没有完成项';
+  $('sumTodo').textContent=s.todo;
+  $('sumPct').textContent=s.pct.toFixed(1)+'%';
+  $('sumProg').style.width=s.pct+'%';
+  $('sumUpdated').textContent='更新 '+(DATA.updated||'--');
+  const cats=DATA.categories.map(c=>{
+    const d=c.items.filter(isDone).length, n=c.items.length;
+    return `<div class="catCard"><div class="t"><span>${esc(c.name)}</span><span class="n">${d}/${n}</span></div><div class="progress"><i style="width:${n?d/n*100:0}%"></i></div></div>`;
+  }).join('');
+  $('catGrid').innerHTML=cats;
+}
+function renderFilters(){
+  const sel=$('catFilter');
+  sel.innerHTML='<option value="all">全部类别</option>'+DATA.categories.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+}
+function itemHTML(it){
+  const done=isDone(it); const local=Object.prototype.hasOwnProperty.call(OV,it.id);
+  return `<div class="item ${done?'done':''}" data-id="${it.id}" onclick="toggle('${it.id}')">
+    <span class="chk">${done?'✓':''}</span>
+    <div class="body">
+      <div class="title"><span>${esc(it.title)}</span><span class="prio ${it.priority}">${it.priority}</span>${local?'<span class="local">本地勾选</span>':''}</div>
+      <div class="detail">${esc(it.detail)}</div>
+      <div class="meta"><span>${esc(it.metric||'')}</span>${done&&it.evidence?`<span style="color:#86efac">证据：${esc(it.evidence)}</span>`:''}</div>
+      ${done&&it.evidence?`<div class="evidence">✓ ${esc(it.evidence)}</div>`:''}
+    </div>
+  </div>`;
+}
+function renderSections(){
+  const sf=$('statusFilter').value, cf=$('catFilter').value, q=$('search').value.trim().toLowerCase();
+  let total=0; const out=[];
+  for(const c of DATA.categories){
+    if(cf!=='all'&&c.id!==cf) continue;
+    const items=c.items.filter(it=>{
+      if(sf==='done'&&!isDone(it))return false;
+      if(sf==='todo'&&isDone(it))return false;
+      if(q){const h=(it.title+' '+it.detail+' '+it.metric+' '+it.evidence+' '+c.name).toLowerCase(); if(!h.includes(q))return false;}
+      return true;
+    });
+    if(!items.length) continue;
+    const d=c.items.filter(isDone).length;
+    total+=items.length;
+    out.push(`<section class="section"><h2>${esc(c.name)} <span class="tag">${d}/${c.items.length} 完成</span><span class="tag">${items.length} 项显示</span></h2><div class="items">${items.map(itemHTML).join('')}</div></section>`);
+  }
+  $('sections').innerHTML=out.join('')||'<div class="empty">没有匹配的测试项</div>';
+  $('count').textContent=total+' 项显示 / '+stats().total+' 项总计';
+}
+function render(){ renderSummary(); renderSections(); }
+function toggle(id){
+  const it=allItems().find(x=>x.id===id); if(!it)return;
+  const cur=isDone(it);
+  if(!cur===!!it.done){ delete OV[id]; } else { OV[id]=!cur; }
+  localStorage.setItem(OVKEY,JSON.stringify(OV));
+  renderFilters(); render();
+}
+function reset(){
+  if(!confirm('清空本地勾选，恢复 test_plan.json 的计划状态？')) return;
+  OV={}; localStorage.removeItem(OVKEY); render();
+}
+function exportMd(){
+  const s=stats(); let md=`# 机器人测试与训练计划\n\n更新时间：${DATA.updated}\n完成：${s.done}/${s.total}（${s.pct.toFixed(1)}%）\n\n`;
+  for(const c of DATA.categories){
+    md+=`## ${c.name}\n`;
+    for(const it of c.items){ md+=`- [${isDone(it)?'x':' '}] ${it.title}（${it.priority}）${isDone(it)&&it.evidence?` — ${it.evidence}`:''}\n`; }
+    md+='\n';
+  }
+  const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='robot_test_plan.md'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+}
+async function load(){
+  try{
+    const r=await fetch('test_plan.json',{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    DATA=await r.json();
+  }catch(e){
+    $('sections').innerHTML='<div class="empty">无法加载 test_plan.json：'+esc(e.message)+'</div>'; return;
+  }
+  render();
+}
+$('statusFilter').onchange=renderSections;
+$('catFilter').onchange=renderSections;
+$('search').oninput=renderSections;
+$('resetBtn').onclick=reset;
+$('exportBtn').onclick=exportMd;
+$('fsBtn').onclick=()=>{
+  if(document.fullscreenElement){ document.exitFullscreen(); }
+  else { document.documentElement.requestFullscreen().catch(()=>{}); }
+};
+document.addEventListener('fullscreenchange',()=>{ $('fsBtn').textContent=document.fullscreenElement?'⛶ 退出全屏':'⛶ 全屏'; });
+load();
+</script>
+</body>
+</html>

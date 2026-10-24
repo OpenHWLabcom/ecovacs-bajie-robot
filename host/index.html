@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>智能硬件开放实验室研发 · 科沃斯八界机器人控制台</title>
+<style>
+  :root{
+    --bg:#eef2f7; --panel:#ffffff; --panel2:#f6f8fb; --line:#d3dbe6;
+    --txt:#1e293b; --muted:#5b6b82; --accent:#0e7490; --pink:#db2777;
+    --ok:#16a34a; --warn:#d97706; --err:#dc2626; --violet:#7c3aed;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:radial-gradient(1200px 700px at 70% -10%,#ffffff 0%,var(--bg) 55%);color:var(--txt);
+    font-family:"Outfit","PingFang SC","Microsoft YaHei",system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:1520px;margin:0 auto;padding:14px 16px 40px}
+  header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+  .logo{font-size:20px;font-weight:700;letter-spacing:.5px}
+  .logo b{color:var(--accent)}
+  .pill{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);
+    border-radius:999px;padding:6px 13px;font-size:13px;color:var(--muted)}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--err);box-shadow:0 0 10px currentColor;color:var(--err)}
+  .dot.on{background:var(--ok);color:var(--ok)}
+  .dot.warn{background:var(--warn);color:var(--warn)}
+  .spacer{flex:1}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;align-items:stretch}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .col{display:contents}
+  .sechdr{grid-column:1/-1;font-size:13px;font-weight:700;letter-spacing:1.5px;color:var(--accent);
+    margin:8px 0 -2px;padding:0 2px 7px;border-bottom:1px solid var(--line)}
+  .card{background:linear-gradient(180deg,var(--panel) 0%,var(--panel2) 100%);border:1px solid var(--line);
+    border-radius:16px;padding:14px 15px;box-shadow:0 8px 24px rgba(15,23,42,.06)}
+  .card h3{margin:0 0 10px;font-size:13px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;font-weight:600}
+  .big{font-size:30px;font-weight:700;line-height:1.1}
+  .sub{font-size:12px;color:var(--muted);margin-top:3px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .batt{height:15px;border-radius:9px;background:#eef2f7;border:1px solid var(--line);overflow:hidden;margin-top:9px}
+  .batt>i{display:block;height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#a3e635);transition:width .5s,background .5s}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;font-size:13px}
+  .kv .k{color:var(--muted)}
+  .kv .v{text-align:right;font-variant-numeric:tabular-nums}
+  .mapwrap{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#ffffff}
+  canvas#map{display:block;width:100%;height:auto}
+  .mapbadge{position:absolute;left:10px;top:10px;background:rgba(255,255,255,.85);border:1px solid var(--line);
+    border-radius:10px;padding:6px 11px;font-size:12px;color:var(--muted);backdrop-filter:blur(4px)}
+  .mapbadge b{color:var(--txt)}
+  .legend{position:absolute;right:10px;top:10px;background:rgba(255,255,255,.85);border:1px solid var(--line);
+    border-radius:10px;padding:6px 11px;font-size:12px;color:var(--muted)}
+  canvas#map{cursor:grab;touch-action:none}
+  .mapctl{position:absolute;left:10px;bottom:10px;display:flex;gap:6px}
+  .mapctl button{background:rgba(255,255,255,.9);border:1px solid var(--line);color:var(--txt);border-radius:9px;
+    min-width:36px;height:32px;font-size:15px;cursor:pointer;backdrop-filter:blur(4px)}
+  .mapctl button:hover{border-color:var(--accent);color:var(--accent)}
+  .mapctl button.wide{width:auto;padding:0 12px;font-size:12.5px}
+  .hintbar{position:absolute;right:10px;bottom:10px;background:rgba(255,255,255,.85);border:1px solid var(--line);
+    border-radius:10px;padding:6px 11px;font-size:11.5px;color:var(--muted)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:#f1f5f9;color:var(--muted)}
+  .chip.on{color:#012;background:var(--accent);border-color:var(--accent);font-weight:600}
+  .chip.on.warn{background:var(--warn);border-color:var(--warn)}
+  .chip.on.err{background:var(--err);border-color:var(--err);color:#fff}
+  .leds{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+  .led{background:#f1f5f9;border:1px solid var(--line);border-radius:11px;padding:9px 11px;display:flex;align-items:center;gap:9px}
+  .led .lamp{width:11px;height:11px;border-radius:50%;background:#334155;flex:none}
+  .led.on .lamp{background:var(--ok);box-shadow:0 0 9px var(--ok)}
+  .led.off .lamp{background:#cbd5e1;box-shadow:none}
+  .led .nm{font-size:12.5px;flex:1}
+  .led .st{font-size:11px;color:var(--muted)}
+  .log{height:220px;overflow:auto;font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.55}
+  .log .t{color:#94a3b8;margin-right:6px}
+  .log .i{color:var(--muted)} .log .s{color:var(--ok)} .log .e{color:var(--err)} .log .w{color:var(--warn)}
+  .bar{height:8px;background:#eef2f7;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+  footer{margin-top:16px;color:#64748b;font-size:12px;text-align:center}
+  .hint{font-size:11.5px;color:#64748b;margin-top:8px}
+  .axrow{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);margin:3px 0}
+  .axrow .nmz{width:26px}
+  .axbar{flex:1;height:8px;background:#eef2f7;border:1px solid var(--line);border-radius:5px;position:relative;overflow:hidden}
+  .axbar>i{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);transform:translateX(-1px)}
+  .btns{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+  .btns span{font-size:10px;padding:2px 6px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}
+  .btns span.on{background:var(--accent);color:#012;border-color:var(--accent);font-weight:700}
+  .sw{display:inline-flex;align-items:center;gap:7px;font-size:13px;cursor:pointer}
+  select#deadmanSel,#padSpeed{background:#f1f5f9;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:4px 6px;font-size:12px}
+  .estop{width:100%;margin-top:11px;background:#7f1d1d;color:#fff;border:1px solid #ef4444;border-radius:10px;padding:10px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:1px}
+  .estop:hover{background:#991b1b}
+  .oktxt{color:var(--ok)!important}
+  .warntxt{color:var(--warn)!important}
+  .armbox{background:#fff7ed;border:1px solid #fdba74;border-radius:10px;padding:8px 10px;margin-top:9px;font-size:11.5px;color:#b45309;display:none}
+  .armbox.show{display:block}
+  .camgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .camgrid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .cambox{position:relative;background:#ffffff;border:1px solid var(--line);border-radius:12px;overflow:hidden;min-height:150px;display:flex;align-items:center;justify-content:center}
+  .cambox img,.cambox canvas{display:block;width:100%;height:auto}
+  .camlab{position:absolute;left:8px;top:8px;background:rgba(255,255,255,.85);border:1px solid var(--line);border-radius:7px;padding:2px 8px;font-size:11px;color:var(--muted);z-index:2}
+  .chip.cmode{cursor:pointer}
+  .btnx{background:#f1f5f9;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:5px 11px;font-size:12.5px;cursor:pointer}
+  .btnx:hover{border-color:var(--accent);color:var(--accent)}
+  .tabs{display:flex;gap:8px;align-items:center;margin:0 0 12px;flex-wrap:wrap}
+  .tab{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:7px 14px;font-size:13.5px;cursor:pointer;font-family:inherit}
+  .tab.active{background:var(--accent);border-color:var(--accent);color:#012;font-weight:700}
+  .tablink{margin-left:auto;font-size:12.5px;color:var(--accent);text-decoration:none;white-space:nowrap}
+  .tabview{height:calc(100vh - 180px);min-height:520px}
+  .tabview iframe{width:100%;height:100%;border:1px solid var(--line);border-radius:14px;background:#fff}
+  details.adv{border:1px solid var(--line);border-radius:12px;padding:6px 12px;margin-top:8px;background:#f8fafc}
+  details.adv>summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--accent);letter-spacing:.5px;list-style:none;padding:3px 0}
+  details.adv>summary::-webkit-details-marker{display:none}
+  details.adv>summary::before{content:"▸ ";color:var(--muted)}
+  details.adv[open]>summary::before{content:"▾ "}
+#arm6Wrap:fullscreen{background:#0b0f14;padding:0;display:flex;align-items:center;justify-content:center}
+#arm6Wrap:fullscreen #arm3dF{width:100vw!important;height:100vh!important;border-radius:0}
+.draggedBtn{position:fixed!important;right:auto!important;bottom:auto!important;z-index:99!important;cursor:grab;touch-action:none;user-select:none;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">🛰️ 智能硬件开放实验室研发 · <b>科沃斯八界机器人控制台</b></div>
+    <span class="pill">🤖 <b id="robotNamePill">八界</b></span>
+    <span class="pill"><span id="connDot" class="dot"></span><span id="connTxt">连接中…</span></span>
+    <span class="pill">📡 <span id="epTxt">ws://192.168.1.100:17890/robot-ws/</span></span>
+    <span class="spacer"></span>
+    <span class="pill" title="页面版本">🛠 <b>build 2026-10-21 10:55</b></span>
+    <span class="pill" id="clockPill">🕒 --:--:--</span>
+  </header>
+
+  <div class="tabs">
+    <a class="tablink" href="robot_home.html" title="控制系统导航总页">🏠 导航</a>
+    <button class="tab active" data-view="dash">📊 实时看板</button>
+    <button class="tab" data-view="console">🛠 开发控制台</button>
+    <button class="tab" data-view="app">🤖 机器人App</button>
+    <a class="tablink" href="data_viewer.html" target="_blank" rel="noopener">📊 数据综合分析台</a>
+    <a class="tablink" href="headfix_collect.html" target="_blank" rel="noopener">🎥 定点头采集</a>
+    <a class="tablink" href="headfix_limits.html" target="_blank" rel="noopener">📐 限位数据库</a>
+    <a class="tablink" href="test_plan.html" target="_blank" rel="noopener">📋 测试计划</a>
+    <a class="tablink" id="openExt" href="http://192.168.1.100:17890/" target="_blank" rel="noopener">↗ 新标签打开</a>
+  </div>
+
+  <div class="grid" id="view-dash">
+    <!-- LEFT -->
+    <div class="col">
+      <div class="sechdr">📷 视觉</div>
+      <div class="card" style="grid-column:1/-1">
+        <h3>📷 相机画面 · 头部 + 手臂（同时）</h3>
+        <div class="row" style="flex-wrap:wrap;gap:8px">
+          <label class="sw"><input type="checkbox" id="camLive" /> 实时</label>
+          <select id="camInt"><option value="1500">1.5s</option><option value="2500" selected>2.5s</option><option value="4000">4s</option></select>
+          <button id="camToggle" class="btnx">📷 开启相机</button>
+          <button id="camShot" class="btnx">抓拍</button>
+          <span class="sub" id="camMeta" style="margin-left:auto">—</span>
+        </div>
+        <div class="camgrid2">
+          <div class="cambox"><span class="camlab">头部相机 RGB</span><img id="camHead" alt="等待画面…" /></div>
+          <div class="cambox"><span class="camlab">手臂相机 RGB</span><img id="camArm" alt="等待画面…" /></div>
+        </div>
+        <details style="margin-top:8px"><summary class="sub" style="cursor:pointer">头部深度（伪彩）</summary>
+          <div class="cambox" style="margin-top:6px"><canvas id="camDepth" width="640" height="400"></canvas></div>
+        </details>
+        <div class="sub">取图会触发机器人摆位（正常）。</div>
+      </div>
+
+      <div class="sechdr">🚁 无人机（遥控屏 · 摄像头拍屏）</div>
+      <div class="card" style="grid-column:1/-1">
+        <div id="dcWrap" style="width:100%;height:56vh;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#ffffff;border-radius:12px">
+          <img id="droneCam" alt="等待画面…" src="" style="display:block;transition:transform .15s" />
+        </div>
+        <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:8px">
+          <span class="sub">画面旋转</span>
+          <button class="btnx" id="dcRotL">↺ 左 90°</button>
+          <button class="btnx" id="dcRotR">↻ 右 90°</button>
+          <button class="btnx" id="dcRot0">复位 0°</button>
+          <span class="sub" id="dcRotV">0°</span>
+        </div>
+        <div class="row" style="margin-top:6px;flex-wrap:wrap;gap:8px">
+          <span class="sub">对焦</span>
+          <button class="btnx" id="focAuto">自动</button>
+          <button class="btnx" id="focManual">手动</button>
+          <input type="range" id="focVal" min="0" max="250" step="5" value="60" style="flex:1;min-width:120px" />
+          <span class="sub" id="focV">60</span>
+        </div>
+        <div class="chips" id="osdBox" style="margin-top:8px"></div>
+        <div class="sub" style="margin-top:6px">摄像头对准无人机遥控器屏幕 · <b>只读画面</b>（RM330 协议闭源，无法直接取遥测）</div>
+      </div>
+
+      <div class="sechdr">📊 状态</div>
+      <div class="card">
+        <h3>电量</h3>
+        <div class="row"><div><span class="big" id="battVal">--</span><span class="sub"> %</span></div>
+          <div class="sub" id="battMode">—</div></div>
+        <div class="batt"><i id="battBar"></i></div>
+        <div class="sub" id="chargeTxt" style="margin-top:7px">—</div>
+      </div>
+
+      <div class="card">
+        <h3>位置 / 姿态</h3>
+        <div class="kv">
+          <div class="k">房间</div><div class="v" id="kRoom">—</div>
+          <div class="k">X (m)</div><div class="v" id="kX">—</div>
+          <div class="k">Y (m)</div><div class="v" id="kY">—</div>
+          <div class="k">朝向 yaw</div><div class="v" id="kYaw">—</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>任务状态</h3>
+        <div><span class="big" id="taskName" style="font-size:20px">—</span></div>
+        <div class="sub" id="taskState">—</div>
+        <div class="kv" style="margin-top:8px">
+          <div class="k">task_id</div><div class="v" id="taskId">—</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>运行标识</h3>
+        <div class="chips">
+          <span class="chip" id="chipOta">软件升级</span>
+          <span class="chip" id="chipMaint">维护模式</span>
+          <span class="chip" id="chipAlarm">硬件异常</span>
+        </div>
+        <div class="hint" id="alarmTxt">无</div>
+      </div>
+
+      <div class="sechdr">🎮 控制 / 机械臂</div>
+      <div class="card">
+        <h3>🎮 手柄控制</h3>
+        <div class="sub" id="padStatus">未检测到手柄（按一下手柄任意键唤醒）</div>
+        <div class="sub" id="padBig" style="margin-top:5px;font-weight:600;color:var(--accent)">—</div>
+        <div class="row" style="margin:9px 0">
+          <label class="sw"><input type="checkbox" id="padArm" /> 启用运动</label>
+          <select id="deadmanSel" title="死手键：按住才驱动（可关）">
+            <option value="-1" selected>死手=无</option>
+            <option value="7">死手=RT</option>
+            <option value="5">死手=RB</option>
+            <option value="0">死手=A</option>
+            <option value="1">死手=B</option>
+          </select>
+        </div>
+        <div class="axrow"><span class="nmz">速度</span><input type="range" id="padSpeed" min="10" max="60" value="25" style="flex:1" /><span id="padSpeedTxt" style="width:34px;text-align:right">0.25</span></div>
+        <div class="hint">左摇杆 ↑=前进 · ←→=转向（不支持后退）· 没手柄时可用键盘 <b>W/A/S/D</b> 或方向键测试（先点一下页面）</div>
+        <div id="padAxes" style="margin-top:8px"></div>
+        <div class="btns" id="padBtns"></div>
+        <div class="hint" id="padRaw">原始: —</div>
+        <div class="armbox" id="padWarn">⚠️ 已“启用运动”——推动摇杆将真实驱动机器人行走，注意环境与人员！</div>
+        <button id="estop" class="estop">⛔ 紧急停止 (stop_all)</button>
+      </div>
+
+      <div class="card">
+        <h3>🕹 虚拟摇杆（网页）</h3>
+        <div id="joyV" style="position:relative;width:180px;height:180px;margin:6px auto;border-radius:50%;background:radial-gradient(circle at 50% 40%,#ffffff,#dbe3ee);border:2px solid var(--line);touch-action:none">
+          <div id="knobV" style="position:absolute;left:50%;top:50%;width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#eef2f7,#ffffff);border:2px solid var(--accent);box-shadow:0 4px 12px rgba(15,23,42,.15)"></div>
+        </div>
+        <div class="hint">拖动摇杆驾驶（真机）· 松手停 · 需先勾「启用运动」；↑前 ↓后 · ←→转向</div>
+      </div>
+
+      <div class="card">
+        <h3>🦾 夹爪 / 机械臂</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <button class="btnx" data-arm="grip_open">👐 夹爪开</button>
+          <button class="btnx" data-arm="grip_close">✊ 夹爪关</button>
+          <button class="btnx" data-arm="home">🏠 臂归位</button>
+          <button class="btnx" data-arm="unbox">📦 开箱姿态</button>
+          <button class="btnx" data-arm="grip_maint" style="grid-column:span 3">🔧 夹爪维护</button>
+          <button class="btnx" id="arm6Ready" style="grid-column:span 3;border-color:#0e7490;color:#0e7490">🎯 抓取准备姿态</button>
+        </div>
+        <h3 style="margin-top:14px">📐 升降 / 头部</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btnx" data-hc="up">⬆ 升高</button>
+          <button class="btnx" data-hc="down">⬇ 降低</button>
+          <button class="btnx" data-hc="headUp">👀 抬头</button>
+          <button class="btnx" data-hc="headDown">🐢 低头</button>
+        </div>
+        <div class="hint">预设姿态（真机）· 机械臂不支持逐关节手动 · 升降 0–0.44m / 头部 0–1.3rad</div>
+      </div>
+
+      <div class="card">
+        <h3>🧭 自定义机械臂</h3>
+        <div class="sub" style="margin-bottom:6px">A. 自定义位姿（末端目标，相机坐标系）</div>
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 8px;align-items:center;font-size:12.5px">
+          <span style="color:var(--muted)">帧 frame_id</span>
+          <input id="poseFrame" value="arm_camera_color_optical_frame" style="background:#f1f5f9;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:6px" />
+          <span style="color:var(--muted)">位置 x,y,z</span>
+          <span><input id="poseX" value="0.30" style="width:30%;background:#f1f5f9;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:6px"><input id="poseY" value="0.00" style="width:30%;margin-left:4%;background:#f1f5f9;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:6px"><input id="poseZ" value="0.50" style="width:30%;margin-left:4%;background:#f1f5f9;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:6px"></span>
+          <span style="color:var(--muted)">姿态四元数 x,y,z,w</span>
+          <span><input id="poseQx" value="0" style="width:22%;background:#f1f5f9;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:6px"><input id="poseQy" value="0" style="width:22%;margin-left:2%;background:#f1f5f9;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:6px"><input id="poseQz" value="0" style="width:22%;margin-left:2%;background:#f1f5f9;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:6px"><input id="poseQw" value="1" style="width:22%;margin-left:2%;background:#f1f5f9;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:6px"></span>
+        </div>
+        <button class="btnx" id="poseGo" style="margin-top:8px;width:100%">🎯 让臂过去</button>
+        <div class="hint">目标不可达时机器人会报“机械臂执行失败”（正常）。</div>
+
+        <div class="sub" style="margin:12px 0 6px">B. 动作宏（每行一步，按序播放）</div>
+        <textarea id="macro" rows="5" style="width:100%;background:#f1f5f9;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px;font-family:ui-monospace,monospace;font-size:12.5px">home
+unbox
+grip_open
+grip_close
+home</textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="btnx" id="macroPlay">▶ 播放宏</button>
+          <button class="btnx" id="macroStop">■ 停止宏</button>
+        </div>
+        <div class="hint">步骤：home 归位 · grip_open 夹爪开 · grip_close 夹爪关 · unbox 开箱 · maint 维护 · delay 1（秒）</div>
+      </div>
+
+      <div class="card" style="grid-column:1/-1">
+        <h3>🦾 机械臂 6 关节 · 调试 + 模拟</h3>
+        <div id="arm6Wrap" style="position:relative;background:#0b0f14">
+          <canvas id="arm6" width="760" height="500" style="display:none"></canvas>
+          <iframe id="arm3dF" src="arm3d.html?v=87&lowmem=1" allow="fullscreen" allowfullscreen style="width:100%;height:520px;border:0;border-radius:12px;background:#0b0f14;display:block"></iframe>
+          <img id="arm6Cam" alt="真机视图(手臂相机)" style="display:none;position:absolute;left:0;top:0;width:100%;height:100%;object-fit:contain;background:#0b0f14;border-radius:12px;z-index:3"/>
+          <canvas id="arm6Draw" style="display:none;position:absolute;left:0;top:0;width:100%;height:100%;z-index:6;touch-action:none;cursor:crosshair;border-radius:12px"></canvas>
+          <div id="arm6Hud" style="display:none;position:absolute;left:56px;top:8px;pointer-events:none;font:10px/1.35 ui-monospace,Menlo,monospace;color:#0e5f78;background:rgba(255,255,255,.34);border:1px solid rgba(14,116,144,.28);border-radius:10px;padding:6px 8px;white-space:pre;width:30%;overflow:hidden"></div>
+          <div style="position:absolute;right:10px;bottom:8px;pointer-events:none;font:11px ui-monospace,monospace;color:#4a6b86">拖底盘圆盘=行走 · 拖手臂=只动手臂/旋转 · 滚轮=缩放 · Shift+拖动=转视角 · 双击=复位</div>
+          <label style="position:absolute;right:48px;top:11px;background:rgba(255,255,255,.6);border:1px solid rgba(14,116,144,.3);border-radius:9px;padding:4px 9px;font:12px ui-monospace,monospace;color:#0e5f78;cursor:pointer"><input type="checkbox" id="arm6Rot" checked /> 自动旋转</label>
+          <!-- 🛗 立柱高度尺（竖直·鼠标拖动） -->
+          <div id="arm6Ruler" title="立柱升降：按住上下拖动" style="position:absolute;left:8px;top:16px;bottom:16px;width:46px;z-index:4;touch-action:none;cursor:ns-resize;user-select:none">
+            <div style="position:absolute;left:17px;top:0;bottom:0;width:8px;background:rgba(15,23,42,.14);border:1px solid rgba(14,116,144,.25);border-radius:4px"></div>
+            <div id="arm6RulerFill" style="position:absolute;left:17px;bottom:0;width:8px;height:0;background:linear-gradient(#67e8f9,#0891b2);border-radius:4px"></div>
+            <div id="arm6RulerKnob" style="position:absolute;left:3px;bottom:0;width:36px;height:13px;margin-bottom:-6px;background:#0891b2;border:2px solid #fff;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.35)"></div>
+            <div id="arm6RulerLbl" style="position:absolute;left:48px;bottom:0;font:11px ui-monospace,monospace;color:#0e5f78;white-space:nowrap;pointer-events:none">立柱 0cm</div>
+          </div>
+          <!-- ✅ 确定执行 / ⛔ 停止（右侧） -->
+          <div id="arm6Prog" style="position:absolute;right:10px;top:26%;width:140px;display:none;background:rgba(255,255,255,.8);border:1px solid rgba(14,116,144,.3);border-radius:9px;padding:6px 8px;z-index:4;font:11px ui-monospace,monospace;color:#0e5f78">
+            <div id="arm6ProgTxt" style="text-align:center">执行 0%</div>
+            <div style="height:7px;background:rgba(15,23,42,.12);border-radius:3px;margin-top:4px;overflow:hidden"><div id="arm6ProgBar" style="height:100%;width:0;background:linear-gradient(#34d399,#16a34a)"></div></div>
+            <div style="margin-top:5px;display:flex;justify-content:space-between"><span>立柱</span><span id="arm6ProgLiftTxt">0%</span></div>
+            <div style="height:5px;background:rgba(15,23,42,.12);border-radius:3px;margin-top:2px;overflow:hidden"><div id="arm6ProgLiftBar" style="height:100%;width:0;background:linear-gradient(#67e8f9,#0891b2)"></div></div>
+          </div>
+          <button id="arm6Fs" style="display:none;position:absolute;right:10px;top:10px;z-index:9;padding:9px 10px;border-radius:10px;border:1px solid #475569;background:#334155;color:#e2e8f0;font:13px/1.2 ui-monospace,monospace;cursor:pointer;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25)">⛶ 全屏</button>
+          <div style="display:none;position:absolute;right:10px;top:38%;flex-direction:column;gap:8px;z-index:8">
+            <button id="arm6ReadySim" style="padding:9px 10px;border-radius:10px;border:1px solid #0e7490;background:#0e7490;color:#fff;font:13px/1.2 ui-monospace,monospace;cursor:pointer;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25)">🎯 抓取准备姿态</button>
+            <button id="arm6Sync" style="padding:9px 10px;border-radius:10px;border:1px solid #0891b2;background:#0891b2;color:#fff;font:13px/1.2 ui-monospace,monospace;cursor:pointer;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25)">🔄 机械臂同步</button>
+            <button id="arm6Exec" style="padding:9px 10px;border-radius:10px;border:1px solid #16a34a;background:#16a34a;color:#fff;font:13px/1.2 ui-monospace,monospace;cursor:pointer;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25)">✅ 确定执行</button>
+            <button id="arm6Halt" style="padding:9px 10px;border-radius:10px;border:1px solid #dc2626;background:#dc2626;color:#fff;font:14px/1.2 ui-monospace,monospace;cursor:pointer;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25)">⛔ 停止</button>
+          </div>
+        </div>
+        <div class="hint">拖<b>底部圆盘</b>=行走底盘（移动）；拖<b>手臂末端</b>=只动手臂/旋转(IK)；或拉下面的关节滑杆。（数据面板在画布左上）</div>
+        <div id="arm6Sliders" style="margin-top:4px"></div>
+        <details class="adv" id="arm6ParamBox" open><summary>📐 关节参数（轴向 / 限位 / 当前）</summary>
+          <div id="arm6Params" style="margin-top:6px;font:12px/1.6 ui-monospace,Menlo,monospace;color:#0e5f78;overflow-x:auto"></div>
+          <div class="hint" style="margin-top:6px">来源：下板真机 URDF <code>arm_escape/urdf/mvp0_3_zj.urdf</code>（八界 mvp03）。⚠️ <b>J3 不对称</b>(-169°~+189°)，其余 ±178.8°；速度上限 1.0 rad/s、加速度 0.8 rad/s²。</div>
+        </details>
+        <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:8px">
+          <button class="btnx" id="arm6Home">🏠 归位</button>
+          <button class="btnx" id="arm6Zero">0 位</button>
+          <button class="btnx" id="arm6Demo">▶ 演示取物轨迹</button>
+          <button class="btnx" id="arm6Wave" title="一键开/关「波浪模式」（全臂波浪+摇头，走 :8796 模式引擎）" style="border-color:#0891b2;color:#0891b2">🌊 波浪</button>
+          <button class="btnx" id="arm6ViewBtn" style="border-color:#0e7490">🧪 模拟视图</button>
+          <button class="btnx" id="arm6Dance" style="border-color:#7c3aed;color:#7c3aed">💃 舞蹈编辑</button>
+          <button class="btnx" id="arm6FitBtn">⤢ 适应画面</button>
+          <button class="btnx" id="arm6Mesh" style="border-color:#0e7490;color:#0e7490">🧊 真机3D(网格)</button>
+        </div>
+        <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:8px;align-items:center">
+          <span class="sub">🛗 立柱升降(第7自由度)</span>
+          <input id="arm6Lift" type="range" min="0" max="44" step="1" value="0" style="width:200px"/>
+          <span class="sub" id="arm6LiftV">0 cm</span>
+          <span class="sub" style="margin-left:14px">🤏 夹爪开合</span>
+          <input id="arm6Grip" type="range" min="0" max="100" step="1" value="55" style="width:130px"/>
+          <span class="sub" id="arm6GripV">55%</span>
+        </div>
+        <details class="adv"><summary>✏️ 标注画布</summary>
+        <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:6px;align-items:center">
+          <label class="sw" style="border:1px solid #d3dbe6;padding:6px 10px;border-radius:9px"><input type="checkbox" id="dskOn" /> ✏️ 标注画布</label>
+          <button class="btnx" id="dskPen" style="border-color:#0e7490;color:#0e7490">🖊 自由</button>
+          <button class="btnx" id="dskMotor">⚙️ 电机</button>
+          <button class="btnx" id="dskLever">📏 力臂</button>
+          <input type="color" id="dskColor" value="#ff3b30" title="颜色" style="width:36px;height:28px;border:1px solid var(--line);border-radius:6px;background:none;padding:0"/>
+          <input type="range" id="dskW" min="1" max="12" value="3" title="粗细" style="width:90px"/>
+          <button class="btnx" id="dskUndo">↶ 撤销</button>
+          <button class="btnx" id="dskClear">🗑 清空</button>
+          <button class="btnx" id="dskSave">💾 存PNG</button>
+          <button class="btnx" id="dskJson" style="border-color:#0e7490;color:#0e7490">📋 导出JSON</button>
+          <span class="sub" id="dskSt" style="margin-left:auto"></span>
+        </div>
+        </details>
+        <div class="hint">6 关节（joint1..joint6，mvp03，各轴 ±178°）· 运动学已对齐实机 mvp03（ik_rbtdef.py）· 真机接口：ROS2 <code>/arm/rt/joint_angle_cmd_collision</code>，IK 用 ik_qp。<b>📍跟随真机定位</b>=底盘/臂基座跟着机器人的实时位姿跑（关掉才能拖动底盘模拟行走）。</div>
+        <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:8px;align-items:center">
+          <label class="sw" style="border:1px solid #d3dbe6;padding:6px 10px;border-radius:9px"><input type="checkbox" id="arm6Follow" checked /> 📍 跟随真机定位</label>
+          <label class="sw" style="border:1px solid #7f1d1d;padding:6px 10px;border-radius:9px" title="经 joints_bridge(:8796) 读真机 /joint_states，实时镜像关节"><input type="checkbox" id="arm6FollowJoints" /> 🔗 跟随真机关节</label>
+          <label class="sw" style="border:1px solid #7f1d1d;padding:6px 10px;border-radius:9px" title="拖关节/滑杆 → 经 joints_bridge(:8796)/set 下发真机关节角(JTC)"><input type="checkbox" id="arm6RealJoint" /> 🦾 拖关节即控真机(JTC)</label>
+          <label class="sw" style="border:1px solid #d3dbe6;padding:6px 10px;border-radius:9px"><input type="checkbox" id="arm6Labels" checked /> 🏷 电机标注</label>
+          <label class="sw" style="border:1px solid #d3dbe6;padding:6px 10px;border-radius:9px"><input type="checkbox" id="arm6Limit" /> 🛡 安全限制</label>
+          <span class="sub" id="a6JiSt" style="display:none"></span>
+          <button class="btnx" id="arm6Stop" style="border-color:#7f1d1d;color:#fca5a5">⛔ 停止机器人(stop_all)</button>
+          <button class="btnx" id="rechargeBtn" style="border-color:#16a34a;color:#15803d">🔋 回去充电</button>
+          <span class="sub" id="arm6RealSt" style="margin-left:auto">真机联动：关</span>
+        </div>
+        <details class="adv"><summary>🦾 真机联动 / 示教下发</summary>
+          <div class="row" style="flex-wrap:wrap;gap:10px;align-items:center">
+            <label class="sw" style="border:1px solid #7f1d1d;padding:6px 10px;border-radius:9px"><input type="checkbox" id="arm6Real" /> 🦾 拖动即控制真机</label>
+            <button class="btnx" id="arm6Send">🎯 发送当前末端位姿</button>
+            <button class="btnx" id="arm6Exp">💾 导出JSON</button>
+            <button class="btnx" id="arm6Recal">🔄 一键重标定</button>
+          </div>
+        </details>
+        <details class="adv"><summary>🧩 装配 / 校准</summary>
+        <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:6px;align-items:center">
+          <span class="sub">校准点(局部 x前/y左/z上)：</span>
+          <button class="btnx" data-a6="0.45,0,0.40">正前</button>
+          <button class="btnx" data-a6="0.45,0,0.70">前上</button>
+          <button class="btnx" data-a6="0.30,0,0.40">前近</button>
+          <button class="btnx" data-a6="0.70,0,0.40">前远</button>
+          <button class="btnx" data-a6="0.10,0.45,0.40">左</button>
+          <button class="btnx" data-a6="0.10,-0.45,0.40">右</button>
+        </div>
+        <div class="hint">⚠️ 设了<b>安装偏移</b>即用<b>物理模型</b>（自动停用下方方位校正表，不再依赖它）；<b>偏移全 0</b> 时回退方位表。</div>
+        <div class="row" style="margin-top:6px;flex-wrap:wrap;gap:8px;align-items:center">
+          <span class="sub">方向校正(自适应)</span>
+          <input id="a6Trim" type="range" min="-30" max="30" value="0" step="1" style="width:140px"/>
+          <span id="a6TrimV" class="sub">0°</span>
+          <span class="sub" id="a6MapLive">—</span>
+        </div>
+        <div class="row" style="margin-top:6px;flex-wrap:wrap;gap:8px;align-items:center">
+          <span class="sub">🧩 臂基座安装偏移(前/左/上 m)</span>
+          <input id="a6bx" type="number" step="0.01" value="-0.058" style="width:66px;background:#f1f5f9;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:4px"/>
+          <input id="a6by" type="number" step="0.01" value="-0.063" style="width:66px;background:#f1f5f9;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:4px"/>
+          <input id="a6bz" type="number" step="0.01" value="0.555" style="width:66px;background:#f1f5f9;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:4px"/>
+          <button class="btnx" id="a6boZero">归零</button>
+          <button class="btnx" id="a6boFlip" style="border-color:#0e7490;color:#0e7490">↔ 左右互换</button>
+          <span style="width:1px;height:20px;background:var(--line)"></span>
+          <span class="sub">🧭 臂朝向校正(°)</span>
+          <input id="a6yaw" type="number" step="5" value="0" style="width:66px;background:#f1f5f9;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:4px"/>
+          <span class="sub">真机 URDF 真值：后5.8/右6.3/上55.5 cm（改这里可微调）</span>
+        </div>
+        </details>
+        <details class="adv"><summary>🎯 指向示教 (hand_observe)</summary>
+        <div class="hint" style="margin-top:8px">🎯 <b>指向示教</b>（hand_observe：真机转向该点 + 手臂对准。需先开上面的开关）</div>
+        <div class="row" style="flex-wrap:wrap;gap:6px;align-items:center">
+          <span class="sub">高度</span>
+          <button class="btnx" data-ph="0.25">低</button>
+          <button class="btnx" data-ph="0.45">中</button>
+          <button class="btnx" data-ph="0.72">高</button>
+          <span class="sub">距离</span>
+          <button class="btnx" data-pd="0.35">近</button>
+          <button class="btnx" data-pd="0.55">中</button>
+          <button class="btnx" data-pd="0.75">远</button>
+        </div>
+        <div class="row" style="flex-wrap:wrap;gap:6px;align-items:center">
+          <span class="sub">方位</span>
+          <button class="btnx" data-pb="-90">右</button>
+          <button class="btnx" data-pb="-45">右前</button>
+          <button class="btnx" data-pb="0">正前</button>
+          <button class="btnx" data-pb="45">左前</button>
+          <button class="btnx" data-pb="90">左</button>
+          <span class="sub" id="arm6PtrSt">—</span>
+        </div>
+        <div class="hint">⚠️ 默认<b>关闭</b>。启用后：点下方<b>方位</b>按钮即下发；也可在模拟臂上拖动末端 → <b>松手即把该点(经机器人位姿转成 map 坐标)下发真机</b>（mission <code>hand_observe</code>）。机器人会<b>转向该点并让手臂对准</b>（约 20~30s/次，忙时忽略）。会让机器人<b>真实运动</b>——先清空周围、手放在急停旁。</div>
+        </details>
+      </div>
+
+      <div class="card" style="grid-column:1/-1">
+        <h3>📦 取物 Skill · 视觉识别 / 算法模拟</h3>
+        <div class="cambox" style="position:relative;max-width:1180px;margin:0 auto;height:640px;max-height:76vh">
+          <img id="pickCam" alt="等待画面…" style="width:100%;height:100%;object-fit:fill;display:block"/>
+          <canvas id="pickOv" width="640" height="400" style="position:absolute;left:0;top:0;width:100%;height:100%"></canvas>
+        </div>
+        <div class="row" style="margin-top:9px;flex-wrap:wrap;gap:8px;align-items:center">
+          <button class="btnx" id="pickRun">▶ 模拟取物流程</button>
+          <button class="btnx" id="pickDetect">🔍 真机识别</button>
+          <input id="pickLabel" value="bottle" style="width:110px;background:#f1f5f9;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:6px" />
+          <button class="btnx" id="pickDemo" style="border-color:#7f1d1d">▶ 真机跑取物流程</button>
+          <button class="btnx" id="pickStop">■ 停止</button>
+          <span class="sub" id="pickNow">待机</span>
+        </div>
+        <pre id="pickLog" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:#334155;background:#eef2f7;border:1px solid #d3dbe6;border-radius:10px;padding:10px;min-height:120px;max-height:220px;overflow:auto;white-space:pre-wrap;margin:9px 0 0"></pre>
+        <div class="hint">背景=机器人头部相机实时图；绿框/位姿/阶段为<strong>模拟算法输出</strong>（识别→像素→相机→基座→IK→抓取→放置）。</div>
+      </div>
+
+      <div class="card">
+        <h3>🔁 一键序列</h3>
+        <button class="btnx" id="seqRun" style="width:100%">▶ 执行：后退0.5 → 左转30° → 前进0.3 → 降到最低 → 臂归位 → 回充</button>
+        <div class="hint" id="seqLog">按顺序执行，每步等前一个完成（机器人单任务）。</div>
+      </div>
+
+      <div class="card">
+        <h3>🔊 语音播报</h3>
+        <div class="row" style="gap:8px">
+          <input id="sayText" placeholder="输入要机器人说的话…" style="flex:1;background:#f1f5f9;color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:8px;font-family:inherit" />
+          <button id="sayBtn" class="btnx">播报</button>
+        </div>
+        <div class="hint">语音对话：对它说「<b>你好，小科</b>」唤醒后讲话（依赖其 AI 后端；当前额度已用尽）</div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <h3>数据流 (robot_info)</h3>
+        <div class="chips" id="topicChips"></div>
+        <div class="sub" style="margin-top:9px" id="rateTxt">—</div>
+        <pre id="riStream" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:#334155;background:#eef2f7;border:1px solid #d3dbe6;border-radius:10px;padding:10px;min-height:260px;max-height:46vh;overflow:auto;white-space:pre-wrap;line-height:1.5;margin:9px 0 0">等待 robot_info 数据…</pre>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="col"></div>
+
+    <!-- RIGHT -->
+    <div class="col">
+      <div class="sechdr">🖥 运维</div>
+      <div class="card">
+        <h3>驱动监控 (下板)</h3>
+        <div class="sub" id="dmStatus" style="margin-bottom:9px">连接中…</div>
+        <div class="leds" id="leds"></div>
+      </div>
+      <div class="card">
+        <h3>实时日志</h3>
+        <div class="log" id="log"></div>
+      </div>
+      <div class="card">
+        <h3>版本</h3>
+        <div class="kv" id="verKV"><div class="k">ROS</div><div class="v">—</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="sechdr" style="margin-top:18px">🗺 地图（房间建模）</div>
+  <div class="card" id="mapCard" style="margin-top:6px;padding:10px">
+    <h3 style="padding:6px 6px 0">🗺 房间建模图（SLAM）</h3>
+    <div class="mapwrap">
+      <canvas id="map" width="1200" height="1200"></canvas>
+      <div class="mapbadge">📍 <b id="mRoom">房间</b> · 轨迹 <b id="mTrace">0</b> 点 · 🔍 <b id="zoomTxt">100%</b></div>
+      <div class="legend">比例 50&nbsp;mm/px · 原点 (-30,-30) m</div>
+      <div class="mapctl">
+        <button id="zIn" title="放大">＋</button>
+        <button id="zOut" title="缩小">－</button>
+        <button id="zRst" class="wide" title="重置视图">重置</button>
+      </div>
+      <div class="hintbar">🖱 滚轮缩放 · 拖拽平移 · 双击复位</div>
+    </div>
+  </div>
+
+  <div id="view-console" class="tabview" hidden><iframe id="ifConsole" title="开发控制台" data-src="http://192.168.1.100:17890/"></iframe></div>
+  <div id="view-app" class="tabview" hidden><iframe id="ifApp" title="机器人App" data-src="http://192.168.1.100:30023/#/machineHome/settings"></iframe></div>
+
+  <div class="sechdr" style="margin-top:18px">📡 信息流 · 语音播报链路</div>
+  <div class="card" style="margin-top:6px">
+    <div class="row" style="margin-bottom:8px"><h3 style="margin:0">麦克风 → 识别 → 唤醒判定 → 进会话 → 播报</h3><span class="sub" style="margin-left:auto">每 2 秒刷新 · 来源 :8794/feed</span></div>
+    <pre id="feedBox" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:#334155;background:#eef2f7;border:1px solid #d3dbe6;border-radius:12px;padding:12px;min-height:420px;max-height:78vh;overflow:auto;white-space:pre-wrap;line-height:1.6;margin:0">加载中…</pre>
+    <script>
+    (function(){
+      var box=document.getElementById('feedBox');
+      function tick(){
+        fetch('http://'+location.hostname+':8794/feed',{cache:'no-store'})
+          .then(function(r){return r.text();})
+          .then(function(t){ box.textContent = t || '(暂无活动)'; box.scrollTop = box.scrollHeight; })
+          .catch(function(e){ box.textContent='拉取失败: '+e.message; });
+      }
+      setInterval(tick,2000); tick();
+    })();
+    </script>
+  </div>
+
+  <div class="sechdr" style="margin-top:18px">🎛 语音目标（对着谁说）</div>
+  <div class="card" style="margin-top:6px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <button id="vtHost" style="cursor:pointer;font:inherit;font-weight:700;padding:13px 26px;border-radius:12px;border:1px solid #d3dbe6;font-size:16px">🎤 对OpenHW Lab说（主机）</button>
+    <button id="vtRobot" style="cursor:pointer;font:inherit;font-weight:700;padding:13px 26px;border-radius:12px;border:1px solid #d3dbe6;font-size:16px">🤖 对八界说（机器人）</button>
+    <button id="vtStop" style="cursor:pointer;font:inherit;font-weight:800;padding:13px 30px;border-radius:12px;border:1px solid #7f1d1d;background:#7f1d1d;color:#fff;font-size:16px">⏹ 全部停止</button>
+    <span id="vtNow" class="sub" style="margin-left:auto"></span>
+    <script>
+    (function(){
+      var bH=document.getElementById('vtHost'), bR=document.getElementById('vtRobot'), now=document.getElementById('vtNow'), bS=document.getElementById('vtStop');
+      var base='http://'+location.hostname+':8794';
+      var timer=null;
+      function paint(who){
+        bH.style.background = who==='host'?'#0891b2':'#ffffff'; bH.style.color = who==='host'?'#06202a':'#1e293b';
+        bR.style.background = who==='robot'?'#ec4899':'#ffffff'; bR.style.color = who==='robot'?'#2a0616':'#1e293b';
+        now.textContent = '当前：'+(who==='robot'?'对八界（按住说话）':'对OpenHW Lab（按住说话）');
+      }
+      function hold(who){ fetch(base+'/hold',{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({who:who})}).catch(function(){}); }
+      function startHold(who){ try{localStorage.setItem('vtarget',who);}catch(e){} paint(who); now.textContent='🔴 正在输入…（松开停止）'; hold(who); clearInterval(timer); timer=setInterval(function(){hold(who);},700); }
+      function endHold(who){ clearInterval(timer); timer=null; hold(who); paint(who); }
+      function bind(btn,who){
+        btn.addEventListener('mousedown',function(e){e.preventDefault(); startHold(who);});
+        btn.addEventListener('touchstart',function(e){e.preventDefault(); startHold(who);},{passive:false});
+        ['mouseup','mouseleave','touchend','touchcancel'].forEach(function(ev){ btn.addEventListener(ev,function(){ endHold(who); }); });
+      }
+      bind(bH,'host'); bind(bR,'robot');
+      if(bS) bS.onclick=function(){ fetch(base+'/stop',{method:'POST',headers:{'Content-Type':'text/plain'},body:'{}'}).then(function(){now.textContent='已全部停止（睡下）';}).catch(function(){}); };
+      var cur='host'; try{cur=localStorage.getItem('vtarget')||'host';}catch(e){}
+      paint(cur);
+    })();
+    </script>
+  </div>
+
+  <footer>智能硬件开放实验室研发 · 只读可视化 · 每帧解析 robot_info 推送 · 数据源：机器人本体 WebSocket</footer>
+</div>
+
+<script>
+const ROBOT_WS = "ws://192.168.1.100:17890/robot-ws/";
+const DRIVER_WS = "ws://192.168.1.100:17890/lower-driver-monitor-ws/";
+const MAP = { url:"map.png", w:1200, h:1200, res:0.05, ox:-30, oy:-30 };
+
+const $=id=>document.getElementById(id);
+const state={ connected:false, pos:null, battery:null, alarm:[], ws:null, work:null,
+  ota:false, maint:false, version:null, trace:[], msgs:0, lastRateTs:Date.now(), lastRateN:0 };
+
+function logLine(cls,msg){
+  const el=$("log"); const d=new Date();
+  const t=`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}:${String(d.getSeconds()).padStart(2,"0")}`;
+  const div=document.createElement("div"); div.innerHTML=`<span class="t">${t}</span><span class="${cls}">${msg}</span>`;
+  el.appendChild(div); el.scrollTop=el.scrollHeight;
+  while(el.childNodes.length>400) el.removeChild(el.firstChild);
+}
+function setConn(ok,txt,warn){ const d=$("connDot"); d.className="dot"+(ok?(warn?" warn":" on"):""); $("connTxt").textContent=txt; }
+
+/* ---------- robot WS ---------- */
+let uuidN=0; const uuid=()=>"viz-"+(++uuidN)+"-"+Math.random().toString(16).slice(2,8);
+function wsSend(ws,cmd,name,data){
+  ws.send(JSON.stringify({header:{mode:"event",type:"request",cmd,ts:Math.floor(Date.now()/1000),uuid:uuid(),host:""},
+    body:{name,task_id:"viz-"+(name||"t"),data:data||{}}}));
+}
+async function connect(){
+  setConn(false,"连接中…");
+  // 本地模式/桥未启动：不反复连机器人 WS，页面照常可用
+  let h=null;
+  try{ h=await fetch('http://'+location.hostname+':8796/health',{cache:'no-store'}).then(r=>r.json()); }catch(e){}
+  if(!h){ setConn(false,"本地模式 · 桥未启动",true); logLine("w","关节桥未启动，10 秒后重试（本地模式可用）"); setTimeout(connect,10000); return; }
+  if(h.offline){ setConn(false,"本地模式 · 未连接机器人",true); logLine("w","本地模式：机器人未连接，页面/仿真照常可用"); setTimeout(connect,15000); return; }
+  let ws; try{ ws=new WebSocket(ROBOT_WS); }catch(e){ logLine("e","WS 创建失败: "+e.message); setTimeout(connect,3000); return; }
+  state.ws=ws;
+  ws.onopen=()=>{ state.connected=true; setConn(true,"已连接"); logLine("s","已连接到机器人");
+    wsSend(ws,"oneshot","robot_info",{topics:["pos","battery","alarm","workState","version","ota","maintenance_mode","robot_status","disinfection_lamp","mapinfo","furniture"]});
+    wsSend(ws,"subscribe","robot_info",{topics:["pos","battery","alarm","workState","mapinfo","furniture","robot_state","disinfection_lamp"]}); };
+  ws.onclose=()=>{ state.connected=false; setConn(false,"断开 · 3s 重连"); logLine("w","连接断开，3 秒后重连"); if(window.arm6Enabled){ try{ sendMission("stop_all",{}); logLine("w","⚠ 断开 → 已发 stop_all"); }catch(e){} } setTimeout(connect,3000); };
+  ws.onerror=()=>{ setConn(false,"连接错误"); };
+  ws.onmessage=ev=>{ state.msgs++; let obj; try{ obj=JSON.parse(String(ev.data)); }catch{ return; } handle(obj); };
+}
+function handle(o){
+  if(!o||!o.body) return;
+  const name=o.body.name, d=o.body.data||{};
+  if(seqWait && o.body.task_id===seqWait && o.header && o.header.type==="notify" && o.header.cmd==="finish"){ if(seqDone) seqDone(); }
+  if(name==="image_query"){ onCamFrame(o.body.task_id, d); return; }
+  if(name==="chassis_move"||name==="stop_all"){ const ec=d.error_code; const h=o.header||{};
+    if(name==="chassis_move" && ((h.type==="notify"&&h.cmd==="finish") || (ec&&ec.code))) { jWaiting=false; }
+    if(ec&&ec.code) logLine("e","🎮 "+name+" 被拒: "+JSON.stringify(ec)); return; }
+  if(name==="speech"){ const ec=d.error_code; if(ec&&ec.code) logLine("e","🔊 播报被拒: "+JSON.stringify(ec)); return; }
+  if(name!=="robot_info") return;
+  // one topic per message (oneshot) OR full notify
+  if(d.pos){ state.pos=d.pos; onPos(); }
+  if(d.battery){ state.battery=d.battery; onBatt(); }
+  if(d.alarm!==undefined){ state.alarm=d.alarm||[]; onAlarm(); }
+  if(d.workState){ state.work=d.workState; onWork(); }
+  if(d.version){ state.version=d.version; onVersion(); }
+  if(d.ota!==undefined){ state.ota=!!d.ota; onFlags(); }
+  if(d.maintenance_mode!==undefined){ state.maint=!!d.maintenance_mode; onFlags(); }
+  if(d.robot_status){ if(d.robot_status.ota!==undefined)state.ota=!!d.robot_status.ota;
+    if(d.robot_status.maintenance_mode!==undefined)state.maint=!!d.robot_status.maintenance_mode; onFlags(); }
+  if(d.disinfection_lamp) window.__a6dis = d.disinfection_lamp;
+  if(d.mapinfo) window.__a6map = d.mapinfo;
+  if(d.furniture) window.__a6fur = d.furniture;
+  window.arm6Robot = { pos:state.pos, battery:state.battery, work:state.work, alarm:state.alarm, version:state.version, ota:state.ota, maint:state.maint, map:(window.__a6map||null), fur:(window.__a6fur||null), dis:(window.__a6dis||null), leds:(window.__a6leds||null), cam:($("camMeta")?$("camMeta").textContent:""), msgs:state.msgs };
+  try{ const _b=$("riStream"); if(_b){ const _n=Date.now();
+    if(!window.__riLast||_n-window.__riLast>140){ window.__riLast=_n;
+      const _pre = (_b.textContent.indexOf("等待")>=0) ? "" : (_b.textContent?"\n":"");
+      _b.textContent += _pre + new Date().toTimeString().slice(0,8)+"  "+JSON.stringify(d).slice(0,320);
+      const _l=_b.textContent.split("\n"); if(_l.length>60) _b.textContent=_l.slice(-60).join("\n");
+      _b.scrollTop=_b.scrollHeight; } } }catch(e){}
+  bumpRate();
+}
+let rTimer=null;
+function bumpRate(){ state.lastRateN++; if(rTimer)return; rTimer=setTimeout(()=>{
+  const dt=(Date.now()-state.lastRateTs)/1000; const r=state.lastRateN/dt;
+  $("rateTxt").textContent=`≈ ${r.toFixed(1)} 条/秒 · 累计 ${state.msgs} 条`; state.lastRateN=0; state.lastRateTs=Date.now(); rTimer=null; },1000); }
+
+function onPos(){
+  const p=state.pos; $("kRoom").textContent=p.room||"—";
+  $("kX").textContent=(p.x??0).toFixed(3); $("kY").textContent=(p.y??0).toFixed(3);
+  $("kYaw").textContent=(p.yaw??0).toFixed(3)+" rad ("+((p.yaw??0)*180/Math.PI).toFixed(0)+"°)";
+  $("mRoom").textContent=p.room||"—";
+  state.trace.push([p.x,p.y]); if(state.trace.length>4000) state.trace.shift();
+  $("mTrace").textContent=state.trace.length;
+  drawMap();
+}
+function onBatt(){
+  const b=state.battery; const v=Math.round(b.value??0);
+  $("battVal").textContent=v; $("battBar").style.width=Math.max(0,Math.min(100,v))+"%";
+  const low=v<20, mid=v<50;
+  $("battBar").style.background=low?"linear-gradient(90deg,#ef4444,#f97316)":mid?"linear-gradient(90deg,#f59e0b,#facc15)":"linear-gradient(90deg,#22c55e,#a3e635)";
+  $("battMode").textContent="mode "+(b.mode??"?");
+  $("chargeTxt").textContent=(b.isCharge? "⚡ 充电中":"未充电");
+}
+function onWork(){ const w=state.work||{}; $("taskName").textContent=w.name||"空闲"; $("taskId").textContent=w.task_id||"—";
+  let st=w.cmd||"—"; try{ const j=JSON.parse(w.data||"{}"); if(j.state) st+=" · "+j.state; }catch{}
+  $("taskState").textContent=st; }
+function onAlarm(){ state.alarm=state.alarm.filter(c=>Number(c)!==0); const has=state.alarm.length>0;
+  const c=$("chipAlarm"); c.className="chip"+(has?" on err":""); $("alarmTxt").textContent=has?("codes: "+state.alarm.join(", ")):"无"; }
+function onFlags(){ $("chipOta").className="chip"+(state.ota?" on warn":""); $("chipMaint").className="chip"+(state.maint?" on warn":""); }
+function onVersion(){ const v=state.version||{}; const kv=$("verKV");
+  kv.innerHTML=""; const add=(k,val)=>{ const a=document.createElement("div");a.className="k";a.textContent=k; const b=document.createElement("div");b.className="v";b.textContent=val; kv.append(a,b); };
+  add("ROS",v.ros||"—"); if(v.mcu) add("MCU",v.mcu.join(" · ")); }
+
+/* ---------- map ---------- */
+const cv=$("map"), cx=cv.getContext("2d");
+const mapImg=new Image(); let mapReady=false;
+const view={scale:1,tx:0,ty:0};
+mapImg.onload=()=>{mapReady=true; drawMap();}; mapImg.onerror=()=>{drawMap();};
+mapImg.src=MAP.url;
+function w2px(x,y){ return [ (x-MAP.ox)/MAP.res, (y-MAP.oy)/MAP.res ]; }
+function screenToMap(cxp,cyp){ return [ (cxp-view.tx)/view.scale, (cyp-view.ty)/view.scale ]; }
+function updZoom(){ const z=$("zoomTxt"); if(z) z.textContent=(view.scale*100).toFixed(0)+"%"; }
+function zoomAt(cxp,cyp,factor){
+  const ns=Math.max(0.5,Math.min(40,view.scale*factor));
+  const [mx,my]=screenToMap(cxp,cyp);
+  view.scale=ns; view.tx=cxp-mx*ns; view.ty=cyp-my*ns; drawMap(); updZoom();
+}
+function resetView(){ view.scale=1; view.tx=0; view.ty=0; drawMap(); updZoom(); }
+function drawMap(){
+  cx.setTransform(1,0,0,1,0,0);
+  cx.clearRect(0,0,cv.width,cv.height);
+  cx.fillStyle="#eef2f7"; cx.fillRect(0,0,cv.width,cv.height);
+  cx.setTransform(view.scale,0,0,view.scale,view.tx,view.ty);
+  if(mapReady){ cx.globalAlpha=0.95; cx.drawImage(mapImg,0,0,MAP.w,MAP.h); cx.globalAlpha=1; }
+  // grid every 5 m
+  cx.strokeStyle="rgba(30,41,59,.10)"; cx.lineWidth=1/view.scale;
+  for(let m=-30;m<=30;m+=5){ const [px]=w2px(m,MAP.oy); const [,py]=w2px(MAP.ox,m);
+    cx.beginPath(); cx.moveTo(px,0); cx.lineTo(px,MAP.h); cx.stroke();
+    cx.beginPath(); cx.moveTo(0,py); cx.lineTo(MAP.w,py); cx.stroke(); }
+  // trace
+  const T=state.trace; if(T.length>1){ cx.lineWidth=3/view.scale; cx.strokeStyle="rgba(236,72,153,.85)";
+    cx.beginPath(); for(let i=0;i<T.length;i++){ const [px,py]=w2px(T[i][0],T[i][1]); i?cx.lineTo(px,py):cx.moveTo(px,py);} cx.stroke(); }
+  // robot marker
+  const p=state.pos; if(p){ const [px,py]=w2px(p.x,p.y);
+    cx.save(); cx.translate(px,py); cx.rotate(p.yaw||0);
+    cx.fillStyle="#0891b2"; cx.beginPath(); cx.moveTo(26,0); cx.lineTo(-14,-14); cx.lineTo(-6,0); cx.lineTo(-14,14); cx.closePath(); cx.fill();
+    cx.restore();
+    cx.beginPath(); cx.arc(px,py,30,0,Math.PI*2); cx.strokeStyle="rgba(8,145,178,.55)"; cx.lineWidth=2/view.scale; cx.stroke();
+  }
+  cx.setTransform(1,0,0,1,0,0);
+}
+/* 滚轮缩放 */
+cv.addEventListener("wheel",e=>{ e.preventDefault();
+  const r=cv.getBoundingClientRect();
+  const cxp=(e.clientX-r.left)*(cv.width/r.width), cyp=(e.clientY-r.top)*(cv.height/r.height);
+  zoomAt(cxp,cyp, e.deltaY<0?1.15:1/1.15);
+},{passive:false});
+/* 拖拽平移 */
+let drag=null;
+cv.addEventListener("mousedown",e=>{ e.preventDefault(); drag={x:e.clientX,y:e.clientY,tx:view.tx,ty:view.ty}; cv.style.cursor="grabbing"; });
+window.addEventListener("mousemove",e=>{ if(!drag) return; const r=cv.getBoundingClientRect(); const k=cv.width/r.width;
+  view.tx=drag.tx+(e.clientX-drag.x)*k; view.ty=drag.ty+(e.clientY-drag.y)*k; drawMap(); });
+window.addEventListener("mouseup",()=>{ if(drag){ drag=null; cv.style.cursor="grab"; } });
+cv.addEventListener("dblclick",resetView);
+$("zIn").onclick=()=>{ zoomAt(cv.width/2,cv.height/2,1.25); };
+$("zOut").onclick=()=>{ zoomAt(cv.width/2,cv.height/2,1/1.25); };
+$("zRst").onclick=resetView;
+
+/* ---------- driver monitor ---------- */
+let dmWS=null;
+function connectDriver(){
+  try{ dmWS=new WebSocket(DRIVER_WS); }catch(e){ return; }
+  dmWS.onopen=()=>{ $("dmStatus").textContent="已连接"; };
+  dmWS.onclose=()=>{ $("dmStatus").textContent="断开 · 3s 重连"; setTimeout(connectDriver,3000); };
+  dmWS.onerror=()=>{ $("dmStatus").textContent="连接错误"; };
+  dmWS.onmessage=ev=>{ let o; try{ o=JSON.parse(String(ev.data)); }catch{ return; } dmHandle(o); };
+}
+let dmCaps=[], dmStates={};
+function dmHandle(m){
+  if(m.type==="initial"){ dmCaps=(m.capabilities||[]).slice(); dmStates=m.states||{}; renderLeds(); return; }
+  if(m.capability){ dmStates[m.capability]=m.state; renderLeds(); }
+  if(m.capabilities && !m.type){ dmCaps=m.capabilities; renderLeds(); }
+}
+function dmOn(cap,st){ if(cap==="joint_motor"&&st&&st.joints){ return st.joints.some(v=>v); } return !!(st&&st.enabled); }
+function stateForCap(c){
+  const m=/^joint_([1-6])$/.exec(c.id);
+  if(m){ const jm=dmStates["joint_motor"]; if(!jm) return undefined;
+    const i=parseInt(m[1],10)-1;
+    const on=(jm.joints&&jm.joints[i]!==undefined)? !!jm.joints[i] : ((Number(jm.mask||0)>>i)&1)===1;
+    return {enabled:on}; }
+  return dmStates[c.id];
+}
+function renderLeds(){
+  window.__a6leds={capabilities:(dmCaps||[]).slice(), states:dmStates};
+  const box=$("leds"); box.innerHTML="";
+  const joints=[1,2,3,4,5,6].map(n=>({id:"joint_"+n,name:"关节"+n}));
+  const others=dmCaps.filter(c=>!/^joint_[1-6]$/.test(c.id));
+  const order=["head_motor","head_optocoupler","handle","downview","crash","driver_motor","joint_motor"];
+  const rest=others.filter(c=>!order.includes(c.id)).sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));
+  const list=[...others.filter(c=>order.includes(c.id)), ...rest, ...joints];
+  if(!dmCaps.length){} // wait for caps
+  list.forEach(c=>{
+    const st=stateForCap(c); const on=dmOn(c.id,st);
+    const el=document.createElement("div"); el.className="led "+(st?(on?"on":"off"):"");
+    el.innerHTML=`<span class="lamp"></span><span class="nm">${c.name||c.id}</span><span class="st">${st?(on?"使能":"失能"):"?"}</span>`;
+    box.appendChild(el);
+  });
+}
+
+/* ---------- 🎮 手柄控制 ---------- */
+const pad={gp:null,name:"",axes:[],buttons:[],lastSend:0,moving:false,sent:0,count:0};
+const keys={};
+function sendMission(name,data){
+  const ws=state.ws;
+  if(!ws||ws.readyState!==1){ logLine("e","WS 未连接，无法发送 "+name); return false; }
+  ws.send(JSON.stringify({header:{mode:"mission",type:"request",cmd:"start",ts:Math.floor(Date.now()/1000),uuid:uuid(),host:""},body:{name,task_id:"viz-"+name+"-"+Date.now(),data:data||{}}}));
+  return true;
+}
+let lastLiftSent=0, lastGripSent=0;
+function sendLiftReal(v){
+  const t=Date.now(); if(t-lastLiftSent<80) return; lastLiftSent=t;
+  try{ fetch('http://'+location.hostname+':8792/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'height',value:+v.toFixed(3)})}); }catch(e){}
+}
+function sendGripReal(v){
+  const t=Date.now(); if(t-lastGripSent<140) return; lastGripSent=t;
+  try{ fetch('http://'+location.hostname+':8796/grip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({v:+v.toFixed(3)})}); }catch(e){}
+}
+/* 夹爪开/关：直接走 :8796/grip（不依赖 mission WS；WS 断开时也能用） */
+function sendGripMode(key){
+  const v = (key==='grip_open') ? 0.69 : 0.0;
+  sendGripReal(v);
+  const g=$('arm6Grip'); if(g){ g.value=Math.round(v/0.69*100); const e=$('arm6GripV'); if(e)e.textContent=g.value+'%'; }
+  logLine('i', (key==='grip_open'?'👐 夹爪开 → ':'✊ 夹爪关 → ')+'/grip '+v.toFixed(2));
+}
+function stopAll(){ sendMission("stop_all",{}); }
+function gpPoll(){
+  const gps=navigator.getGamepads?navigator.getGamepads():[];
+  pad.count=gps.filter(g=>g&&g.connected).length;
+  let gp=null; for(const g of gps){ if(g&&g.connected){ gp=g; break; } }
+  const was=pad.gp; pad.gp=gp;
+  if(gp){ pad.name=gp.id||"gamepad"; pad.axes=Array.from(gp.axes); pad.buttons=Array.from(gp.buttons).map(b=>b.pressed);
+    if(!was){ $("padStatus").textContent="已连接: "+pad.name+" (index "+gp.index+")"; $("padStatus").classList.add("oktxt"); logLine("s","🎮 手柄已连接: "+pad.name); }
+    renderAxes(); renderBtns(); renderRaw(); }
+  else if(was){ $("padStatus").textContent="手柄已断开"; $("padStatus").classList.remove("oktxt"); logLine("w","🎮 手柄断开"); renderRaw(); }
+  else { renderRaw(); }
+}
+setInterval(gpPoll,50);
+window.addEventListener("gamepadconnected",e=>logLine("s","🎮 gamepadconnected: "+(e.gamepad&&e.gamepad.id)));
+window.addEventListener("gamepaddisconnected",e=>logLine("w","🎮 gamepaddisconnected: "+(e.gamepad&&e.gamepad.id)));
+function renderAxes(){ const box=$("padAxes"); if(!box)return; box.innerHTML="";
+  ["LX","LY","RX","RY"].forEach((nm,i)=>{ const v=pad.axes[i]||0; const r=document.createElement("div"); r.className="axrow";
+    r.innerHTML=`<span class="nmz">${nm}</span><span class="axbar"><i style="left:${((v+1)/2*100).toFixed(0)}%"></i></span><span style="width:40px;text-align:right">${v.toFixed(2)}</span>`; box.appendChild(r); }); }
+function renderBtns(){ const box=$("padBtns"); if(!box)return;
+  const names=["A","B","X","Y","LB","RB","LT","RT","Back","Start","LS","RS","↑","↓","←","→","Home"];
+  box.innerHTML=""; pad.buttons.forEach((p,i)=>{ const s=document.createElement("span"); if(p)s.className="on"; s.textContent=(names[i]||("b"+i)); box.appendChild(s); }); }
+function renderRaw(){ const el=$("padRaw"); if(!el)return;
+  if(!pad.gp){ el.textContent="检测到手柄: "+(pad.count||0)+" 个"+(pad.count?"（未取到对象）":"（点页面后按一下手柄按钮唤醒）"); return; }
+  const pressed=pad.buttons.map((p,i)=>p?i:null).filter(x=>x!==null);
+  el.textContent="axes["+pad.axes.length+"]=["+pad.axes.map(a=>a.toFixed(2)).join(",")+"] btnpressed=["+pressed.join(",")+"]"; }
+function readInputs(){
+  let lx=0,ly=0,dead=false;
+  if(pad.gp){
+    const ax=pad.axes, b=pad.buttons;
+    let bx=0,by=0,bm=-1;
+    for(const pr of [[0,1],[2,3]]){ const x=ax[pr[0]]||0, y=ax[pr[1]]||0; const m=Math.max(Math.abs(x),Math.abs(y)); if(m>bm){ bm=m; bx=x; by=y; } }
+    lx=bx; ly=by;
+    if(b[14])lx=Math.min(lx,-1); if(b[15])lx=Math.max(lx,1);
+    if(b[12])ly=Math.min(ly,-1); if(b[13])ly=Math.max(ly,1);
+    const dm=parseInt($("deadmanSel").value,10); dead = dm<0 ? true : !!b[dm];
+  }
+  let kb=false;
+  if(keys["KeyW"]||keys["ArrowUp"]){ ly=Math.min(ly,-1); kb=true; }
+  if(keys["KeyS"]||keys["ArrowDown"]){ ly=Math.max(ly,1); kb=true; }
+  if(keys["KeyA"]||keys["ArrowLeft"]){ lx=Math.min(lx,-1); kb=true; }
+  if(keys["KeyD"]||keys["ArrowRight"]){ lx=Math.max(lx,1); kb=true; }
+  if(kb) dead=true;
+  return {lx,ly,dead,kb};
+}
+window.addEventListener("keydown",e=>{ keys[e.code]=true; if(e.key==="Escape") $("estop").click(); });
+window.addEventListener("keyup",e=>{ keys[e.code]=false; });
+$("padArm").onchange=()=>{ const on=$("padArm").checked; $("padWarn").classList.toggle("show",on);
+  logLine(on?"w":"i", on?"🎮 运动已启用":"🎮 运动已禁用"); if(!on&&pad.moving){ stopAll(); pad.moving=false; } };
+$("padSpeed").oninput=()=>{ $("padSpeedTxt").textContent=(parseInt($("padSpeed").value,10)/100).toFixed(2); };
+$("estop").onclick=()=>{ stopAll(); pad.moving=false; $("padArm").checked=false; $("padWarn").classList.remove("show"); logLine("e","⛔ 紧急停止已发送 (stop_all)"); };
+function padControl(){
+  const armed=$("padArm").checked;
+  const spd=parseInt($("padSpeed").value,10)/100;
+  const r=readInputs(); const lx=r.lx, ly=r.ly, kb=r.kb; const active=armed&&r.dead;
+  let dist=0,ang=0;
+  if(active){ if(ly<-0.28)dist=Number((spd*0.40).toFixed(3)); if(lx<-0.28)ang=Number((spd*1.20).toFixed(4)); if(lx>0.28)ang=Number((-spd*1.20).toFixed(4)); }
+  const want=active&&(dist>0||ang!==0);
+  const busy=state.work&&state.work.name&&state.work.cmd!=="idle";
+  const src = pad.gp ? ("手柄 "+(pad.name||"").slice(0,20)) : (kb?"键盘":"无输入");
+  $("padBig").textContent="🎮 "+src+" · 运动:"+(armed?(active?"可驱动":"待死手"):"未启用")+(want?" · ▶行进中":"")+(busy?(" · ⚠机器人忙:"+state.work.name):"");
+  const now=Date.now();
+  if(want){
+    if(now-pad.lastSend>=380){ pad.lastSend=now; sendMission("chassis_move",{move_distance:dist,move_angle:ang}); pad.sent++;
+      logLine("i",`🎮 chassis_move  d=${dist.toFixed(2)}m  a=${(ang*180/Math.PI).toFixed(0)}°`+(busy?"  (机器人忙)":"")); }
+    pad.moving=true;
+  } else if(pad.moving){ stopAll(); pad.moving=false; logLine("w","🎮 停止 (stop_all)"); }
+}
+setInterval(padControl,120);
+
+/* ---------- 📷 相机画面 ---------- */
+let camLiveOn=false, camInt=2500, camTimer=null, camFailsafe=null, camFrames={head:0,arm:0};   // 默认关闭：省机器人算力
+const CAMTYPE={head:2,arm:1};
+const camId=w=>"vizcam-"+w;   // 回包会原样回显 task_id -> 以此区分相机
+function setImg(el, b64){ const im=new Image(); im.onload=()=>{ el.src=im.src; }; im.src="data:image/png;base64,"+b64; }
+function captureCam(which){ const ws=state.ws; if(!ws||ws.readyState!==1) return;
+  ws.send(JSON.stringify({header:{mode:"mission",type:"request",cmd:"start",ts:Math.floor(Date.now()/1000),uuid:uuid(),host:""},body:{name:"image_query",task_id:camId(which),data:{camera_type:CAMTYPE[which]}}})); }
+function camStep(){ if(!camLiveOn) return; captureCam("head");
+  if(camFailsafe) clearTimeout(camFailsafe);
+  camFailsafe=setTimeout(()=>{ if(camLiveOn) camStep(); }, 9000); }
+function onCamFrame(taskId, d){          // 只处理本页发起的帧(其余广播忽略)
+  const which = taskId && taskId.endsWith("-head") ? "head" : (taskId && taskId.endsWith("-arm") ? "arm" : null);
+  if(!which) return;
+  const rd=d.result_data;
+  if(!rd){ const ec=d.error_code; if(ec&&ec.code) logLine("e","📷 "+which+" 取图错误 "+JSON.stringify(ec)); }
+  else if(rd.rgb_image&&rd.rgb_image.data){
+    setImg($(which==="head"?"camHead":"camArm"), rd.rgb_image.data);
+    if(which==="head"&&rd.depth_image&&rd.depth_image.data) renderDepth(rd.depth_image.data);
+    camFrames[which]++;
+    $("camMeta").textContent="头部 "+camFrames.head+" 帧 · 手臂 "+camFrames.arm+" 帧 · "+new Date().toLocaleTimeString("zh-CN",{hour12:false});
+  }
+  if(which==="head"){ setTimeout(()=>captureCam("arm"),300); }
+  else { if(camFailsafe){ clearTimeout(camFailsafe); camFailsafe=null; } if(camLiveOn){ if(camTimer) clearTimeout(camTimer); camTimer=setTimeout(camStep, camInt); } }
+}
+function camStartAll(){ camLiveOn=true; camStep(); }
+function camStopAll(){ camLiveOn=false; if(camTimer){clearTimeout(camTimer);camTimer=null;} if(camFailsafe){clearTimeout(camFailsafe);camFailsafe=null;} }
+async function inflateBytes(u8){ const ds=new DecompressionStream("deflate"); const st=new Blob([u8]).stream().pipeThrough(ds); return new Uint8Array(await new Response(st).arrayBuffer()); }
+const VIRIDIS=[[68,1,84],[72,40,120],[62,74,137],[49,104,142],[38,130,142],[31,158,137],[53,183,121],[109,205,89],[183,218,62],[253,231,37]];
+function viridis(t){ t=Math.max(0,Math.min(1,t)); const x=t*9, i=Math.min(8,Math.floor(x)), f=x-i; const a=VIRIDIS[i],b=VIRIDIS[i+1]; return [Math.round(a[0]+(b[0]-a[0])*f),Math.round(a[1]+(b[1]-a[1])*f),Math.round(a[2]+(b[2]-a[2])*f)]; }
+async function renderDepth(b64){
+  const cv=$("camDepth"), cx=cv.getContext("2d");
+  try{
+    const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+    let p=8,w=0,h=0,bitd=8,ct=0; const idat=[];
+    while(p+8<=bin.length){ const len=(bin[p]<<24|bin[p+1]<<16|bin[p+2]<<8|bin[p+3])>>>0; const type=String.fromCharCode(bin[p+4],bin[p+5],bin[p+6],bin[p+7]); const data=bin.subarray(p+8,p+8+len);
+      if(type==="IHDR"){ w=(data[0]<<24|data[1]<<16|data[2]<<8|data[3])>>>0; h=(data[4]<<24|data[5]<<16|data[6]<<8|data[7])>>>0; bitd=data[8]; ct=data[9]; }
+      else if(type==="IDAT") idat.push(data); else if(type==="IEND") break;
+      p+=12+len; }
+    let total=0; idat.forEach(d=>total+=d.length); const all=new Uint8Array(total); let o=0; idat.forEach(d=>{all.set(d,o);o+=d.length;});
+    const raw=await inflateBytes(all);
+    const channels = ct===2?3:ct===4?2:ct===6?4:1;
+    const bpp = channels*(bitd/8);
+    const stride = w*bpp;
+    const out=new Uint16Array(w*h); let off=0; let prev=new Uint8Array(stride);
+    for(let y=0;y<h;y++){ const ft=raw[off++]; const line=raw.subarray(off,off+stride); off+=stride; const cur=new Uint8Array(stride);
+      for(let x=0;x<stride;x++){ const a=x>=bpp?cur[x-bpp]:0,b=prev[x],c=x>=bpp?prev[x-bpp]:0; let v=line[x];
+        if(ft===1)v=(v+a)&255; else if(ft===2)v=(v+b)&255; else if(ft===3)v=(v+((a+b)>>1))&255; else if(ft===4){const pp=a+b-c;const pa=Math.abs(pp-a),pb=Math.abs(pp-b),pc=Math.abs(pp-c);v=(v+(pa<=pb&&pa<=pc?a:(pb<=pc?b:c)))&255;}
+        cur[x]=v; }
+      for(let x=0;x<w;x++){ const base=x*bpp; out[y*w+x]=(bitd===16)?((cur[base]<<8)|cur[base+1]):cur[base]; }
+      prev=cur; }
+    let mn=Infinity,mx=-Infinity; for(let i=0;i<out.length;i++){ const v=out[i]; if(v>0){ if(v<mn)mn=v; if(v>mx)mx=v; } }
+    if(!isFinite(mn)){mn=0;mx=1;} const span=(mx-mn)||1;
+    const img=cx.createImageData(w,h); const px=img.data;
+    for(let i=0;i<out.length;i++){ const v=out[i]; const t=v>0?((v-mn)/span):0; const rgb=viridis(t); px[i*4]=rgb[0];px[i*4+1]=rgb[1];px[i*4+2]=rgb[2];px[i*4+3]=255; }
+    cv.width=w; cv.height=h; cx.putImageData(img,0,0);
+  }catch(e){ logLine("e","深度解码失败: "+e.message); cx.fillStyle="#eef2f7"; cx.fillRect(0,0,cv.width,cv.height); }
+}
+function camSetUI(){ const b=$("camToggle"); if(b) b.textContent = camLiveOn ? "📷 关闭相机" : "📷 开启相机"; const c=$("camLive"); if(c) c.checked=!!camLiveOn; }
+$("camToggle").onclick=()=>{ if(camLiveOn){ camStopAll(); } else { camStartAll(); } camSetUI(); logLine("i", camLiveOn?"📷 相机已开启（开始取图，会增加机器人负载）":"📷 相机已关闭（省算力）"); };
+$("camShot").onclick=()=>{ camLiveOn=true; camStep(); camSetUI(); };
+$("camLive").onchange=()=>{ if($("camLive").checked) camStartAll(); else camStopAll(); camSetUI(); };
+camSetUI();
+$("camInt").onchange=()=>{ camInt=parseInt($("camInt").value,10); };
+
+/* ---------- 🧪 模拟 / 🔭 真机 视图切换 ---------- */
+window.arm6View="sim";
+(function(){
+  var timer=null;
+  function setView(v){ window.arm6View=v; try{localStorage.setItem("a6view",v);}catch(e){}
+    var img=$("arm6Cam"), btn=$("arm6ViewBtn"); if(!img||!btn) return;
+    if(v==="real"){ img.style.display="block"; btn.textContent="🔭 真机视图"; btn.style.borderColor="#7f1d1d";
+      if(!camLiveOn){ camStartAll(); camSetUI(); }
+      if(timer) clearInterval(timer);
+      timer=setInterval(function(){ var s=($("camArm")||{}).src; if(s&&s.slice(0,5)==="data:") img.src=s; }, 250);
+    } else { img.style.display="none"; btn.textContent="🧪 模拟视图"; btn.style.borderColor="#0e7490";
+      if(timer){clearInterval(timer);timer=null;} if(camLiveOn){ camStopAll(); camSetUI(); } }
+  }
+  window.arm6SetView=setView;
+  var init="sim"; try{ init=localStorage.getItem("a6view")||"sim"; }catch(e){}
+  window.arm6View=init;
+  (function bind(){ var btn=$("arm6ViewBtn"); if(!btn) return; btn.onclick=function(){ setView(window.arm6View==="real"?"sim":"real"); };
+    var img=$("arm6Cam"); if(img) img.style.display=(init==="real")?"block":"none"; btn.textContent=(init==="real")?"🔭 真机视图":"🧪 模拟视图"; btn.style.borderColor=(init==="real")?"#7f1d1d":"#0e7490"; if(init==="real") setView("real"); })();
+})();
+
+/* ---------- ✏️ 标注画布（手动画机械臂：自由/电机/力臂） ---------- */
+(function(){
+  var wrap=$("arm6Wrap"), cv=$("arm6Draw"); if(!wrap||!cv) return;
+  var ctx=cv.getContext("2d");
+  var on=false, tool="pen", color="#ff3b30", lw=3, items=[], cur=null;
+  try{ var _d=JSON.parse(localStorage.getItem("a6draw2")||"null"); if(_d&&_d.length) items=_d; }catch(e){}
+  function save(){ try{ localStorage.setItem("a6draw2", JSON.stringify(items)); }catch(e){} }
+  function fit(){ var r=wrap.getBoundingClientRect(); cv.width=Math.max(1,Math.round(r.width)); cv.height=Math.max(1,Math.round(r.height)); redraw(); }
+  function sp(e){ var r=cv.getBoundingClientRect(); return { x:(e.clientX-r.left)*(cv.width/r.width), y:(e.clientY-r.top)*(cv.height/r.height) }; }
+  function motorAt(c,w,x,y){ ctx.save(); ctx.strokeStyle=c; ctx.fillStyle=c; ctx.lineWidth=2; var R=Math.max(6,w+5);
+    ctx.beginPath(); ctx.arc(x,y,R,0,7); ctx.stroke();
+    for(var a=0;a<8;a++){ var A=a*Math.PI/4; ctx.beginPath(); ctx.moveTo(x+Math.cos(A)*R,y+Math.sin(A)*R); ctx.lineTo(x+Math.cos(A)*(R+5),y+Math.sin(A)*(R+5)); ctx.stroke(); }
+    ctx.beginPath(); ctx.arc(x,y,Math.max(2,R*0.32),0,7); ctx.fill(); ctx.restore(); }
+  function render(it){ if(it.t==="motor"){ motorAt(it.c,it.w,it.x,it.y); return; }
+    ctx.strokeStyle=it.c; ctx.lineWidth=it.w; ctx.lineJoin="round"; ctx.lineCap="round"; ctx.beginPath();
+    for(var i=0;i<it.pts.length;i++){ var p=it.pts[i]; i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y); } ctx.stroke();
+    if(it.t==="lever"&&it.pts.length>1){ var a=it.pts[0], b=it.pts[it.pts.length-1]; ctx.fillStyle=it.c;
+      ctx.beginPath(); ctx.arc(a.x,a.y,3,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(b.x,b.y,3,0,7); ctx.fill(); } }
+  function redraw(){ ctx.clearRect(0,0,cv.width,cv.height); for(var k=0;k<items.length;k++) render(items[k]); if(cur) render(cur); }
+  cv.addEventListener("pointerdown",function(e){ if(!on) return; e.preventDefault(); cv.setPointerCapture&&cv.setPointerCapture(e.pointerId); var p=sp(e);
+    if(tool==="motor"){ items.push({t:"motor",x:Math.round(p.x),y:Math.round(p.y),c:color,w:lw}); redraw(); save(); return; }
+    cur={t:(tool==="lever"?"lever":"pen"), pts:[p], c:color, w:lw}; redraw(); });
+  cv.addEventListener("pointermove",function(e){ if(!on||!cur) return; e.preventDefault(); var p=sp(e); if(cur.t==="lever") cur.pts=[cur.pts[0],p]; else cur.pts.push(p); redraw(); });
+  function end(){ if(!on||!cur) return; items.push(cur); cur=null; redraw(); save(); }
+  cv.addEventListener("pointerup",end); cv.addEventListener("pointercancel",end);
+  function toolBtn(id,t){ var b=$(id); if(!b) return; b.onclick=function(){ tool=t; ["dskPen","dskMotor","dskLever"].forEach(function(k){ var e2=$(k); if(e2){ var sel=(k===id); e2.style.borderColor=sel?"#0e7490":"var(--line)"; e2.style.color=sel?"#0e7490":""; } }); }; }
+  toolBtn("dskPen","pen"); toolBtn("dskMotor","motor"); toolBtn("dskLever","lever");
+  var elC=$("dskColor"); if(elC){ color=elC.value; elC.oninput=function(){ color=elC.value; }; }
+  var elW=$("dskW"); if(elW){ lw=parseInt(elW.value,10)||3; elW.oninput=function(){ lw=parseInt(elW.value,10)||3; }; }
+  var elOn=$("dskOn"); if(elOn){ elOn.onchange=function(){ on=elOn.checked; cv.style.display=on?"block":"none"; if(on) fit(); var st=$("dskSt"); if(st) st.textContent=on?("标注中 · 已 "+items.length+" 笔"):""; }; }
+  if($("dskUndo")) $("dskUndo").onclick=function(){ items.pop(); redraw(); save(); };
+  if($("dskClear")) $("dskClear").onclick=function(){ if(items.length&&!confirm("清空标注？")) return; items=[]; cur=null; redraw(); save(); };
+  if($("dskSave")) $("dskSave").onclick=function(){ var sim=document.getElementById("arm6"); var out=document.createElement("canvas"); out.width=cv.width; out.height=cv.height; var o=out.getContext("2d"); o.fillStyle="#ffffff"; o.fillRect(0,0,out.width,out.height); if(sim) try{ o.drawImage(sim,0,0,out.width,out.height); }catch(e){} o.drawImage(cv,0,0); var a=document.createElement("a"); a.download="arm6-annot.png"; a.href=out.toDataURL("image/png"); a.click(); };
+  if($("dskJson")) $("dskJson").onclick=function(){ var data={ note:"arm6 标注(电机点+力臂段)，坐标=画布像素，原点左上", canvas:{ w:cv.width, h:cv.height }, items:items }; var j=JSON.stringify(data); var show=function(){ try{ var ta=$("dskSt"); if(ta) ta.textContent="已复制 JSON（"+items.length+" 笔），粘贴给OpenHW Lab即可"; }catch(e){} };
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(j).then(show).catch(function(){ prompt("复制以下 JSON 发给OpenHW Lab：", j); }); } else { prompt("复制以下 JSON 发给OpenHW Lab：", j); } };
+  window.addEventListener("resize",function(){ if(on) fit(); });
+  window.arm6DrawItems=function(){ return items; };
+  window.arm6DrawClear=function(){ items=[]; cur=null; redraw(); save(); };
+})();
+
+/* ---------- 🕹 网页虚拟摇杆 ---------- */
+const joyV=$("joyV"),knobV=$("knobV"); let jActive=false,jVec=null,jLast=0,jMoving=false,jWaiting=false,jWaitTo=null;
+function jVecF(e){ const r=joyV.getBoundingClientRect(); const cx=r.left+r.width/2,cy=r.top+r.height/2; let dx=e.clientX-cx,dy=e.clientY-cy; const m=Math.hypot(dx,dy),R=55; if(m>R){dx=dx/m*R;dy=dy/m*R;} return {dx,dy,nx:dx/R,ny:dy/R}; }
+function jSet(dx,dy){ knobV.style.transform="translate("+dx+"px,"+dy+"px)"; }
+joyV.addEventListener("pointerdown",e=>{ if(!$("padArm").checked){ logLine("w","先勾『启用运动』"); return; } jActive=true; joyV.setPointerCapture&&joyV.setPointerCapture(e.pointerId); const v=jVecF(e); jSet(v.dx,v.dy); jVec=v; camStopAll(); logLine("i","🕹 驾驶中（已暂停取图）"); });
+joyV.addEventListener("pointermove",e=>{ if(!jActive)return; const v=jVecF(e); jSet(v.dx,v.dy); jVec=v; });
+function jEnd(){ if(!jActive)return; jActive=false; jVec=null; jSet(0,0); if(jMoving){ stopAll(); jMoving=false; logLine("w","🕹 松杆停 (stop_all)"); } if(camLiveOn) camStartAll(); }
+["pointerup","pointercancel"].forEach(ev=>joyV.addEventListener(ev,jEnd));
+setInterval(()=>{ if(!jActive||!jVec||jWaiting)return; const now=Date.now(); if(now-jLast<120)return; jLast=now;
+  const dz=0.28; let d=0,a=0;
+  if(jVec.ny<-dz) d=Number((0.8*Math.min(1,-jVec.ny)).toFixed(2));
+  if(jVec.ny> dz) d=Number((-0.8*Math.min(1,jVec.ny)).toFixed(2));
+  if(jVec.nx<-dz) a=Number((1.2*Math.min(1,-jVec.nx)).toFixed(2));
+  if(jVec.nx>dz) a=Number((-1.2*Math.min(1,jVec.nx)).toFixed(2));
+  if(d!==0||a!==0){ jWaiting=true; jMoving=true; sendMission("chassis_move",{move_distance:d,move_angle:a});
+    clearTimeout(jWaitTo); jWaitTo=setTimeout(()=>{ jWaiting=false; }, 3000);
+    logLine("i","🕹 chassis_move d="+d+" a="+a); } },120);
+
+/* ---------- 🦾 夹爪/机械臂 ---------- */
+const ARM_MODE={home:2,grip_open:6,grip_close:7,unbox:9,grip_maint:40};
+const HC={up:()=>sendMission("robot_height_ctrl",{value:0.44}),down:()=>sendMission("robot_height_ctrl",{value:0}),headUp:()=>sendMission("robot_head_ctrl",{value:1.3}),headDown:()=>sendMission("robot_head_ctrl",{value:0})};
+document.querySelectorAll("[data-hc]").forEach(b=>b.onclick=()=>{ const f=HC[b.dataset.hc]; if(!f)return; f(); logLine("i","📐 "+b.textContent.trim()); });
+document.querySelectorAll("[data-arm]").forEach(b=>b.onclick=()=>{
+  const k=b.dataset.arm;
+  if(k==='grip_open'||k==='grip_close'){ sendGripMode(k); return; }
+  const m=ARM_MODE[k]; if(m===undefined) return;
+  sendMission("robot_arm_ctrl",{mode:m});
+  logLine("i","🦾 臂动作 "+k+" (mode="+m+") · "+b.textContent.trim());
+});
+const READY_POSE=[0.186,2.694,2.150,-0.285,-1.065,0.0];
+const CLEAR_POSE=[1.1,1.2,2.0,0,-0.8,0.0];
+function maxJointDiff(a,b){ let d=0; for(let i=0;i<6;i++) d=Math.max(d,Math.abs(+a[i]-+b[i])); return d; }
+async function waitNearPose(target, timeoutS){
+  const n=Math.max(1,Math.round(timeoutS*4));
+  for(let i=0;i<n;i++){
+    await new Promise(r=>setTimeout(r,250));
+    try{
+      const j=await fetch('http://'+location.hostname+':8796/joints',{cache:'no-store'}).then(r=>r.json());
+      if(j&&j.rad&&maxJointDiff(j.rad,target)<0.15) return true;
+    }catch(e){}
+  }
+  return false;
+}
+async function goReadyPose(src){
+  if(window.__readyBusy) return;
+  window.__readyBusy=true;
+  const base='http://'+location.hostname+':8796';
+  const post=(p,b)=>fetch(base+p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json()).catch(()=>({ok:false}));
+  try{
+    let cur=null; try{ cur=await fetch(base+'/joints',{cache:'no-store'}).then(r=>r.json()); }catch(e){}
+    if(cur&&cur.rad&&maxJointDiff(cur.rad,READY_POSE)<0.08){ logLine('i','🎯 已在抓取准备姿态'); return; }
+    logLine('i','🎯 抓取准备：检查路径'+(src?(' · '+src):''));
+    await post('/mode',{mode:{id:'slow',label:'慢速',vmax:0.8,amax:3.0,vmin:0.15,dead:0.02}});
+    let safe=null;
+    try{
+      const w=document.getElementById('arm3dF')?.contentWindow;
+      if(w&&cur&&cur.rad&&w.arm3dPreviewPose) w.arm3dPreviewPose(cur.rad,cur.lift,cur.finger);
+      if(w&&w.arm3dPathSafeTo) safe=w.arm3dPathSafeTo(READY_POSE,12);
+    }catch(e){}
+    if(safe && safe.ok && safe.col>=0.03 && safe.ground>=0.02){ logLine('i','✅ 路径安全（柱 '+(safe.col*100).toFixed(1)+'cm），直接去准备位'); }
+    else if(!cur||!cur.rad||maxJointDiff(cur.rad,CLEAR_POSE)>0.15){
+      await post('/jog',{rad:CLEAR_POSE});
+      if(!await waitNearPose(CLEAR_POSE,25)){ logLine('e','⚠ 侧摆A未到位，已中止'); return; }
+    }
+    await post('/jog',{rad:READY_POSE});
+    const ok=await waitNearPose(READY_POSE,25);
+    logLine(ok?'i':'w', ok?'✅ 已到抓取准备姿态':'⚠ 抓取准备姿态未完全到位');
+    try{ if(window.arm6SetJoints) window.arm6SetJoints(READY_POSE); if(window.arm6Push3D) window.arm6Push3D(); }catch(e){}
+  }finally{
+    setTimeout(()=>post('/mode',{mode:{id:'std',label:'标准',vmax:2.0,amax:6.0,vmin:0.15,dead:0.02}}),800);
+    window.__readyBusy=false;
+  }
+}
+$("arm6Ready").onclick=()=>goReadyPose("预设");
+$("arm6ReadySim").onclick=()=>goReadyPose("模拟图");
+$("arm6Fs").onclick=()=>{
+  const el=$("arm6Wrap");
+  if(document.fullscreenElement){ document.exitFullscreen(); return; }
+  if(el.requestFullscreen){ el.requestFullscreen().catch(()=>window.open('arm3d.html','_blank')); }
+  else { window.open('arm3d.html','_blank'); }
+};
+
+/* ---------- 🧭 自定义机械臂 (A位姿 / B宏) ---------- */
+const _f=id=>{ const v=parseFloat($(id).value); return isNaN(v)?0:v; };
+$("poseGo").onclick=()=>{
+  const item={ frame_id: $("poseFrame").value.trim()||"arm_camera_color_optical_frame",
+    position:{ x:_f("poseX"), y:_f("poseY"), z:_f("poseZ") },
+    orientation:{ x:_f("poseQx"), y:_f("poseQy"), z:_f("poseQz"), w:(isNaN(parseFloat($("poseQw").value))?1:parseFloat($("poseQw").value)) } };
+  sendMission("robot_pose_ctrl",{object_pose:[item]});
+  logLine("i","🎯 robot_pose_ctrl "+JSON.stringify(item));
+};
+let macroStop=false;
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const MACRO_ALIAS={home:"home","归位":"home",grip_open:"grip_open","夹爪开":"grip_open","开爪":"grip_open",grip_close:"grip_close","夹爪关":"grip_close","合爪":"grip_close",unbox:"unbox","开箱":"unbox",maint:"grip_maint",grip_maint:"grip_maint","维护":"grip_maint"};
+async function runMacro(){
+  macroStop=false;
+  const lines=$("macro").value.split("\n").map(s=>s.trim()).filter(Boolean);
+  logLine("i","▶ 宏开始（"+lines.length+" 步）");
+  for(const ln of lines){ if(macroStop){ logLine("w","■ 宏停止"); return; }
+    const t=ln.toLowerCase();
+    if(t.startsWith("delay")){ const s=parseFloat(t.split(/\s+/)[1])||1; await wait(s*1000); continue; }
+    const key=MACRO_ALIAS[ln]||MACRO_ALIAS[t];
+    if(key==='grip_open'||key==='grip_close'){ sendGripMode(key); logLine("i","宏: "+ln+" (/grip)"); await wait(1800); }
+    else if(key&&ARM_MODE[key]!==undefined){ sendMission("robot_arm_ctrl",{mode:ARM_MODE[key]}); logLine("i","宏: "+ln+" (mode="+ARM_MODE[key]+")"); await wait(3500); }
+    else logLine("w","宏: 未知步骤 "+ln);
+  }
+  logLine("i","✔ 宏结束");
+}
+$("macroPlay").onclick=()=>runMacro();
+$("macroStop").onclick=()=>{ macroStop=true; };
+
+/* ---------- 🦾 机械臂模拟（拖动） ---------- */
+const asCv=$("armSim"), asCx=asCv?asCv.getContext("2d"):null; if(asCv){
+const BX=110, BY=290, L1=130, L2=110, PXPM=400; let tgt={x:BX+L1, y:BY-80};
+function armIK(){ let dx=tgt.x-BX, dy=tgt.y-BY, d=Math.hypot(dx,dy); const maxR=L1+L2-2; if(d>maxR){ dx=dx/d*maxR; dy=dy/d*maxR; d=maxR; } else if(d<1e-3){ dx=1; dy=0; d=1; }
+  const a=Math.atan2(dy,dx); const cE=(L1*L1+L2*L2-d*d)/(2*L1*L2); const e=Math.acos(Math.max(-1,Math.min(1,cE))); const cS=(L1*L1+d*d-L2*L2)/(2*L1*d); const s=a-Math.acos(Math.max(-1,Math.min(1,cS)));
+  return {jx:BX+L1*Math.cos(s), jy:BY+L1*Math.sin(s), ex:BX+d*Math.cos(a), ey:BY+d*Math.sin(a)}; }
+function drawArmSim(){ asCx.clearRect(0,0,asCv.width,asCv.height);
+  asCx.strokeStyle="#243b5a";asCx.lineWidth=2;asCx.beginPath();asCx.moveTo(20,BY+8);asCx.lineTo(asCv.width-20,BY+8);asCx.stroke();
+  const k=armIK(); asCx.lineCap="round";
+  asCx.strokeStyle="#0891b2";asCx.lineWidth=12;asCx.beginPath();asCx.moveTo(BX,BY);asCx.lineTo(k.jx,k.jy);asCx.stroke();
+  asCx.strokeStyle="#38bdf8";asCx.lineWidth=10;asCx.beginPath();asCx.moveTo(k.jx,k.jy);asCx.lineTo(k.ex,k.ey);asCx.stroke();
+  asCx.fillStyle="#1e3a5f";asCx.beginPath();asCx.arc(BX,BY,11,0,7);asCx.fill();
+  asCx.fillStyle="#a78bfa";asCx.beginPath();asCx.arc(k.ex,k.ey,8,0,7);asCx.fill();
+  asCx.strokeStyle="#f59e0b";asCx.lineWidth=2;asCx.beginPath();asCx.arc(tgt.x,tgt.y,13,0,7);asCx.stroke();
+  const fx=(tgt.x-BX)/PXPM, fz=(BY-tgt.y)/PXPM;
+  $("armSimV").textContent="目标 x="+fx.toFixed(3)+"  z="+fz.toFixed(3)+" m （y="+$("armSimY").value+"）"; }
+drawArmSim();
+let asDrag=false;
+function asEvt(e){ const r=asCv.getBoundingClientRect(); return {x:(e.clientX-r.left)*(asCv.width/r.width), y:(e.clientY-r.top)*(asCv.height/r.height)}; }
+asCv.addEventListener("pointerdown",e=>{ asDrag=true; asCv.setPointerCapture&&asCv.setPointerCapture(e.pointerId); tgt=asEvt(e); drawArmSim(); });
+asCv.addEventListener("pointermove",e=>{ if(!asDrag)return; tgt=asEvt(e); drawArmSim(); });
+function asEnd(){ if(!asDrag)return; asDrag=false; sendArmPose(); }
+["pointerup","pointercancel"].forEach(ev=>asCv.addEventListener(ev,asEnd));
+$("armSimY").oninput=drawArmSim;
+function sendArmPose(){ const fx=+((tgt.x-BX)/PXPM).toFixed(3), fz=+((BY-tgt.y)/PXPM).toFixed(3), fy=parseFloat($("armSimY").value)||0;
+  const item={frame_id:"arm_camera_color_optical_frame",position:{x:fx,y:fy,z:fz},orientation:{x:0,y:0,z:0,w:1}};
+  sendMission("robot_pose_ctrl",{object_pose:[item]}); logLine("i","🦾 拖动目标 → robot_pose_ctrl "+JSON.stringify(item)); } }
+
+/* ---------- 🦾 模拟臂拖动 → 真机示教 ---------- */
+window.arm6Enabled=false;
+window.arm6MapOf=function(x,y,z){ const rp=state.pos; if(!rp) return null;
+  const BO=window.arm6BaseOffset||{x:0,y:0,z:0};
+  const c=Math.cos(rp.yaw||0), s=Math.sin(rp.yaw||0), lx=x+BO.x, ly=y+BO.y, lz=z+BO.z;
+  return { x:rp.x+lx*c-ly*s, y:rp.y+lx*s+ly*c, z:lz }; };
+/* 按方位校正表：给定"目标方位(度)"，反解"指令方位(度)"——分段线性插值 */
+function arm6CalBearing(bInt){
+  const L=window.arm6Learn||{}; const s=L.calib&&L.calib.samples;
+  if(!s||!s.length) return bInt;
+  const pts=s.map(function(o){return {f:o.bearing+o.err, b:o.bearing};}).sort(function(a,b){return a.f-b.f;});
+  if(bInt<=pts[0].f) return pts[0].b;
+  const last=pts[pts.length-1]; if(bInt>=last.f) return last.b;
+  for(let i=0;i<pts.length-1;i++){ if(bInt>=pts[i].f && bInt<=pts[i+1].f){ const d=pts[i+1].f-pts[i].f; const t=d?((bInt-pts[i].f)/d):0; return pts[i].b + t*(pts[i+1].b-pts[i].b); } }
+  return bInt;
+}
+window.arm6CalBearing=arm6CalBearing;
+function arm6MapMsg(){
+  const p=window.__a6force || (window.arm6GetPose?window.arm6GetPose():null); if(!p) return null;
+  /* 模拟臂末端(相对臂基座, 前x/左y/上z) → map 系
+     ⭐ 物理模型：若设了臂基座安装偏移(ARM_BASE 非零) → 末端相对底盘 = 偏移 + 末端，
+        不再做经验方位校正(停用方位表)。偏移全 0 时回退旧行为(方位校正表/trim)。 */
+  const BO=window.arm6BaseOffset||{x:0,y:0,z:0};
+  const phys=(BO.x||BO.y||BO.z);
+  let lx=p.x, ly=p.y, lz=p.z;      // 臂基座局部
+  let guarded=false;
+  const L=window.arm6Learn||{};
+  if(!phys){
+    /* 旧路：自适应方向校正（优先 offset+scale，回退常数 trim） */
+    if(L.calib && L.calib.samples && L.calib.samples.length){
+      const r=Math.sqrt(lx*lx+ly*ly), b=Math.atan2(ly,lx)*180/Math.PI;
+      const bc=arm6CalBearing(b)*Math.PI/180;
+      lx=r*Math.cos(bc); ly=r*Math.sin(bc);
+    } else if(L.calib && typeof L.calib.offsetDeg==="number"){
+      const r=Math.sqrt(lx*lx+ly*ly), b=Math.atan2(ly,lx);
+      const bc=(b - L.calib.offsetDeg*Math.PI/180)/(1+(L.calib.slope||0));
+      lx=r*Math.cos(bc); ly=r*Math.sin(bc);
+    } else if(L.trimDeg){ const t=L.trimDeg*Math.PI/180; const bx=lx*Math.cos(t)-ly*Math.sin(t), by=lx*Math.sin(t)+ly*Math.cos(t); lx=bx; ly=by; }
+    if(window.arm6Limit && window.arm6SafeClamp){ const s=window.arm6SafeClamp({x:lx,y:ly,z:lz}); lx=s.x; ly=s.y; lz=s.z; guarded=!!s.clamped; }
+  } else {
+    /* 物理路：先在臂基座局部过安全区，再加安装偏移 → 末端相对底盘 */
+    if(window.arm6Limit && window.arm6SafeClamp){ const s=window.arm6SafeClamp({x:lx,y:ly,z:lz}); lx=s.x; ly=s.y; lz=s.z; guarded=!!s.clamped; }
+    lx+=BO.x; ly+=BO.y; lz+=BO.z;
+  }
+  const rp=state.pos; let mx=lx, my=ly, mz=lz, src="(无机器人位姿:直接用)";
+  if(rp){ const c=Math.cos(rp.yaw||0), s=Math.sin(rp.yaw||0);
+    mx=rp.x+lx*c-ly*s; my=rp.y+lx*s+ly*c;
+    src="robot("+rp.x.toFixed(2)+","+rp.y.toFixed(2)+",yaw"+(rp.yaw||0).toFixed(2)+")"; }
+  return { msg:{ frame_id:"map", position:{x:+mx.toFixed(3),y:+my.toFixed(3),z:+mz.toFixed(3)},
+                 orientation:{x:0,y:0,z:0,w:1}, box_length:{x:0.02,y:0.02,z:0.005} },
+           guarded:guarded, phys:!!phys,
+           dbg:(phys?"[物理偏移 前"+BO.x.toFixed(2)+" 左"+BO.y.toFixed(2)+" 上"+BO.z.toFixed(2)+"] ":"[方位表] ")+"local("+lx.toFixed(2)+","+ly.toFixed(2)+","+lz.toFixed(2)+")"+(guarded?"[限安全区]":"")+" → map("+mx.toFixed(2)+","+my.toFixed(2)+","+mz.toFixed(2)+") "+src };
+}
+window.arm6SendPose=function(){
+  if(!window.arm6Enabled){ logLine("w","🦾 真机联动未启用——勾选『拖动即控制真机』后才会下发"); return; }
+  const w=state.work; if(w && w.name){ logLine("w","🦾 机械臂忙("+w.name+")，本次忽略"); return; }
+  const m=arm6MapMsg(); if(!m){ logLine("e","🦾 取不到模拟臂末端位姿"); return; }
+  if(m.guarded) logLine("w","🛡 目标超出安全区，已限制在禁入区外（防挤压自身外壳/屏幕）");
+  sendMission("hand_observe", m.msg);
+  logLine("i","🦾 拖动示教 → hand_observe "+m.dbg);
+};
+window.arm6SendLocal=function(lx,ly,lz){ window.__a6force={x:lx,y:ly,z:lz}; try{ window.arm6SendPose(); } finally { window.__a6force=null; } };
+/* 调试：只算不发（不动机器人）。返回 {msg,dbg,phys} */
+window.arm6MapDbg=function(lx,ly,lz){ window.__a6force={x:lx,y:ly,z:lz}; try{ return arm6MapMsg(); } finally { window.__a6force=null; } };
+/* 底盘拖动 → 真机 chassis_move（步长/限速：单步 ≤0.15m / ≤0.4rad；忙则跳过） */
+window.arm6SendChassis=function(d,a){
+  if(!window.arm6Enabled) return false;                       // 未启用 → 仅模拟，不真发
+  const w=state.work; if(w && w.name) return false;           // 机器人忙(单任务) → 跳过
+  if(window.arm6Limit===true){                                // 仅“安全限制”开时才限幅
+    d=Math.max(-0.15,Math.min(0.15, d)); a=Math.max(-0.4,Math.min(0.4, a));
+    if(Math.abs(d)<0.02 && Math.abs(a)<0.02) return false;
+  }
+  sendMission("chassis_move",{move_distance:+d.toFixed(3), move_angle:+a.toFixed(3)});
+  logLine("i","🦿 底盘 → chassis_move d="+d.toFixed(2)+" a="+a.toFixed(2));
+  return true;
+};
+
+/* ---------- 🔁 一键序列 ---------- */
+let seqWait=null, seqDone=null, seqRunning=false;
+const SEQ_STEPS=[
+  {name:"chassis_move", data:{move_distance:-0.5, move_angle:0},        label:"后退0.5米"},
+  {name:"chassis_move", data:{move_distance:0,    move_angle:0.5236},   label:"左转30度"},
+  {name:"chassis_move", data:{move_distance:0.3,  move_angle:0},        label:"前进0.3米"},
+  {name:"robot_height_ctrl", data:{value:0},                            label:"降到最低"},
+  {name:"robot_arm_ctrl", data:{mode:2},                                label:"臂归位"},
+  {name:"recharge", data:{},                                            label:"回去充电"},
+];
+async function runSequence(steps){
+  if(seqRunning){ logLine("w","序列进行中"); return; } seqRunning=true;
+  for(let i=0;i<steps.length;i++){ const s=steps[i];
+    const tid="seq-"+Date.now()+"-"+i;
+    $("seqLog").textContent="["+(i+1)+"/"+steps.length+"] "+s.label;
+    await new Promise(res=>{
+      let done=false; const to=setTimeout(()=>{ if(!done){done=true;seqWait=null;seqDone=null;res();} }, 30000);
+      seqWait=tid; seqDone=()=>{ if(!done){ done=true; clearTimeout(to); seqWait=null; seqDone=null; res(); } };
+      state.ws.send(JSON.stringify({header:{mode:"mission",type:"request",cmd:"start",ts:Math.floor(Date.now()/1000),uuid:tid,host:""},body:{name:s.name,task_id:tid,data:s.data}}));
+      logLine("i","序列 ["+(i+1)+"/"+steps.length+"] "+s.label);
+    });
+  }
+  seqRunning=false; $("seqLog").textContent="✔ 序列完成"; logLine("i","✔ 序列完成");
+}
+$("seqRun").onclick=()=>runSequence(SEQ_STEPS);
+/* 🔋 回去充电 */
+if($("rechargeBtn")) $("rechargeBtn").onclick=()=>{ if(!confirm("让机器人回去充电？")) return; sendMission("recharge",{}); logLine("i","🔋 回去充电 (recharge)"); };
+
+/* ---------- 🔊 语音播报 ---------- */
+function robotSay(text){
+  const ws=state.ws; if(!ws||ws.readyState!==1){ logLine("e","WS 未连接"); return; }
+  ws.send(JSON.stringify({header:{mode:"app",type:"request",cmd:"start",ts:Math.floor(Date.now()/1000),uuid:uuid(),host:""},body:{name:"speech",task_id:"viz-speech-"+Date.now(),data:{text:text,code:0}}}));
+  logLine("i","🔊 播报: "+text);
+}
+$("sayBtn").onclick=()=>{ const t=$("sayText").value.trim(); if(t){ robotSay(t); $("sayText").value=""; } };
+$("sayText").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); $("sayBtn").click(); } });
+
+/* ---------- clock ---------- */
+setInterval(()=>{ const d=new Date(); $("clockPill").textContent="🕒 "+d.toLocaleTimeString("zh-CN",{hour12:false}); },1000);
+
+/* ---------- 标签页 ---------- */
+function showView(v){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===v));
+  $("view-dash").hidden = v!=="dash";
+  $("view-console").hidden = v!=="console";
+  $("view-app").hidden = v!=="app";
+  const id = v==="console"?"ifConsole":(v==="app"?"ifApp":null);
+  if(id){ const f=$(id); if(f && !f.dataset.loaded){ f.src=f.dataset.src; f.dataset.loaded="1"; } }
+  $("openExt").href = v==="app" ? "http://192.168.1.100:30023/#/machineHome/settings" : "http://192.168.1.100:17890/";
+}
+const _urlv = new URLSearchParams(location.search).get("v");
+if(_urlv === "console" || _urlv === "app") showView(_urlv);
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>showView(t.dataset.view));
+
+/* ---------- init ---------- */
+/* 🧩 臂基座安装偏移：先把本地存的传给 arm6.js(它在下一个 script 载入时读取) */
+try{ var _lb=JSON.parse(localStorage.getItem("a6base2")||"null"); if(_lb) window.__a6baseInit={x:+_lb.x||0,y:+_lb.y||0,z:+_lb.z||0}; }catch(e){}
+logLine("i","初始化 · 目标 "+ROBOT_WS);
+connect(); connectDriver(); drawMap();
+/* 🦾 真机联动开关 */
+try{
+  const _r=$("arm6Real"); if(_r) _r.onchange=()=>{ window.arm6Enabled=_r.checked; const s=$("arm6RealSt"); if(s) s.textContent="真机联动："+(_r.checked?"开 ⚠":"关"); logLine(_r.checked?"w":"i","🦾 真机联动 "+(_r.checked?"已启用（拖动将真实驱动机械臂）":"已关闭")); };
+  const _sb=$("arm6Send"); if(_sb) _sb.onclick=()=>window.arm6SendPose();
+  const _sp=$("arm6Stop"); if(_sp) _sp.onclick=()=>{ window.__a6recalStop=true; sendMission("stop_all",{}); logLine("w","⛔ 已发 stop_all"); };
+  const _rot=$("arm6Rot"); if(_rot){ window.arm6AutoRot=_rot.checked; _rot.onchange=()=>{ window.arm6AutoRot=_rot.checked; }; }
+  const _lim=$("arm6Limit"); if(_lim){ window.arm6Limit=_lim.checked; _lim.onchange=()=>{ window.arm6Limit=_lim.checked; logLine("i","🛡 安全限制 "+(window.arm6Limit?"开（安全区/可达/步长生效）":"关（不限）")); }; }
+  const _fl=$("arm6Follow"); if(_fl){ window.arm6Follow=_fl.checked; _fl.onchange=()=>{ window.arm6Follow=_fl.checked; logLine("i","📍 底盘/臂基座 "+(window.arm6Follow?"跟随真机定位":"自由模拟（可拖动底盘）")); if(window.arm6Redraw) window.arm6Redraw(); }; }
+  /* B: 设置持久化 */
+  function _a6save(){ try{ localStorage.setItem("a6ui", JSON.stringify({real:!!window.arm6Enabled,limit:!!window.arm6Limit,rot:!!window.arm6AutoRot,follow:!!window.arm6Follow})); }catch(e){} }
+  try{ var _ls=JSON.parse(localStorage.getItem("a6ui")||"{}");
+    if(_ls.real!=null){ const r=$("arm6Real"); if(r){ r.checked=!!_ls.real; } window.arm6Enabled=!!_ls.real; const st=$("arm6RealSt"); if(st) st.textContent="真机联动："+(_ls.real?"开 ⚠":"关"); }
+    if(_ls.limit!=null){ const l=$("arm6Limit"); if(l) l.checked=!!_ls.limit; window.arm6Limit=!!_ls.limit; }
+    if(_ls.rot!=null){ const rr=$("arm6Rot"); if(rr) rr.checked=!!_ls.rot; window.arm6AutoRot=!!_ls.rot; }
+    if(_ls.follow!=null){ const fl=$("arm6Follow"); if(fl) fl.checked=!!_ls.follow; window.arm6Follow=!!_ls.follow; }
+  }catch(e){}
+  ["arm6Real","arm6Limit","arm6Rot","arm6Follow"].forEach(id=>{ const el=$(id); if(el) el.addEventListener("change",_a6save); });
+  /* A: 导出当前姿态 JSON */
+  if($("arm6Exp")) $("arm6Exp").onclick=()=>{ try{ var j=JSON.stringify(window.arm6Snapshot(),null,1); if(navigator.clipboard){ navigator.clipboard.writeText(j).then(()=>logLine("i","💾 姿态JSON 已复制到剪贴板")).catch(()=>prompt("复制以下 JSON：",j)); } else prompt("复制以下 JSON：",j); }catch(e){ logLine("e","导出失败 "+e); } };
+  /* D: 一键重标定（浏览器内扫方位，量朝向，写表+本地） */
+  window.__a6recalStop=false;
+  window.arm6Recalib=async function(){
+    if(!window.arm6Enabled){ alert("先勾选『拖动即控制真机』"); return; }
+    if(!confirm("一键重标定：机器人会依次转向 15 个方位（约 7 分钟，底盘会转/挪）。确定？")) return;
+    window.__a6recalStop=false;
+    const dirs=[-70,-60,-50,-40,-30,-20,-10,0,10,20,30,40,50,60,70];
+    const wrap=a=>((a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;
+    const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+    const samples=[]; logLine("i","🔄 重标定开始…（点⛔可中止）");
+    for(let k=0;k<dirs.length;k++){ if(window.__a6recalStop){ logLine("w","🔄 已中止"); break; }
+      const b=dirs[k]; let g=0; while(state.work&&state.work.name&&g++<120){ await sleep(500); }
+      if(!state.pos){ logLine("w","无位姿,跳过"); continue; }
+      const sy=state.pos.yaw||0, rad=b*Math.PI/180, lx=0.45*Math.cos(rad), ly=0.45*Math.sin(rad), c=Math.cos(sy), s=Math.sin(sy);
+      const mx=state.pos.x+lx*c-ly*s, my=state.pos.y+lx*s+ly*c, intended=wrap(sy+rad), tid="recal-"+Date.now();
+      try{ state.ws.send(JSON.stringify({header:{mode:"mission",type:"request",cmd:"start",ts:Math.floor(Date.now()/1000),uuid:tid,host:""},body:{name:"hand_observe",task_id:tid,data:{frame_id:"map",position:{x:+mx.toFixed(3),y:+my.toFixed(3),z:0.45},orientation:{x:0,y:0,z:0,w:1},box_length:{x:0.02,y:0.02,z:0.005}}}})); }catch(e){ logLine("e","发送失败 "+e); break; }
+      let waited=0; while(waited++<100){ await sleep(500); if(!state.work||!state.work.name) break; }
+      const fy=state.pos.yaw||0, err=wrap(fy-intended)*180/Math.PI;
+      samples.push({bearing:b, err:+err.toFixed(1)});
+      logLine("i","🔄 "+b+"° → 偏差 "+err.toFixed(1)+"°");
+    }
+    if(samples.length){ const me=samples.reduce((a,x)=>a+x.err,0)/samples.length; const cal={meanErrDeg:+me.toFixed(1), samples:samples};
+      if(window.arm6Learn){ window.arm6Learn.calib=cal; } try{ localStorage.setItem("a6calib", JSON.stringify(cal)); }catch(e){}
+      if(window.arm6Redraw) window.arm6Redraw(); logLine("i","🔄 重标定完成："+samples.length+" 点，均值偏差 "+me.toFixed(1)+"°（已存本地）"); }
+  };
+  if($("arm6Recal")) $("arm6Recal").onclick=()=>window.arm6Recalib();
+  const _tr=$("a6Trim"); if(_tr) _tr.oninput=()=>{ if(window.arm6Learn) window.arm6Learn.trimDeg=parseFloat(_tr.value)||0; const v=$("a6TrimV"); if(v) v.textContent=_tr.value+"°"; if(window.arm6Redraw) window.arm6Redraw(); };
+  /* 🧩 臂基座安装偏移(前/左/上 m)：对齐物理定位 */
+  (function(){
+    var bx=$("a6bx"),by=$("a6by"),bz=$("a6bz");
+    function apply(){ if(!window.arm6SetBaseOffset||!bx) return;
+      var o=window.arm6SetBaseOffset({x:parseFloat(bx.value)||0,y:parseFloat(by.value)||0,z:parseFloat(bz.value)||0});
+      try{ localStorage.setItem("a6base2", JSON.stringify(o)); }catch(e){}
+      logLine("i","🧩 臂基座偏移 前"+o.x.toFixed(2)+" 左"+o.y.toFixed(2)+" 上"+o.z.toFixed(2)+" m"); }
+    [bx,by,bz].forEach(function(el){ if(el) el.addEventListener("change",apply); });
+    if($("a6boZero")) $("a6boZero").onclick=function(){ if(bx)bx.value=0; if(by)by.value=0; if(bz)bz.value=0; apply(); };
+    if($("a6boFlip")) $("a6boFlip").onclick=function(){ if(by){ by.value = String(-(parseFloat(by.value)||0)); } apply(); };
+    var yw=$("a6yaw");
+    if(yw){
+      yw.oninput=function(){ var v=parseFloat(yw.value)||0; if(window.arm6SetArmYaw) window.arm6SetArmYaw(v); logLine("i","🧭 臂朝向校正 "+v+"°"); };
+      try{ var sv=localStorage.getItem("a6armyaw"); if(sv!=null){ yw.value=sv; if(window.arm6SetArmYaw) window.arm6SetArmYaw(parseFloat(sv)||0); } }catch(e){}
+    }
+    function sync(){ if(!window.arm6GetBaseOffset||!bx) return; var o=window.arm6GetBaseOffset(); bx.value=o.x; by.value=o.y; bz.value=o.z; }
+    window.addEventListener("load", sync); if(document.readyState==="complete") sync();
+  })();
+  /* 🤏 夹爪开合 */
+  (function(){
+    var g=$("arm6Grip"); if(!g) return;
+    function set(real){ var v=parseInt(g.value,10)||0; if(window.arm6SetGrip) window.arm6SetGrip(v/100); if(real) sendGripReal((v/100)*0.69); var e=$("arm6GripV"); if(e) e.textContent=v+"%"; try{ localStorage.setItem("a6grip",String(v/100)); }catch(e2){} }
+    g.oninput=function(){ set(true); };
+    function init(){ var gv=window.arm6GetGrip?window.arm6GetGrip():0.55; g.value=Math.round(gv*100); var e=$("arm6GripV"); if(e)e.textContent=g.value+"%"; set(false); }
+    window.addEventListener("load",init); if(document.readyState==="complete") init();
+  })();
+  /* 🧊 真机3D(网格) 入口 */
+  (function(){ var b=$("arm6Mesh"); if(b) b.onclick=function(){ window.open("arm3d.html?t="+Date.now(),"_blank"); }; })();
+  /* 💃 舞蹈编辑器入口 */
+  (function(){ var b=$("arm6Dance"); if(b) b.onclick=function(){ window.open("dance_editor.html","_blank"); }; })();
+  /* 🌊 波浪模式 一键开关（与 arm3d 模式系统同步；走 :8796/mode 下发） */
+  (function(){
+    var b=$("arm6Wave"); if(!b) return;
+    var WAVE={id:"wave",label:"波浪",vmax:2.0,amax:6.0,vmin:0.15,dead:0.02,dance:1,wave:1,damp:0.7,dperiod:7.0};
+    var STD={id:"std",label:"标准",vmax:2.0,amax:6.0,vmin:0.15,dead:0.02};
+    function ifWin(){ try{ var f=document.getElementById("arm3dF"); return (f&&f.contentWindow)||null; }catch(e){ return null; } }
+    function cur(){ try{ var m=localStorage.getItem("a3dmode"); if(m) return m; }catch(e){}
+      try{ var w=ifWin(); if(w&&w.a3dGetMode) return w.a3dGetMode(); }catch(e){ return "std"; } return "std"; }
+    function paint(on){ b.textContent=on?"🌊 波浪 ✓ 开":"🌊 波浪"; b.style.background=on?"#0891b2":""; b.style.color=on?"#fff":"#0891b2"; b.style.borderColor="#0891b2"; }
+    b.onclick=function(){
+      var next=(cur()==="wave")?"std":"wave";
+      var w=ifWin(), viaFrame=false;
+      if(w&&w.a3dApplyMode){ try{ w.a3dApplyMode(next); viaFrame=true; }catch(e){} }
+      if(!viaFrame){ var m=(next==="wave")?WAVE:STD;
+        try{ localStorage.setItem("a3dmode",next); }catch(e){}
+        try{ fetch("http://"+location.hostname+":8796/mode",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:m})}); }catch(e){}
+      }
+      paint(next==="wave");
+      logLine("i", next==="wave"?"🌊 波浪模式 已开（再点一下 = 关）":"🌊 波浪模式 已关 → 标准");
+    };
+    setInterval(function(){ paint(cur()==="wave"); },1500);
+    paint(cur()==="wave");
+  })();
+  /* 🚶 行走对齐 (v27)：模拟底盘(arm6 BASE) → 真机3D网格(arm3d) ；随『📍跟随真机定位』联动 */
+  (function(){
+    var last="";
+    setInterval(function(){
+      try{
+        var f=document.getElementById("arm3dF"); if(!f) return; var w=f.contentWindow; if(!w||!w.arm3dSetBase) return;
+        if(!window.arm6Follow) { last=""; return; }              // 自由模拟时不覆盖手动行走
+        if(typeof window.arm6Base!=="function") return; var b=window.arm6Base(); if(!b) return;
+        var key=(+b.x).toFixed(3)+","+(+b.y).toFixed(3)+","+(+b.yaw).toFixed(3);
+        if(key===last) return; last=key;
+        w.arm3dSetBase({x:b.x,y:b.y,yaw:b.yaw});
+      }catch(e){}
+    },400);
+  })();
+  /* 🕹 arm3d 网格视图 → 真机指令（行走/升降/停机）；同源 iframe 调用 */
+  window.arm3dCmd=function(name,data){
+    try{
+      if(!name) return false;
+      if(state && state.work && state.work.name && name!=="stop_all"){ logLine("w","🤖 机器人忙("+state.work.name+")，arm3d 指令忽略"); return false; }
+      var ok=sendMission(name, data||{});
+      if(ok) logLine("i","🕹 arm3d → "+name+" "+JSON.stringify(data||{}));
+      return !!ok;
+    }catch(e){ return false; }
+  };
+  window.arm3dRoboSt=function(){ try{ return { busy:!!(state.work&&state.work.name), ws:!!(state.ws&&state.ws.readyState===1) }; }catch(e){ return {busy:false,ws:false}; } };
+  /* 🛗 立柱升降（第7自由度） */
+  (function(){
+    var lf=$("arm6Lift"); if(!lf) return;
+    function set(real){ var cm=parseInt(lf.value,10)||0; if(window.arm6SetLift) window.arm6SetLift(cm/100); if(real) sendLiftReal(cm/100); var v=$("arm6LiftV"); if(v) v.textContent=cm+" cm"; try{ localStorage.setItem("a6lift",String(cm)); }catch(e){} }
+    lf.oninput=function(){ set(true); };
+    function init(){ try{ var lv=localStorage.getItem("a6lift"); if(lv!=null) lf.value=lv; }catch(e){} set(false); }
+    window.addEventListener("load", init); if(document.readyState==="complete") init();
+  })();
+  /* 📐 关节参数表 */
+  (function(){
+    function init(){ var box=$("arm6Params"); if(box && window.arm6ParamsHTML) box.innerHTML=window.arm6ParamsHTML(); }
+    window.addEventListener("load", init); if(document.readyState==="complete") init();
+  })();
+  /* 🛗 立柱高度尺(竖直拖动) + ✅ 确定执行 / ⛔ 停止 */
+  (function(){
+    var box=$("arm6Ruler"), kb=$("arm6RulerKnob"), fill=$("arm6RulerFill"), lbl=$("arm6RulerLbl");
+    function render(cm){ cm=(cm==null)?(window.arm6GetLift?Math.round(window.arm6GetLift()*100):0):cm; var t=Math.max(0,Math.min(1,cm/44)); if(fill)fill.style.height=(t*100)+"%"; if(kb)kb.style.bottom=(t*100)+"%"; if(lbl)lbl.textContent="立柱 "+cm+"cm"; }
+    function setFromY(cy){ if(!box||window.arm6Locked)return; var r=box.getBoundingClientRect(); var t=1-(cy-r.top)/r.height; t=Math.max(0,Math.min(1,t)); var cm=Math.round(t*44);
+      if(window.arm6SetLift) window.arm6SetLift(cm/100);
+      var lf=$("arm6Lift"); if(lf){ lf.value=cm; var v=$("arm6LiftV"); if(v)v.textContent=cm+" cm"; }
+      try{ localStorage.setItem("a6lift",String(cm)); }catch(e){} sendLiftReal(cm/100); render(cm); }
+    if(box){ var dragging=false;
+      box.addEventListener("pointerdown",function(e){ dragging=true; if(box.setPointerCapture)box.setPointerCapture(e.pointerId); setFromY(e.clientY); e.preventDefault(); });
+      box.addEventListener("pointermove",function(e){ if(dragging) setFromY(e.clientY); });
+      ["pointerup","pointercancel"].forEach(function(ev){ box.addEventListener(ev,function(){ dragging=false; }); });
+    }
+    function init(){ var cm=0; try{ var s=localStorage.getItem("a6lift"); if(s!=null) cm=parseInt(s,10)||0; }catch(e){} render(cm); }
+    window.addEventListener("load",init); if(document.readyState==="complete") init();
+    window.arm6RulerSync=render;
+    var _execSeq = 0;
+    function setLock(v){ window.arm6Locked = !!v; }
+    function runProgress(targetDeg, liftTarget){
+      var seq = ++_execSeq;
+      var st=$("arm6Prog"), bar=$("arm6ProgBar"), txt=$("arm6ProgTxt"), lbar=$("arm6ProgLiftBar"), ltxt=$("arm6ProgLiftTxt");
+      if(st) st.style.display=""; if(bar) bar.style.width="0%"; if(lbar) lbar.style.width="0%"; if(txt) txt.textContent="执行 0%";
+      var t0=Date.now(), start=null, lift0=null;
+      (function upd(){
+        if(seq!==_execSeq) return;
+        fetch("http://"+location.hostname+":8796/joints",{cache:"no-store"}).then(function(r){return r.json();}).then(function(j){
+          if(seq!==_execSeq) return;
+          if(!j||!j.deg){ if(txt)txt.textContent="等真机…"; setTimeout(upd,400); return; }
+          var now=j.deg; if(!start) start=now.slice();
+          var den=0,num=0,maxd=0;
+          for(var i=0;i<6;i++){ den+=Math.abs(start[i]-targetDeg[i]); num+=Math.abs(now[i]-targetDeg[i]); maxd=Math.max(maxd,Math.abs(now[i]-targetDeg[i])); }
+          var pct = den>0 ? Math.max(0,Math.min(1,1-num/den)) : 1;
+          var armDone = (maxd<=2.5); if(armDone) pct=1;
+          var lp=1, lDone=true;
+          if(liftTarget!=null && j.lift!=null){
+            if(lift0==null) lift0=j.lift;
+            var lden=Math.abs(lift0-liftTarget), lnum=Math.abs(j.lift-liftTarget);
+            lp = lden>0.005 ? Math.max(0,Math.min(1,1-lnum/lden)) : 1;
+            lDone = (lnum<=0.01); if(lDone) lp=1;
+          }
+          if(lbar) lbar.style.width=(lp*100)+"%"; if(ltxt) ltxt.textContent=Math.round(lp*100)+"%";
+          var done = armDone && lDone;
+          if(txt) txt.textContent=(done?"✅ 完成 100%":"执行 "+Math.round(pct*100)+"%");
+          if(bar) bar.style.width=(pct*100)+"%";
+          if(done || Date.now()-t0>25000){ setLock(false); setTimeout(function(){ if(seq===_execSeq && st) st.style.display="none"; },1600); return; }
+          setTimeout(upd,350);
+        }).catch(function(){ if(seq!==_execSeq) return; setLock(false); if(txt)txt.textContent="桥未连(:8796?)"; setTimeout(function(){ if(seq===_execSeq&&st) st.style.display="none"; },1600); });
+      })();
+    }
+    var sy=$("arm6Sync");
+    if(sy) sy.onclick=function(){
+      var old="🔄 机械臂同步"; sy.textContent="⏳ 同步中…"; sy.disabled=true;
+      function done(t){ sy.textContent=t; sy.disabled=false; setTimeout(function(){ sy.textContent=old; },1800); }
+      fetch("http://"+location.hostname+":8796/joints",{cache:"no-store"}).then(function(r){return r.json();}).then(function(j){
+        if(!j||!j.rad){ logLine("e","同步失败：读不到真机关节(:8796)"); done("❌ 同步失败"); return; }
+        if(window.arm6SetJoints) window.arm6SetJoints(j.rad);
+        if(j.lift!=null && window.arm6SetLift) window.arm6SetLift(j.lift);
+        logLine("i","🔄 已同步真机：关节 ["+j.deg.map(function(x){return x.toFixed(0);}).join(",")+"]°  立柱 "+(j.lift!=null?(j.lift*100).toFixed(0)+"cm":"?"));
+        done("✅ 已同步");
+      }).catch(function(){ logLine("e","同步失败：桥未连(:8796?)"); done("❌ 桥未连"); });
+    };
+    var ex=$("arm6Exec");
+    if(ex) ex.onclick=function(){
+      var rad=null, lift=window.arm6GetLift?window.arm6GetLift():0, deg=null;
+      try { var f=document.getElementById("arm3dF"), w=f&&f.contentWindow; if(w&&w.arm3dGetJoints){ rad=w.arm3dGetJoints().slice(0,6); } } catch(e){}
+      if(!rad){ var pose=window.arm6GetPose?window.arm6GetPose():null; if(!pose){ logLine("e","读不到姿态"); return; } rad=pose.joints.map(function(d){return d*Math.PI/180;}); }
+      deg=rad.map(function(r){return Math.round(r*180/Math.PI);});
+      var _z=0; for(var _zi=0;_zi<6;_zi++) _z+=Math.abs(rad[_zi]);
+      if(_z<1e-6){ logLine("w","⚠ 目标为全 0（页面未同步姿态）→ 已拦截；先拖动/同步目标再执行"); return; }
+      setLock(true);
+      logLine("i","▶ 执行：关节 ["+deg.join(",")+"]°  立柱 "+(lift*100).toFixed(0)+"cm（执行中已锁定操作）");
+      runProgress(deg.slice(), lift);
+      fetch("http://"+location.hostname+":8796/set",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({rad:rad})})
+        .then(function(r){return r.json();}).then(function(j){ logLine(j&&j.ok?"i":"e","✅ 关节下发"+(j&&j.ok?"成功":"失败 "+(j&&j.err||""))); })
+        .catch(function(){ logLine("e","❌ 关节下发失败（:8796 桥?）"); });
+      sendMission("robot_height_ctrl",{value:lift}); logLine("i","✅ 立柱 → "+(lift*100).toFixed(0)+" cm");
+    };
+    var hl=$("arm6Halt");
+    if(hl) hl.onclick=function(){ _execSeq++; setLock(false); var st=$("arm6Prog"); if(st) st.style.display="none"; sendMission("stop_all",{}); logLine("w","⛔ 停止 (stop_all)"); };
+  })();
+  /* 🏷 电机标注 (J1–J6) */
+  (function(){
+    var lb=$("arm6Labels"); if(!lb) return;
+    function apply(){ if(window.arm6MotorLabels) window.arm6MotorLabels(lb.checked); try{ localStorage.setItem("a6labels", lb.checked?"1":"0"); }catch(e){} }
+    lb.onchange=apply;
+    function init(){ try{ var v=localStorage.getItem("a6labels"); if(v!=null) lb.checked=(v!=="0"); }catch(e){} apply(); }
+    window.addEventListener("load", init); if(document.readyState==="complete") init();
+  })();
+  (function(){ var b=$("arm6FitBtn"); if(b) b.onclick=function(){ if(window.arm6Fit) window.arm6Fit(); }; })();
+  /* 🦾 拖动关节 → 真机 (JTC via joints_bridge :8796/set) */
+  (function(){
+    var cb=$("arm6RealJoint"); if(!cb) return;
+    var pending=null, last=0, timer=null;
+    function fire(){ if(!pending) return; var rad=pending; pending=null; last=Date.now();
+      fetch("http://"+location.hostname+":8796/set",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({rad:rad})})
+        .then(function(r){return r.json();}).then(function(j){ var st=$("a6JiSt"); if(st) st.textContent=j.ok?("✅ 已下发真机 JTC "+rad.map(function(x){return x.toFixed(2);}).join(",")):("❌ 下发失败 "+(j.err||"")); })
+        .catch(function(){ var st=$("a6JiSt"); if(st) st.textContent="❌ 下发失败(:8796?)"; });
+    }
+    window.arm6SendJoints=function(rad){ pending=rad; var now=Date.now(); if(now-last>800 && !timer){ fire(); } else if(!timer){ timer=setTimeout(function(){ timer=null; fire(); }, 800); } };
+    function apply(){ window.arm6RealJoint=cb.checked; try{localStorage.setItem("a6realjoint", cb.checked?"1":"0");}catch(e){}
+      if(cb.checked){ var m=$("arm6FollowJoints"); if(m&&m.checked){ m.checked=false; m.dispatchEvent(new Event("change")); } }
+      var st=$("a6JiSt"); if(st){ st.style.display=cb.checked?"":"none"; if(cb.checked) st.textContent="真机联动(JTC) 开：拖关节即下发（臂会真动！）"; } }
+    cb.onchange=apply;
+    function init(){ try{ if(localStorage.getItem("a6realjoint")==="1") cb.checked=true; }catch(e){} apply(); }
+    if(document.readyState==="complete") init(); else window.addEventListener("load", init);
+  })();
+  /* 🔗 跟随真机关节：轮询 joints_bridge(:8796) */
+  (function(){
+    var cb=$("arm6FollowJoints"); if(!cb) return; var timer=null;
+    function tick(){ if(!window.arm6SetJoints) return;
+      fetch("http://"+location.hostname+":8796/joints",{cache:"no-store"}).then(function(r){return r.json();}).then(function(j){
+        if(j && j.rad && j.age!=null && j.age<3){ window.arm6SetJoints(j.rad); var st=$("a6JiSt"); if(st) st.textContent="真机关节 · "+j.deg.map(function(x){return x.toFixed(0);}).join(","); }
+        else { var st=$("a6JiSt"); if(st) st.textContent="等真机关节("+(j&&j.status||"?")+")"; }
+      }).catch(function(){ var st=$("a6JiSt"); if(st) st.textContent="桥未连(:8796?"; });
+    }
+    function apply(){ if(cb.checked){ var r=$("arm6RealJoint"); if(r&&r.checked){ r.checked=false; r.dispatchEvent(new Event("change")); } if(!timer) timer=setInterval(tick,700); var st=$("a6JiSt"); if(st) st.style.display=""; tick(); } else { if(timer){clearInterval(timer);timer=null;} var st=$("a6JiSt"); if(st){st.textContent=""; st.style.display="none";} } try{ localStorage.setItem("a6followJoints", cb.checked?"1":"0"); }catch(e){} }
+    cb.onchange=apply;
+    function init(){ try{ if(localStorage.getItem("a6followJoints")==="1") cb.checked=true; }catch(e){} apply(); }
+    if(document.readyState==="complete") init(); else window.addEventListener("load", init);
+  })();
+  /* 🎯 指向示教按钮 */
+  window.arm6Ptr={b:0,d:0.55,z:0.45};
+  var _nmH={0.25:"低",0.45:"中",0.72:"高"}, _nmD={0.35:"近",0.55:"中",0.75:"远"}, _nmB={'-90':'右','-45':'右前','0':'正前','45':'左前','90':'左'};
+  var _ptrUpd=function(){ var p=window.arm6Ptr, el=$("arm6PtrSt"); if(el) el.textContent="高:"+(_nmH[p.z]||p.z)+" 距:"+(_nmD[p.d]||p.d)+" 方位:"+(_nmB[String(p.b)]||p.b); };
+  document.querySelectorAll("[data-ph]").forEach(b=>b.onclick=()=>{ window.arm6Ptr.z=+b.dataset.ph; _ptrUpd(); });
+  document.querySelectorAll("[data-pd]").forEach(b=>b.onclick=()=>{ window.arm6Ptr.d=+b.dataset.pd; _ptrUpd(); });
+  document.querySelectorAll("[data-pb]").forEach(b=>b.onclick=()=>{ window.arm6Ptr.b=+b.dataset.pb; _ptrUpd();
+    var p=window.arm6Ptr, rad=p.b*Math.PI/180, lx=p.d*Math.cos(rad), ly=p.d*Math.sin(rad);
+    if(window.arm6SetTarget) window.arm6SetTarget({x:lx,y:ly,z:p.z});
+    if(window.arm6SendLocal) window.arm6SendLocal(lx,ly,p.z); });
+  _ptrUpd();
+  document.querySelectorAll("[data-a6]").forEach(b=>b.onclick=()=>{
+    const a=b.dataset.a6.split(",").map(Number); const p={x:a[0],y:a[1],z:a[2]};
+    if(window.arm6SetTarget) window.arm6SetTarget(p);
+    logLine("i","🎯 校准点 "+JSON.stringify(p));
+    window.arm6SendPose();
+  });
+}catch(e){}
+try{ const dc=$("droneCam"); if(dc) dc.src="http://"+location.hostname+":8091/stream"; }catch(e){}
+/* 🧭 自适应校准：载入 calib.json（autocal.py 生成） */
+function _a6applyCal(j){
+  if(!j||!j.samples) return;
+  if(window.arm6Learn){ if(typeof j.trimDeg==="number") window.arm6Learn.trimDeg=j.trimDeg; window.arm6Learn.calib=j; }
+  const v=$("a6TrimV"); if(v&&typeof j.trimDeg==="number") v.textContent=j.trimDeg+"°";
+  const t=$("a6Trim"); if(t&&typeof j.trimDeg==="number") t.value=String(j.trimDeg);
+  if(window.arm6Redraw) window.arm6Redraw();
+  logLine("i","🧭 已载入标定："+(j.samples?j.samples.length+" 点":"")+" 均值偏差 "+(j.meanErrDeg!=null?j.meanErrDeg:"?")+"°");
+}
+try{ var _lc=null; try{ _lc=JSON.parse(localStorage.getItem("a6calib")||"null"); }catch(e){}
+  if(_lc&&_lc.samples){ _a6applyCal(_lc); } else { fetch("calib.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(_a6applyCal).catch(()=>{}); }
+}catch(e){}
+try{ fetch("calib.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
+  if(!j||typeof j.trimDeg!=="number") return;
+  if(window.arm6Learn){ window.arm6Learn.trimDeg=j.trimDeg; window.arm6Learn.calib=j; }
+  const t=$("a6Trim"); if(t) t.value=String(j.trimDeg);
+  const v=$("a6TrimV"); if(v) v.textContent=j.trimDeg+"°";
+  if(window.arm6Redraw) window.arm6Redraw();
+  logLine("i","🧭 已载入自适应校准："+(j.samples?("方位表 "+j.samples.length+" 点"):("trimDeg="+j.trimDeg+"°"))+"（均值偏差 "+(j.meanErrDeg!=null?j.meanErrDeg:"?")+"°）");
+}).catch(()=>{}); }catch(e){}
+/* 无人机画面旋转（自动缩放适配，不溢出） */
+try{
+  let dcRot=parseInt(localStorage.getItem("droneCamRot")||"0",10)||0;
+  function dcFit(){ const dc=$("droneCam"), w=$("dcWrap"); if(!dc||!w) return;
+    const W=w.clientWidth, H=w.clientHeight, iw=dc.naturalWidth, ih=dc.naturalHeight; if(!iw||!ih) return;
+    const s0=Math.min(W/iw,H/ih); const dispW=iw*s0, dispH=ih*s0; let k=1;
+    if(dcRot%180!==0) k=Math.min(1, W/dispH, H/dispW);
+    dc.style.width=dispW+"px"; dc.style.height=dispH+"px";
+    dc.style.transform="rotate("+dcRot+"deg) scale("+k+")";
+    $("dcRotV").textContent=dcRot+"°"; localStorage.setItem("droneCamRot",String(dcRot)); }
+  $("dcRotL").onclick=()=>{ dcRot=((dcRot-90)%360+360)%360; dcFit(); };
+  $("dcRotR").onclick=()=>{ dcRot=(dcRot+90)%360; dcFit(); };
+  $("dcRot0").onclick=()=>{ dcRot=0; dcFit(); };
+  $("droneCam").addEventListener("load",dcFit); window.addEventListener("resize",dcFit);
+  dcFit(); setTimeout(dcFit,1500);
+}catch(e){}
+/* 摄像头对焦 */
+try{
+  const _cb="http://"+location.hostname+":8091";
+  const focSet=(a,v)=>fetch(_cb+"/focus?auto="+(a?1:0)+"&val="+v,{cache:"no-store"}).then(r=>r.text()).then(t=>logLine("i","对焦: "+t.replace(/\n/g," "))).catch(e=>logLine("e","对焦失败 "+e.message));
+  $("focAuto").onclick=()=>focSet(1,0);
+  $("focManual").onclick=()=>focSet(0,$("focVal").value);
+  $("focVal").oninput=()=>{ $("focV").textContent=$("focVal").value; };
+  $("focVal").onchange=()=>focSet(0,$("focVal").value);
+}catch(e){}
+/* 遥控屏 OCR 读屏 */
+try{ const _ob=$("osdBox"); const _esc=s=>String(s).replace(/[<>&]/g,"");
+  const _pull=async()=>{ try{ const r=await fetch("http://"+location.hostname+":8091/osd.json",{cache:"no-store"}); const j=await r.json();
+    const ts=j.texts||[]; if(ts.length){ _ob.innerHTML=ts.map(t=>'<span class="chip">'+_esc(t)+'</span>').join(""); }
+  }catch(e){} };
+  _pull(); setInterval(_pull,2500);
+}catch(e){}
+/* 相机默认关闭（省机器人算力）：需手动点『📷 开启相机』 */
+// topic chips (static hint)
+["pos","battery","alarm","workState","version","ota","robot_status"].forEach(t=>{
+  const s=document.createElement("span"); s.className="chip"; s.textContent=t; $("topicChips").appendChild(s);
+});
+</script>
+<script src="arm6.js?v=96"></script>
+<script>
+/* 🖱 模拟图右侧父级按钮可拖动（保存位置；Shift+双击复位） */
+(function(){
+  var KEY='arm6BtnPos';
+  var ids=['arm6Fs','arm6ReadySim','arm6Sync','arm6Exec','arm6Halt'];
+  var saved={}; try{ saved=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){}
+  function place(b,id,x,y){
+    b.classList.add('draggedBtn');
+    b.style.left=Math.max(0,Math.min(window.innerWidth-150,x))+'px';
+    b.style.top=Math.max(0,Math.min(window.innerHeight-42,y))+'px';
+  }
+  function setup(b,id){
+    var drag=null;
+    function move(e){
+      if(!drag) return;
+      var dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+      if(!drag.moved && Math.hypot(dx,dy)<4) return;
+      drag.moved=true; b.__dragMoved=true;
+      b.classList.add('draggedBtn');
+      b.style.left=Math.max(0,Math.min(window.innerWidth-150,drag.l+dx))+'px';
+      b.style.top=Math.max(0,Math.min(window.innerHeight-42,drag.t+dy))+'px';
+      e.preventDefault();
+    }
+    function end(e){
+      if(!drag) return;
+      document.removeEventListener('pointermove',move,true);
+      document.removeEventListener('pointerup',end,true);
+      document.removeEventListener('pointercancel',end,true);
+      if(drag.moved){
+        saved[id]=[Math.round(parseFloat(b.style.left)),Math.round(parseFloat(b.style.top))];
+        try{ localStorage.setItem(KEY,JSON.stringify(saved)); }catch(x){}
+        e.preventDefault(); e.stopPropagation();
+      }
+      drag=null;
+    }
+    b.addEventListener('pointerdown',function(e){
+      if(e.button!==0) return;
+      var r=b.getBoundingClientRect();
+      drag={x:e.clientX,y:e.clientY,l:r.left,t:r.top,moved:false}; b.__dragMoved=false;
+      try{ b.setPointerCapture(e.pointerId); }catch(x){}
+      document.addEventListener('pointermove',move,true);
+      document.addEventListener('pointerup',end,true);
+      document.addEventListener('pointercancel',end,true);
+    });
+    b.addEventListener('click',function(e){ if(b.__dragMoved){ b.__dragMoved=false; e.preventDefault(); e.stopPropagation(); } },true);
+    if(saved[id]) place(b,id,saved[id][0],saved[id][1]);
+    b.addEventListener('dblclick',function(e){ if(!e.shiftKey) return; delete saved[id]; try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(x){} b.classList.remove('draggedBtn'); b.style.left=''; b.style.top=''; e.preventDefault(); });
+  }
+  ids.forEach(function(id){ var b=document.getElementById(id); if(b) setup(b,id); });
+})();
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

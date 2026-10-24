@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh"><head>
+<meta charset="utf-8">
+<title>标注训练 · 抓取物 / 存放位置</title>
+<style>
+:root{--bg:#0b1016;--panel:#0e1a24;--line:#1e3a4a;--txt:#d6f2ff;--mut:#7ba7bd;--cyan:#38d6ff;--green:#55e6a5;--orange:#ffb057}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1100px 600px at 20% 0%,#122532,#070d12 70%);color:var(--txt);font:13px/1.45 ui-monospace,Menlo,Consolas,monospace}
+header{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--line);background:rgba(5,12,18,.85);position:sticky;top:0;z-index:20}
+h1{margin:0;font-size:16px;letter-spacing:1px;color:#bfe9ff}
+.hint{color:var(--mut);font-size:12px}
+.wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px}
+@media(max-width:1100px){.wrap{grid-template-columns:1fr}}
+.card{background:linear-gradient(180deg,#0f1e29,#0a141c);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.card h2{margin:0;padding:9px 12px;font-size:13px;letter-spacing:1px;color:#9fdcff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.card h2 .tag{font-size:11px;color:var(--mut);font-weight:400}
+.tools{display:flex;gap:6px;padding:7px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap;align-items:center}
+button{cursor:pointer;border:1px solid #2b5a70;background:#0d2634;color:#c9efff;border-radius:8px;padding:5px 9px;font:12px ui-monospace,monospace}
+button:hover{border-color:#3fd8ff;background:#103344}
+button.on{border-color:var(--green);background:#0d3a2a;color:#c8ffdf}
+button.place.on{border-color:var(--orange);background:#3a2a0d;color:#ffe0b8}
+button.primary{border-color:#38d6ff;background:#0a3b4d;color:#e4faff;font-weight:600}
+.view{position:relative;height:430px;overflow:hidden;background:#050b10;touch-action:none;cursor:grab}
+.view.grip{height:330px}
+.stage{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.stage img{display:block;user-select:none;-webkit-user-drag:none;pointer-events:none;background:#031018}
+.stage canvas{position:absolute;left:0;top:0}
+.hud{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.5);border:1px solid #1e3a4a;border-radius:7px;padding:3px 7px;font-size:11px;color:#9fd8ff;pointer-events:none}
+.status{position:fixed;left:0;right:0;bottom:0;background:rgba(4,10,15,.95);border-top:1px solid var(--line);padding:9px 14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;z-index:30}
+.status .msg{color:var(--mut)}
+.status .box{color:#bfe9ff}
+body{padding-bottom:64px}
+.badge{display:inline-block;padding:1px 6px;border-radius:6px;background:#0e3040;border:1px solid #2b5a70;color:#9fdcff;font-size:11px}
+</style></head>
+<body>
+<header>
+  <h1>🏷 标注训练 · 抓取物 / 存放位置</h1>
+  <span class="hint">滚轮缩放 · 拖动平移 · 选模式后鼠标框选（推荐：抓取物→爪子相机；存放位置→头部相机）</span>
+</header>
+<div class="wrap">
+  <section class="card">
+    <h2>🧠 头部深度识别相机 <span class="tag">:8799 · 只看右侧识别画面</span></h2>
+    <div class="tools">
+      <button data-z="in" data-p="head">＋</button>
+      <button data-z="out" data-p="head">－</button>
+      <button data-z="reset" data-p="head">⟲ 复位</button>
+      <button class="pick" data-mode="pick" data-p="head">✏ 标注抓取物</button>
+      <button class="place" data-mode="place" data-p="head">📍 标注存放位置</button>
+      <button data-clear="head">🗑 清空</button>
+      <span class="badge" id="zoomHead">100%</span>
+    </div>
+    <div class="view" id="viewHead">
+      <div class="stage" id="stageHead">
+        <img id="imgHead" alt="head feed">
+        <canvas id="cvHead"></canvas>
+      </div>
+      <div class="hud" id="hudHead">—</div>
+    </div>
+  </section>
+  <section class="card">
+    <h2>🎯 爪子相机识别 <span class="tag">:8800 · 整幅画面</span></h2>
+    <div class="tools">
+      <button data-z="in" data-p="grip">＋</button>
+      <button data-z="out" data-p="grip">－</button>
+      <button data-z="reset" data-p="grip">⟲ 复位</button>
+      <button class="pick" data-mode="pick" data-p="grip">✏ 标注抓取物</button>
+      <button class="place" data-mode="place" data-p="grip">📍 标注存放位置</button>
+      <button data-clear="grip">🗑 清空</button>
+      <span class="badge" id="zoomGrip">100%</span>
+    </div>
+    <div class="view grip" id="viewGrip">
+      <div class="stage" id="stageGrip">
+        <img id="imgGrip" alt="grip feed">
+        <canvas id="cvGrip"></canvas>
+      </div>
+      <div class="hud" id="hudGrip">—</div>
+    </div>
+  </section>
+</div>
+<div class="status">
+  <span class="box" id="stPick">抓取物：未标注</span>
+  <span class="box" id="stPlace">存放位置：未标注</span>
+  <span class="msg" id="stMsg"></span>
+  <span style="margin-left:auto"></span>
+  <button class="primary" id="send">📤 发送标注到机器人</button>
+  <button id="clearAll">清空全部</button>
+</div>
+<script>
+const HOST = location.hostname;
+const P = {
+  head:{view:'viewHead',stage:'stageHead',img:'imgHead',cv:'cvHead',hud:'hudHead',zoom:'zoomHead',natW:740,natH:420,patch:[405,0,320,200]},
+  grip:{view:'viewGrip',stage:'stageGrip',img:'imgGrip',cv:'cvGrip',hud:'hudGrip',zoom:'zoomGrip',natW:480,natH:300,patch:[0,0,480,300]}
+};
+const state = {head:{s:1,tx:0,ty:0,mode:null,boxes:{pick:null,place:null},drag:null,pan:null},grip:{s:1,tx:0,ty:0,mode:null,boxes:{pick:null,place:null},drag:null,pan:null}};
+function cfg(p){return P[p]}
+function apply(p){
+  const c=cfg(p), st=state[p];
+  document.getElementById(c.stage).style.transform = `translate(${st.tx}px,${st.ty}px) scale(${st.s})`;
+  document.getElementById(c.zoom).textContent = Math.round(st.s*100)+'%';
+  document.getElementById(c.hud).textContent = (p==='head'?'头部':'爪子')+' '+Math.round(st.s*100)+'%';
+}
+function fit(p){
+  const c=cfg(p), v=document.getElementById(c.view), st=state[p];
+  const vw=v.clientWidth||1, vh=v.clientHeight||1;
+  st.s=Math.min(vw/c.natW, vh/c.natH, 1.0);
+  st.tx=(vw-c.natW*st.s)/2; st.ty=(vh-c.natH*st.s)/2; apply(p);
+}
+
+async function poll(p){
+  const c=cfg(p), img=document.getElementById(c.img);
+  const port = p==='head' ? 8799 : 8800;
+  try{
+    const r = await fetch(`http://${HOST}:${port}/snap.jpg?t=${Date.now()}`, {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const old = img.dataset.blob;
+    img.onload = function(){
+      if(!img._init){ img._init=1; fit(p); }
+      if(old) URL.revokeObjectURL(old);
+      img.dataset.blob = url;
+      document.getElementById(c.hud).textContent = (p==='head'?'头部':'爪子')+' LIVE';
+      draw(p);
+    };
+    img.src = url;
+  }catch(e){
+    document.getElementById(c.hud).textContent = (p==='head'?'头部':'爪子')+' 离线';
+  }
+  setTimeout(()=>poll(p), 500);
+}
+
+function init(p){
+  const c=cfg(p); const img=document.getElementById(c.img);
+  img.style.width=c.natW+'px'; img.style.height=c.natH+'px';
+  const cv=document.getElementById(c.cv); cv.width=c.natW; cv.height=c.natH;
+  cv.style.width=c.natW+'px'; cv.style.height=c.natH+'px';
+  img.onload=()=>{ if(!img._init){img._init=1; fit(p); draw(p);} };
+  poll(p);
+  const v=document.getElementById(c.view);
+  v.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const r=v.getBoundingClientRect(); const mx=e.clientX-r.left,my=e.clientY-r.top;
+    const st=state[p]; const old=st.s;
+    const f=e.deltaY<0?1.12:1/1.12; st.s=Math.max(0.35,Math.min(5,st.s*f));
+    st.tx=mx-(mx-st.tx)*(st.s/old); st.ty=my-(my-st.ty)*(st.s/old); apply(p);
+  },{passive:false});
+  v.addEventListener('mousedown',e=>{
+    const st=state[p];
+    if(st.mode){ startBox(p,e); }
+    else { st.pan={x:e.clientX,y:e.clientY,tx:st.tx,ty:st.ty}; v.style.cursor='grabbing'; }
+  });
+  window.addEventListener('mousemove',e=>{
+    const st=state[p];
+    if(st.pan){ st.tx=st.pan.tx+(e.clientX-st.pan.x); st.ty=st.pan.ty+(e.clientY-st.pan.y); apply(p); }
+    if(st.drag) moveBox(p,e);
+  });
+  window.addEventListener('mouseup',e=>{
+    const st=state[p];
+    if(st.pan){ st.pan=null; v.style.cursor=st.mode?'crosshair':'grab'; }
+    if(st.drag) endBox(p,e);
+  });
+  setTimeout(()=>fit(p),50);
+}
+function canvasPoint(p,e){
+  const c=cfg(p), cv=document.getElementById(c.cv), r=cv.getBoundingClientRect();
+  let x=(e.clientX-r.left)*(c.natW/r.width);
+  let y=(e.clientY-r.top)*(c.natH/r.height);
+  const [px,py,pw,ph]=c.patch;
+  x=Math.max(px,Math.min(px+pw,x)); y=Math.max(py,Math.min(py+ph,y));
+  return [x,y];
+}
+function startBox(p,e){
+  const st=state[p]; const [x,y]=canvasPoint(p,e);
+  st.drag={x0:x,y0:y,mode:st.mode}; st.boxes[st.mode]={x1:x,y1:y,x2:x,y2:y}; draw(p);
+}
+function moveBox(p,e){
+  const st=state[p]; if(!st.drag)return; const [x,y]=canvasPoint(p,e); const m=st.drag.mode;
+  st.boxes[m]={x1:Math.min(st.drag.x0,x),y1:Math.min(st.drag.y0,y),x2:Math.max(st.drag.x0,x),y2:Math.max(st.drag.y0,y)};
+  draw(p);
+}
+function endBox(p,e){
+  const st=state[p]; if(!st.drag)return;
+  const [x,y]=canvasPoint(p,e); const m=st.drag.mode, b=st.boxes[m];
+  if(Math.abs(b.x2-b.x1)<6||Math.abs(b.y2-b.y1)<6) st.boxes[m]=null;
+  st.drag=null; draw(p); updateStatus();
+}
+function draw(p){
+  const c=cfg(p), cv=document.getElementById(c.cv), g=cv.getContext('2d');
+  g.clearRect(0,0,c.natW,c.natH);
+  const [px,py,pw,ph]=c.patch;
+  if(p==='head'){ g.save(); g.strokeStyle='rgba(80,220,255,.55)'; g.setLineDash([6,5]); g.lineWidth=2; g.strokeRect(px+1,py+1,pw-2,ph-2); g.restore(); }
+  for(const mode of ['pick','place']){
+    const b=state[p].boxes[mode]; if(!b) continue;
+    const isPlace=mode==='place';
+    g.save(); g.strokeStyle=isPlace?'#ffb057':'#55e6a5'; g.lineWidth=3; g.strokeRect(b.x1,b.y1,b.x2-b.x1,b.y2-b.y1);
+    g.fillStyle=isPlace?'rgba(255,176,87,.14)':'rgba(85,230,165,.14)'; g.fillRect(b.x1,b.y1,b.x2-b.x1,b.y2-b.y1);
+    g.fillStyle=isPlace?'#ffb057':'#55e6a5'; g.font='bold 16px ui-monospace,monospace';
+    g.fillText(isPlace?'存放位置':'抓取物',b.x1+6,Math.max(18,b.y1+18)); g.restore();
+  }
+}
+function camBox(p,b){
+  const c=cfg(p); const [px,py,pw,ph]=c.patch;
+  return {cam:p, box:[+(b.x1-px).toFixed(1),+(b.y1-py).toFixed(1),+(b.x2-px).toFixed(1),+(b.y2-py).toFixed(1)], img:[pw,ph], raw:[+b.x1.toFixed(1),+b.y1.toFixed(1),+b.x2.toFixed(1),+b.y2.toFixed(1)], raw_img:[c.natW,c.natH]};
+}
+function currentPick(){
+  if(state.grip.boxes.pick) return {panel:'grip',...camBox('grip',state.grip.boxes.pick)};
+  if(state.head.boxes.pick) return {panel:'head',...camBox('head',state.head.boxes.pick)};
+  return null;
+}
+function currentPlace(){
+  if(state.head.boxes.place) return {panel:'head',...camBox('head',state.head.boxes.place)};
+  if(state.grip.boxes.place) return {panel:'grip',...camBox('grip',state.grip.boxes.place)};
+  return null;
+}
+function updateStatus(){
+  // boxes are per-panel single; mode determines label
+  const pick = state.grip.boxes.pick ? '爪子相机已标注' : (state.head.boxes.pick ? '头部相机已标注' : '未标注');
+  const place = state.head.boxes.place ? '头部相机已标注' : (state.grip.boxes.place ? '爪子相机已标注' : '未标注');
+  document.getElementById('stPick').textContent='抓取物：'+pick;
+  document.getElementById('stPlace').textContent='存放位置：'+place;
+}
+function setMode(p,mode){
+  const st=state[p];
+  st.mode = st.mode===mode ? null : mode;
+  document.querySelectorAll(`[data-mode="${mode}"][data-p="${p}"]`).forEach(b=>b.classList.toggle('on',st.mode===mode));
+  document.getElementById(P[p].view).style.cursor=st.mode?'crosshair':'grab';
+  // 保留另一种模式的框
+  draw(p); updateStatus();
+}
+function clearPanel(p){
+  state[p].boxes={pick:null,place:null}; state[p].mode=null; state[p].drag=null;
+  document.querySelectorAll(`[data-p="${p}"][data-mode]`).forEach(b=>b.classList.remove('on'));
+  document.getElementById(P[p].view).style.cursor='grab'; draw(p); updateStatus();
+}
+document.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{
+  const p=b.dataset.p, st=state[p], c=cfg(p), v=document.getElementById(c.view);
+  if(b.dataset.z==='reset'){ fit(p); return; }
+  const f=b.dataset.z==='in'?1.2:1/1.2; const old=st.s, mx=v.clientWidth/2,my=v.clientHeight/2;
+  st.s=Math.max(0.35,Math.min(5,st.s*f)); st.tx=mx-(mx-st.tx)*(st.s/old); st.ty=my-(my-st.ty)*(st.s/old); apply(p);
+});
+document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>setMode(b.dataset.p,b.dataset.mode));
+document.querySelectorAll('[data-clear]').forEach(b=>b.onclick=()=>clearPanel(b.dataset.clear));
+document.getElementById('clearAll').onclick=()=>{clearPanel('head');clearPanel('grip');document.getElementById('stMsg').textContent='';};
+document.getElementById('send').onclick=async()=>{
+  const pick=currentPick(), place=currentPlace();
+  const msg=document.getElementById('stMsg');
+  if(!pick||!place){ msg.textContent='⚠ 需要同时标注「抓取物」和「存放位置」'; return; }
+  const payload={ts:Date.now(),pick,place};
+  msg.textContent='⏳ 已发送，正在计算 3D…';
+  try{
+    const r=await fetch(`http://${HOST}:8792/annotate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const j=await r.json();
+    if(!j.ok){ msg.textContent='❌ 发送失败: '+JSON.stringify(j); return; }
+    msg.textContent='✅ 已发送：抓取物='+pick.cam+' 存放='+place.cam+' · 3D 计算中…';
+    poll3d(msg);
+  }catch(e){ msg.textContent='❌ 发送失败: '+e.message; }
+};
+
+async function poll3d(msg){
+  for(let i=0;i<40;i++){
+    await new Promise(r=>setTimeout(r,800));
+    try{
+      const r=await fetch(`http://${HOST}:8792/annotation3d`,{cache:'no-store'});
+      const j=await r.json();
+      if(j.status==='computing') continue;
+      let txt='✅ 标注已保存';
+      const reach=v=>v[0]>=0.25&&v[0]<=0.72;
+      if(j.pick3d){ txt += j.pick3d.ok ? ' · 抓取3D=('+j.pick3d.xyz.join(', ')+')'+(reach(j.pick3d.xyz)?' ✅可达':' ⚠超出臂展') : ' · 抓取3D失败:'+(j.pick3d.err||''); }
+      if(j.place3d){ txt += j.place3d.ok ? ' · 存放3D=('+j.place3d.xyz.join(', ')+')'+(reach(j.place3d.xyz)?' ✅可达':' ⚠超出臂展') : ' · 存放3D失败:'+(j.place3d.err||''); }
+      msg.textContent=txt; return;
+    }catch(e){}
+  }
+  msg.textContent='⚠ 3D 计算超时，标注已保存到机器人';
+}
+
+init('head'); init('grip');
+</script>
+<script src="nav.js"></script>
+</body></html>

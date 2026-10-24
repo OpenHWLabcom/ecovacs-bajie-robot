@@ -1,0 +1,90 @@
+{
+  "updated": "2026-10-21",
+  "note": "勾选状态 = 已完成；证据列记录日期/文件。页面可点击勾选做本地跟踪，不改写原始计划。",
+  "categories": [
+    {
+      "id": "motion",
+      "name": "运动与精度",
+      "items": [
+        {"id":"m01","title":"关节零位/方向/限位核对","detail":"每个关节小角度正反点动，FK 与真机对比，确认零位、方向和软限位。","metric":"零位偏差 / 限位余量","priority":"P0","done":false,"evidence":""},
+        {"id":"m02","title":"重复定位精度","detail":"同一 TCP 点往返 10 次，记录末端位置与姿态散布。","metric":"位置 ≤2mm，姿态 ≤1°","priority":"P0","done":false,"evidence":""},
+        {"id":"m03","title":"回差/背隙","detail":"从正、反两个方向接近同一点，测差值。","metric":"回差 mm","priority":"P1","done":false,"evidence":""},
+        {"id":"m04","title":"轨迹跟踪误差/振动","detail":"慢速、标准、S 曲线三种轨迹，记录跟随误差、超调与振动。","metric":"跟随误差 rad / 振动","priority":"P0","done":false,"evidence":""},
+        {"id":"m05","title":"负载与夹持/滑脱","detail":"不同重量、材质物体，测夹持力、滑脱和闭合重复性。","metric":"夹持力 N / 滑脱率","priority":"P1","done":false,"evidence":""},
+        {"id":"m06","title":"升降/头部重复性","detail":"同一高度/角度来回，测偏差；检查相机支架刚性。","metric":"位置偏差 mm / 角度偏差 °","priority":"P1","done":false,"evidence":""},
+        {"id":"m07","title":"急停/断连","detail":"stop_all、adb 断开、WiFi 断开、服务重启后的停止行为。","metric":"停止响应时间 / 是否失控","priority":"P0","done":false,"evidence":""},
+        {"id":"m08","title":"温漂/长时 soak","detail":"连续 1–2 小时循环，记录关节误差、电流、温度与漂移。","metric":"漂移 mm / 温度 ℃","priority":"P2","done":false,"evidence":""}
+      ]
+    },
+    {
+      "id": "calib",
+      "name": "标定",
+      "items": [
+        {"id":"c01","title":"3D 运动学模型/FK 与真机同步","detail":"arm3d 模型、kin.py FK、joints_bridge 实时关节同步。","metric":"FK/真机姿态一致","priority":"P0","done":true,"evidence":"2026-10-20/21 · arm3d + kin.py + :8796"},
+        {"id":"c02","title":"运动学参数/TCP 标定","detail":"连杆参数、objects_link/TCP 的实物标定（不是只用 URDF 名义值）。","metric":"TCP 误差 mm","priority":"P1","done":false,"evidence":""},
+        {"id":"c03","title":"手腕相机安装 TF","detail":"gripper_link → berxel_arm_rgb_optical_frame 的安装位姿。","metric":"xyz/rpy 偏差","priority":"P0","done":true,"evidence":"2026-10-21 · tf2_echo: xyz(-0.088,0,-0.001) rpy(-14.8°,0.69°,-88.3°)"},
+        {"id":"c04","title":"头部/手腕内参、双目、手眼","detail":"相机内参、双目基线、手眼标定与重投影误差。","metric":"重投影误差 px","priority":"P0","done":false,"evidence":""},
+        {"id":"c05","title":"关节/图像时间同步","detail":"/joints 与头/腕图像时间戳对齐。","metric":"同步误差 <30ms","priority":"P0","done":false,"evidence":""},
+        {"id":"c06","title":"桌面 z/立柱间隙","detail":"桌面高度、立柱与连杆/夹爪的间隙；侧摆A 安全距离。","metric":"桌面 z / 离柱 cm","priority":"P0","done":true,"evidence":"2026-10-18/21 · 侧摆A 离柱 6.1cm；桌面 z≈0.692m（小臂接触估算，初测）"},
+        {"id":"c07","title":"爪头四方向临界角","detail":"左/右/正下方/正上方，相机或夹爪刚接触桌面的姿态。","metric":"四个临界角 °","priority":"P0","done":true,"evidence":"2026-10-21 · 左13.11° / 右9.82° / 正下方21.40° / 正上方39.70° · limits.db"},
+        {"id":"c08","title":"夹爪开/合/全闭控制","detail":"0.69 / 0.185 / 0.0 三个开度的实际响应与到位时间。","metric":"开度 / 到位时间","priority":"P0","done":true,"evidence":"2026-10-21 · 0.535→0.005（3s），:8796/grip"},
+        {"id":"c09","title":"夹爪开度—力映射","detail":"不同开度下的夹持力、接触检测与滑脱阈值。","metric":"力 N / 开度 mm","priority":"P1","done":false,"evidence":""},
+        {"id":"c10","title":"多姿态精度地图","detail":"工作空间 5–10 个点的绝对定位误差地图。","metric":"误差 mm / 姿态 °","priority":"P1","done":false,"evidence":""},
+        {"id":"c11","title":"头部/手腕相机画面链路","detail":"percd(:8799) 与 percg(:8800) 画面、延迟、断线重连。","metric":"帧率 / 延迟 ms","priority":"P0","done":true,"evidence":"2026-10-21 · 两路 /snap.jpg 均 200，camfeed 正常"}
+      ]
+    },
+    {
+      "id": "perception",
+      "name": "感知与抓取",
+      "items": [
+        {"id":"p01","title":"Pick benchmark 20–30 次","detail":"固定场景，记录成功率、周期时间、放置误差；再换物体/位置/光照。","metric":"成功率 % / 周期 s / 误差 mm","priority":"P0","done":false,"evidence":""},
+        {"id":"p02","title":"手腕视觉伺服","detail":"目标偏离 1–2cm 时，手腕相机闭环对齐。","metric":"对齐误差 mm / 收敛时间","priority":"P1","done":false,"evidence":""},
+        {"id":"p03","title":"头腕融合","detail":"头部找目标 → 手腕精定位，验证坐标一致性与遮挡。","metric":"定位误差 mm","priority":"P1","done":false,"evidence":""},
+        {"id":"p04","title":"失败恢复","detail":"没抓到、滑落、遮挡、目标丢失时的重试/放弃策略。","metric":"恢复成功率 %","priority":"P1","done":false,"evidence":""},
+        {"id":"p05","title":"检测/分割测试","detail":"书/盒/不同颜色的检测与分割，mAP/IoU。","metric":"mAP / IoU","priority":"P1","done":false,"evidence":""},
+        {"id":"p06","title":"6D pose/抓取点","detail":"物体 6D 位姿与抓取点预测精度。","metric":"位姿误差 mm/°","priority":"P2","done":false,"evidence":""}
+      ]
+    },
+    {
+      "id": "data",
+      "name": "数据质量",
+      "items": [
+        {"id":"d01","title":"数据采集流程（30Hz 关节 + 5Hz 图像）","detail":"collector/logger 记录关节、指令、夹爪、头腕图像。","metric":"样本/帧率","priority":"P0","done":true,"evidence":"2026-10-21 · 31 episodes / 36,918 样本"},
+        {"id":"d02","title":"综合分析台/质量指标","detail":"任务筛选、成功率、平均样本、Δp99、图像帧率、质量告警。","metric":"质量告警数","priority":"P0","done":true,"evidence":"2026-10-20/21 · data_viewer + viewer_index"},
+        {"id":"d03","title":"时间同步/帧率/丢帧审计","detail":"关节-图像时间对齐、帧率稳定性、丢帧统计。","metric":"同步误差 ms / 丢帧 %","priority":"P0","done":false,"evidence":""},
+        {"id":"d04","title":"Episode 成功/失败标记流程","detail":"采集页自动标记成功 + 手动改失败/未标注。","metric":"未标注比例","priority":"P0","done":true,"evidence":"2026-10-21 · 11:41 采集自动 success=true；仍 13 条未标注"},
+        {"id":"d05","title":"全部数据标注完整","detail":"所有 episode 的成功/失败、任务、备注都补齐。","metric":"标注覆盖率 100%","priority":"P1","done":false,"evidence":""},
+        {"id":"d06","title":"多机器人 robot_id","detail":"meta/限位库加入机器人序列号，区分不同机器数据。","metric":"数据可追溯","priority":"P1","done":false,"evidence":""}
+      ]
+    },
+    {
+      "id": "training",
+      "name": "训练",
+      "items": [
+        {"id":"t01","title":"HDF5 数据集转换","detail":"17 条成功 desktop_pick → 10Hz / 128×128 HDF5。","metric":"steps / 大小 / split","priority":"P0","done":true,"evidence":"2026-10-20 · 4,739 steps / 41MB / 14 train 3 val"},
+        {"id":"t02","title":"BC smoke test","detail":"小 CNN+MLP 跑通训练/验证管线，验证数据与代码。","metric":"val MAE（仅 smoke）","priority":"P0","done":true,"evidence":"2026-10-20 · 8 epochs，val MAE 0.0757（不可部署）"},
+        {"id":"t03","title":"80 条示教扩充","detail":"多样物体/位置/光照/背景，补到 80 条成功示教。","metric":"成功 episode 数","priority":"P1","done":false,"evidence":"当前 desktop 17 条成功"},
+        {"id":"t04","title":"ACT / Diffusion Policy","detail":"在 80+ 条数据上训练，闭环评估。","metric":"成功率 / 平滑度","priority":"P2","done":false,"evidence":"需 GPU 工作站"},
+        {"id":"t05","title":"检测/分割训练","detail":"用标注帧训练 YOLO/UNet，接入抓取点。","metric":"mAP / IoU","priority":"P1","done":false,"evidence":""},
+        {"id":"t06","title":"定点头专项训练","detail":"用 headfix episodes 学习 tip-fixed 轨迹/姿态安全区。","metric":"tip 误差 / 姿态超限率","priority":"P2","done":false,"evidence":"当前 headfix 9 条 / 1 条成功"},
+        {"id":"t07","title":"临界角/安全包络拟合","detail":"用限位点拟合安全包络，生成姿态限制。","metric":"包络误差 °","priority":"P1","done":false,"evidence":"已有 4 点 limits.db，尚未拟合"},
+        {"id":"t08","title":"3D 数字孪生/同步预览","detail":"arm3d 模型与真机实时同步，用于离线验证。","metric":"同步延迟 ms","priority":"P1","done":true,"evidence":"2026-10-21 · arm3d v84 + :8796 跟随"},
+        {"id":"t09","title":"Sim-to-real","detail":"仿真训练 + 域随机化 + 真机迁移。","metric":"sim/real 差距","priority":"P2","done":false,"evidence":""},
+        {"id":"t10","title":"残差 RL/强化学习","detail":"在仿真或真机上做 residual RL，优化抓取/放置。","metric":"成功率提升","priority":"P2","done":false,"evidence":""},
+        {"id":"t11","title":"多任务/VLA","detail":"语言指令 + 视觉 + 动作的多任务策略。","metric":"任务泛化","priority":"P2","done":false,"evidence":""}
+      ]
+    },
+    {
+      "id": "reliability",
+      "name": "可靠性与换机验收",
+      "items": [
+        {"id":"r01","title":"采集服务重启/孤儿恢复","detail":"collector 重启后仍能停止遗留 logger，数据不丢。","metric":"恢复时间 / 数据完整","priority":"P0","done":true,"evidence":"2026-10-21 · orphan 检测 + /stop 实测"},
+        {"id":"r02","title":"断网/相机掉线恢复","detail":"WiFi/adb 断开、相机拔插后的自动重连与提示。","metric":"重连时间 s","priority":"P1","done":false,"evidence":""},
+        {"id":"r03","title":"数据完整性（掉帧/重启）","detail":"采集中断、服务重启后 samples/frames/meta 完整。","metric":"损坏 episode 数","priority":"P1","done":false,"evidence":""},
+        {"id":"r04","title":"旧数据回放/新机对比","detail":"旧轨迹在新机开环回放，比较关节/视觉差异。","metric":"轨迹偏差 mm","priority":"P1","done":false,"evidence":""},
+        {"id":"r05","title":"新机验收清单","detail":"零位/限位、相机、夹爪、桌面/立柱、临界角逐项验收。","metric":"验收通过项","priority":"P0","done":false,"evidence":""},
+        {"id":"r06","title":"长时 soak/内存","detail":"连续跑采集/3D/相机，监控内存、OOM、服务存活。","metric":"OOM 次数 / 可用内存","priority":"P1","done":false,"evidence":"2026-10-21 已定位 OOM，但未做正式 soak"}
+      ]
+    }
+  ]
+}

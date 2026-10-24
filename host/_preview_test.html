@@ -1,0 +1,20 @@
+<!doctype html><meta charset="utf-8"><title>preview test</title>
+<iframe id="f" src="arm3d.html?embed=1" style="width:780px;height:520px"></iframe>
+<pre id="out">waiting</pre>
+<script>
+let done=false;
+const t=setInterval(()=>{
+  const w=document.getElementById('f').contentWindow;
+  if(!w) return;
+  if(w.Q && w.apply){
+    done=true; clearInterval(t);
+    try{
+      w.userEdited=true;
+      w.Q=[0.5,2.5,2.0,0,-1,0];
+      w.apply(); if(w.syncAll) w.syncAll();
+      document.getElementById('out').textContent='Q='+JSON.stringify(w.Q)+' LOADED='+w.loaded+'/'+w.total;
+    }catch(e){ document.getElementById('out').textContent='ERR '+e; }
+  }
+},500);
+setTimeout(()=>{ if(!done) document.getElementById('out').textContent='TIMEOUT Q='+(document.getElementById('f').contentWindow||{}).Q; },15000);
+</script>

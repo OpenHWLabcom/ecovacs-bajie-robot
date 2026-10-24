@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>智能硬件开放实验室研发 · 定点头限位数据库</title>
+<style>
+  :root{--bg:#070d18;--card:#101c2f;--line:#22344d;--txt:#e8f2ff;--sub:#8aa9c2;--cyan:#22d3ee;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;--violet:#a78bfa}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:radial-gradient(1200px 600px at 50% -200px,#12304a 0%,var(--bg) 55%);color:var(--txt);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif}
+  a{color:var(--cyan);text-decoration:none}
+  .wrap{max-width:1500px;margin:0 auto;padding:18px 20px 60px}
+  .labNav{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#0b1729;margin-bottom:14px}
+  .labBrand{font-weight:750;color:var(--cyan);letter-spacing:.5px}.labNavSub{color:var(--sub);font-size:12px}
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+  h1{font-size:25px;margin:0}h1 span{color:var(--cyan)}
+  .sub{color:var(--sub);font-size:12.5px}
+  .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#0e1a2c;color:var(--txt);border-radius:10px;padding:9px 13px;font:600 13px ui-monospace,monospace;cursor:pointer}
+  .btn:hover{border-color:#3a5a7a}.btn.primary{background:linear-gradient(180deg,#0e7490,#155e75);border-color:#22d3ee55}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:14px}
+  .card{background:linear-gradient(180deg,#12223a,#0d1728);border:1px solid var(--line);border-radius:14px;padding:13px 15px;box-shadow:0 10px 30px #0005}
+  .card .k{color:var(--sub);font-size:11.5px}.card .v{font:700 23px/1.15 ui-monospace,monospace;color:var(--cyan);margin-top:6px}
+  .card .s{color:var(--sub);font-size:11px;margin-top:3px}
+  .layout{display:grid;grid-template-columns:1.55fr .85fr;gap:14px;align-items:start}
+  @media(max-width:1050px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:repeat(3,1fr)}}
+  .panel{background:linear-gradient(180deg,#101d31,#0b1424);border:1px solid var(--line);border-radius:16px;padding:14px}
+  .panel h2{font-size:14px;margin:0 0 10px;color:#cfe6f8;display:flex;align-items:center;gap:8px}
+  .tag{font:500 11px/1 ui-monospace,monospace;color:var(--sub);border:1px solid var(--line);border-radius:999px;padding:3px 7px}
+  .hint{color:var(--sub);font-size:11.5px}
+  #chart{width:100%;height:270px;display:block}
+  .dirGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .dirCard{background:#0c1830;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .dirCard .k{color:var(--sub);font-size:11px;display:flex;align-items:center;gap:6px}
+  .dirCard .v{font:700 21px/1.2 ui-monospace,monospace;color:var(--cyan);margin-top:4px}
+  .dirCard .s{color:var(--sub);font-size:10.5px;margin-top:2px}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .tableWrap{overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:10px}
+  table{width:100%;border-collapse:collapse;font-size:12px;min-width:900px}
+  th,td{padding:8px 10px;border-bottom:1px solid #16263b;text-align:left;white-space:nowrap}
+  th{color:var(--sub);font-weight:600;background:#0b1729;position:sticky;top:0}
+  tbody tr{cursor:pointer}tbody tr:hover{background:#0e2037}tbody tr.on{background:#102b40}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .stTrue{color:var(--green)}.stFalse{color:var(--red)}.warn{color:var(--amber)}
+  .contact .b{display:inline-block;font-size:10.5px;padding:2px 6px;border-radius:6px;margin-right:3px;border:1px solid #2b4a66;color:#9fd8ff}
+  .contact .b.on{border-color:#22d3ee88;color:#bff4ff;background:#083344}
+  .detailGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
+  .jv{background:#0c1830;border:1px solid var(--line);border-radius:9px;padding:7px 9px}
+  .jv .k{color:var(--sub);font-size:10.5px}.jv .v{font:700 13px ui-monospace,monospace;color:#dff3ff;margin-top:2px}
+  .jv .bar{height:3px;background:#13253a;border-radius:2px;margin-top:5px;position:relative}.jv .bar i{position:absolute;top:0;height:100%;background:var(--cyan);border-radius:2px}
+  .imgs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .imgBox{background:#050a13;border:1px solid var(--line);border-radius:10px;overflow:hidden;min-height:120px;position:relative}
+  .imgBox img{width:100%;display:block;max-height:260px;object-fit:contain}
+  .imgBox .cap{position:absolute;left:8px;top:8px;font:11px ui-monospace,monospace;background:#000a;padding:2px 6px;border-radius:6px;color:#bfe9ff}
+  pre.raw{background:#060e19;border:1px solid var(--line);border-radius:10px;padding:10px;font:11px ui-monospace,monospace;color:#9fc4d6;max-height:260px;overflow:auto;white-space:pre-wrap}
+  .foot{margin-top:26px;color:var(--sub);font-size:11.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="labNav"><span class="labBrand">智能硬件开放实验室研发</span><span class="labNavSub">定点头 · 爪头限位数据库</span></nav>
+  <header>
+    <div>
+      <h1>爪头 · <span>限位数据库</span></h1>
+      <div class="sub">定点头临界角标定 · 夹爪面/相机与桌面接触点 · 用于约束定点头姿态</div>
+    </div>
+    <div style="display:flex;gap:9px;flex-wrap:wrap">
+      <button class="btn" id="refreshBtn">🔄 刷新</button>
+      <button class="btn primary" id="syncBtn">⤓ 同步 points.json</button>
+      <a class="btn" id="csvBtn" href="#" target="_blank">⬇ 导出 CSV</a>
+      <a class="btn" href="index.html">← 控制台</a>
+    </div>
+  </header>
+
+  <section class="cards">
+    <div class="card"><div class="k">限位点</div><div class="v" id="sumPoints">--</div><div class="s">静态标定点</div></div>
+    <div class="card"><div class="k">覆盖方向</div><div class="v" id="sumSides">--</div><div class="s" id="sumSidesSub">--</div></div>
+    <div class="card"><div class="k">最小临界角</div><div class="v" id="sumMin">--</div><div class="s">夹爪面 / 桌面</div></div>
+    <div class="card"><div class="k">最大临界角</div><div class="v" id="sumMax">--</div><div class="s">夹爪面 / 桌面</div></div>
+    <div class="card"><div class="k">最近更新</div><div class="v" id="sumTime" style="font-size:15px">--</div><div class="s" id="sumSource">加载中…</div></div>
+  </section>
+
+  <div class="layout">
+    <section class="panel">
+      <h2>各点位临界角 <span class="tag" id="chartTag">0–90°</span><span class="sub" style="margin-left:auto">虚线 = 定点头 45° 上限</span></h2>
+      <canvas id="chart"></canvas>
+      <div class="hint" id="chartHint">横条 = 夹爪面与桌面夹角（X/Y 两面取更小者；越小越接近贴平桌面）。</div>
+    </section>
+    <section class="panel">
+      <h2>方向覆盖 <span class="tag">接触侧</span></h2>
+      <div class="dirGrid" id="dirGrid"></div>
+      <div class="hint" style="margin-top:10px">点位由 `record_headfix_point.py` 记录；`同步 points.json` 会把最新点写入 SQLite。</div>
+    </section>
+  </div>
+
+  <section class="panel" style="margin-top:14px">
+    <h2>数据库记录 <span class="tag" id="tableTag">--</span></h2>
+    <div class="tableWrap"><table id="limitTable">
+      <thead><tr><th>#</th><th>时间</th><th>方向</th><th>接触</th><th>临界角</th><th>工具轴</th><th>相机光轴</th><th>爪尖离桌</th><th>相机离桌</th><th>备注</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+
+  <section class="panel" style="margin-top:14px" id="detailPanel">
+    <h2>点位详情 <span class="tag" id="detailTag">选择一行</span></h2>
+    <div id="detailBody"><div class="hint">点击上方任意一行查看关节角与快照。</div></div>
+  </section>
+
+  <div class="foot">智能硬件开放实验室研发</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const HOST=location.hostname||'127.0.0.1';
+const API=`http://${HOST}:8788`;
+const SIDE_NAME={left:'左侧',right:'右侧',bottom:'正下方',top:'正上方'};
+const SIDE_COLOR={left:'#22d3ee',right:'#a78bfa',bottom:'#f59e0b',top:'#22c55e'};
+let PTS=[], SEL=null, SRC='api';
+function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function fmt(x,n=2){return (x==null||isNaN(x))?'--':(+x).toFixed(n);}
+function sideName(s){return SIDE_NAME[s]||s||'--';}
+function sideColor(s){return SIDE_COLOR[s]||'#22d3ee';}
+function contacts(p){
+  const c=p.contact||{};
+  return {camera:!!c.camera,forearm:!!c.forearm,gripper:!!c.gripper,motor:!!c.motor};
+}
+function contactTags(p){
+  const c=contacts(p);
+  return `<span class="contact">
+    <span class="b ${c.camera?'on':''}">相机</span>
+    <span class="b ${c.forearm?'on':''}">小臂</span>
+    <span class="b ${c.gripper?'on':''}">夹爪</span>
+    <span class="b ${c.motor?'on':''}">电机</span></span>`;
+}
+function normalize(p){
+  // API 记录 / points.json 原始记录统一
+  const raw=p.raw||p;
+  const ax=raw.gripper_axes_elev_deg||{};
+  let gx=p.grip_x_face!=null?+p.grip_x_face:raw.gripper_x_face_angle_to_table_deg;
+  let gy=p.grip_y_face!=null?+p.grip_y_face:raw.gripper_y_face_angle_to_table_deg;
+  if(gx==null&&ax.x!=null)gx=90-Math.abs(+ax.x);
+  if(gy==null&&ax.y!=null)gy=90-Math.abs(+ax.y);
+  if(gy==null&&raw.gripper_face_angle_to_table_deg!=null)gy=+raw.gripper_face_angle_to_table_deg;
+  const lim=p.limit_angle!=null?+p.limit_angle:(gx!=null&&gy!=null?Math.min(gx,gy):(gx??gy));
+  const c=p.contact||raw.contact||{};
+  return Object.assign({},p,raw,{raw,contact:c,grip_x_face:gx,grip_y_face:gy,limit_angle:lim,
+    side:p.side||c.side||raw.contact&&raw.contact.side||'',
+    tool_elev:p.tool_elev!=null?+p.tool_elev:raw.tool_elev_deg,
+    cam_opt_elev:p.cam_opt_elev!=null?+p.cam_opt_elev:raw.camera_opt_elev_deg,
+    tip_above_table:p.tip_above_table!=null?+p.tip_above_table:raw.tip_height_above_table,
+    cam_above_table:p.cam_above_table!=null?+p.cam_above_table:raw.camera_origin_height_above_table,
+    images:p.images||raw.images||{},
+    note:p.note!=null?p.note:(raw.note||'')});
+}
+async function load(){
+  $('sumSource').textContent='读取限位数据库…';
+  try{
+    const r=await fetch(API+'/limits',{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j=await r.json(); PTS=(j.points||[]).map(normalize); SRC='api';
+  }catch(e){
+    try{
+      const r=await fetch('headfix_calib/points.json',{cache:'no-store'});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const a=await r.json(); PTS=a.map(normalize); SRC='json';
+    }catch(e2){ PTS=[]; SRC='none'; }
+  }
+  $('sumSource').textContent=SRC==='api'?'SQLite :8788 · 在线':(SRC==='json'?'points.json · 只读（服务 :8788 未启动）':'无法读取数据');
+  $('syncBtn').disabled=SRC!=='api';
+  $('csvBtn').href=SRC==='api'?API+'/export.csv':'#';
+  render();
+}
+function render(){
+  const n=PTS.length, sides={}, angs=[];
+  for(const p of PTS){ const s=p.side||'?'; sides[s]=(sides[s]||0)+1; if(p.limit_angle!=null)angs.push(+p.limit_angle); }
+  $('sumPoints').textContent=n;
+  $('sumSides').textContent=Object.keys(sides).length;
+  $('sumSidesSub').textContent=Object.keys(sides).map(s=>sideName(s)+' '+sides[s]).join(' · ')||'--';
+  $('sumMin').textContent=angs.length?Math.min(...angs).toFixed(2)+'°':'--';
+  $('sumMax').textContent=angs.length?Math.max(...angs).toFixed(2)+'°':'--';
+  $('sumTime').textContent=(PTS.map(p=>p.ts||p.updated||p.timestamp||'').sort().pop()||'--').slice(0,16);
+  $('tableTag').textContent=n+' 条';
+  $('chartTag').textContent=n+' 点';
+  renderChart(); renderDirs(sides); renderTable();
+  if(SEL==null&&PTS.length) selectPoint(PTS[0].id);
+  else if(SEL!=null&&PTS.some(p=>p.id===SEL)) selectPoint(SEL);
+  else { SEL=null; $('detailBody').innerHTML='<div class="hint">点击上方任意一行查看关节角与快照。</div>'; $('detailTag').textContent='选择一行'; }
+}
+function renderChart(){
+  const c=$('chart'), rect=c.getBoundingClientRect();
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  c.width=Math.max(1,Math.round((rect.width||700)*dpr)); c.height=Math.max(1,Math.round(270*dpr));
+  c.style.height='270px';
+  const ctx=c.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,rect.width,270);
+  const w=rect.width||700,h=270,m={l:120,r:36,t:20,b:26};
+  const n=PTS.length; const rowH=Math.min(48,(h-m.t-m.b)/Math.max(1,n));
+  const X=v=>m.l+(w-m.l-m.r)*(v/90);
+  // grid
+  ctx.font='10px ui-monospace,monospace'; ctx.fillStyle='#7f9fb8';
+  for(let a=0;a<=90;a+=15){ const x=X(a); ctx.strokeStyle=a===45?'#f59e0b55':'#12243a'; ctx.setLineDash(a===45?[4,4]:[]); ctx.beginPath();ctx.moveTo(x,m.t);ctx.lineTo(x,h-m.b);ctx.stroke();ctx.setLineDash([]); ctx.fillText(a+'°',x-8,h-8); }
+  ctx.strokeStyle='#f59e0b'; ctx.setLineDash([5,4]); const x45=X(45); ctx.beginPath();ctx.moveTo(x45,m.t);ctx.lineTo(x45,h-m.b);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#f59e0b'; ctx.fillText('45°',x45+3,m.t+10);
+  if(!n){ ctx.fillStyle='#8aa9c2'; ctx.fillText('还没有限位点',m.l,60); return; }
+  PTS.forEach((p,i)=>{
+    const y=m.t+i*rowH+rowH/2;
+    const v=p.limit_angle==null?0:+p.limit_angle;
+    const col=sideColor(p.side);
+    ctx.fillStyle='#0c1830'; ctx.fillRect(m.l,y-10,w-m.l-m.r,20);
+    const x=X(Math.max(0,Math.min(90,v)));
+    const grad=ctx.createLinearGradient(m.l,0,x||m.l+1,0); grad.addColorStop(0,col+'44'); grad.addColorStop(1,col);
+    ctx.fillStyle=grad; ctx.fillRect(m.l,y-10,Math.max(2,x-m.l),20);
+    ctx.fillStyle='#dff3ff'; ctx.font='11px ui-monospace,monospace';
+    const lab=`${p.id}. ${sideName(p.side)}`;
+    ctx.fillText(lab,8,y+4);
+    ctx.fillStyle=col; ctx.font='700 11px ui-monospace,monospace'; ctx.fillText(v!=null?v.toFixed(2)+'°':'--',x+4,y+4);
+  });
+}
+function renderDirs(sides){
+  const dirs=['left','right','bottom','top'];
+  $('dirGrid').innerHTML=dirs.map(s=>{
+    const p=PTS.find(x=>x.side===s);
+    return `<div class="dirCard"><div class="k"><i class="dot" style="background:${sideColor(s)}"></i>${sideName(s)}</div>
+      <div class="v">${p&&p.limit_angle!=null?p.limit_angle.toFixed(2)+'°':'--'}</div>
+      <div class="s">${p?esc(p.label):'未采集'}${p?(' · '+esc((p.ts||p.updated||p.timestamp||'').slice(0,16)) ):''}</div></div>`;
+  }).join('');
+}
+function renderTable(){
+  $('limitTable').querySelector('tbody').innerHTML=PTS.map(p=>{
+    const c=contacts(p);
+    return `<tr data-id="${p.id}" onclick="selectPoint(${p.id})" class="${SEL===p.id?'on':''}">
+      <td class="mono">${p.id}</td><td class="mono">${esc((p.ts||p.updated||p.timestamp||'').slice(0,19))}</td>
+      <td><i class="dot" style="background:${sideColor(p.side)}"></i> ${esc(sideName(p.side))}</td>
+      <td>${contactTags(p)}</td>
+      <td class="mono" style="color:${sideColor(p.side)};font-weight:700">${p.limit_angle!=null?p.limit_angle.toFixed(2)+'°':'--'}</td>
+      <td class="mono">${fmt(p.tool_elev)}°</td><td class="mono">${fmt(p.cam_opt_elev)}°</td>
+      <td class="mono">${p.tip_above_table!=null?(p.tip_above_table*1000).toFixed(1)+' mm':'--'}</td>
+      <td class="mono">${p.cam_above_table!=null?(p.cam_above_table*1000).toFixed(1)+' mm':'--'}</td>
+      <td>${esc(p.note||'')}</td></tr>`;
+  }).join('')||'<tr><td colspan="10" class="hint">还没有限位点。摆好点后运行 record_headfix_point.py。</td></tr>';
+}
+function selectPoint(id){
+  const p=PTS.find(x=>x.id===id); if(!p) return;
+  SEL=id; document.querySelectorAll('#limitTable tbody tr').forEach(tr=>tr.classList.toggle('on',+tr.dataset.id===id));
+  $('detailTag').textContent=`#${p.id} · ${p.label||''}`;
+  const qd=p.q_deg||[]; const qr=p.q_rad||[];
+  const jbars=qd.map((v,i)=>{
+    const x=Math.max(0,Math.min(100,(+v+180)/360*100));
+    return `<div class="jv"><div class="k">J${i+1} 关节</div><div class="v">${(+v).toFixed(1)}°</div><div class="bar"><i style="left:${x}%;width:2px"></i></div></div>`;
+  }).join('');
+  const imgs=p.images||{};
+  const img=(src,cap)=>src?`<div class="imgBox"><img src="${esc(src)}" alt="${cap}"/><div class="cap">${cap}</div></div>`:`<div class="imgBox"><div class="cap">${cap} · 无图</div></div>`;
+  $('detailBody').innerHTML=`
+    <div class="hint">${esc(p.label||'')} · ${esc((p.ts||p.updated||p.timestamp||''))} · ${esc(sideName(p.side))} · 接触：${contactTags(p)}</div>
+    <div class="detailGrid">${jbars}</div>
+    <div class="imgs">${img(imgs.head,'头部相机')}${img(imgs.wrist,'手腕/爪子相机')}</div>
+    <div class="hint" style="margin-top:10px">rad: <span class="mono">${esc((qr||[]).map(v=>+v.toFixed(3)).join(', '))}</span> · lift ${fmt(p.lift,3)} · finger ${fmt(p.finger,3)}</div>
+    <details style="margin-top:10px"><summary class="hint">原始记录 JSON</summary><pre class="raw">${esc(JSON.stringify(p.raw||p,null,2))}</pre></details>`;
+}
+async function syncDb(){
+  try{
+    $('syncBtn').disabled=true; $('syncBtn').textContent='同步中…';
+    const r=await fetch(API+'/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    const j=await r.json(); if(!r.ok||!j.ok) throw new Error(j.err||('HTTP '+r.status));
+    await load(); $('sumSource').textContent=`已同步 ${j.synced} 点 → SQLite`;
+  }catch(e){ alert('同步失败：'+e.message); }
+  finally{ $('syncBtn').disabled=false; $('syncBtn').textContent='⤓ 同步 points.json'; }
+}
+$('refreshBtn').onclick=load; $('syncBtn').onclick=syncDb;
+window.addEventListener('resize',()=>{ if(PTS.length) renderChart(); });
+load();
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

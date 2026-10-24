@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>八界 · 指挥系统</title>
+<style>
+  :root{--bg:#0b1120;--panel:#121a2c;--panel2:#0f1626;--line:#1e2a44;--txt:#e6edf7;--muted:#8aa0c0;--accent:#22d3ee;--ok:#22c55e;--err:#ef4444;--warn:#f59e0b}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:radial-gradient(900px 500px at 70% -10%,#16233d,var(--bg));color:var(--txt);
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;overscroll-behavior:none}
+  .wrap{max-width:620px;margin:0 auto;padding:12px 12px 40px}
+  header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  h1{font-size:18px;margin:0}
+  h1 b{color:var(--accent)}
+  .pill{font-size:12px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 11px;color:var(--muted)}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:13px;margin-bottom:12px}
+  .card h3{margin:0 0 10px;font-size:12.5px;letter-spacing:1.4px;color:var(--muted);text-transform:uppercase}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .sw{display:inline-flex;align-items:center;gap:7px;font-size:14px}
+  .btn{background:#0c1424;border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:13px 10px;font-size:14px;font-family:inherit}
+  .btn:active{background:var(--accent);color:#012}
+  .btn.mini{padding:9px 10px;font-size:13px}
+  .estop{width:100%;margin-top:10px;background:#7f1d1d;color:#fff;border:1px solid #ef4444;border-radius:13px;padding:15px;font-size:16px;font-weight:800;letter-spacing:1px}
+  .estop:active{background:#991b1b}
+  /* 摇杆 */
+  .joywrap{display:flex;gap:16px;align-items:center;justify-content:center;margin:6px 0 2px}
+  #joy{width:220px;height:220px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#16233d,#0b1220);border:2px solid var(--line);position:relative;touch-action:none;flex:none}
+  #knob{position:absolute;left:50%;top:50%;width:88px;height:88px;margin:-44px 0 0 -44px;border-radius:50%;
+    background:radial-gradient(circle at 50% 35%,#2b4a6e,#16233d);border:2px solid var(--accent);box-shadow:0 6px 20px rgba(0,0,0,.5)}
+  .joyhint{font-size:12px;color:var(--muted);text-align:center;width:120px}
+  /* 机械臂 */
+  .armwrap{display:flex;gap:12px;align-items:center}
+  canvas#arm{background:#070c17;border:1px solid var(--line);border-radius:12px;flex:none}
+  .armbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1}
+  .slider{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted)}
+  input[type=range]{width:100%}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .log{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:var(--muted);max-height:120px;overflow:auto;line-height:1.6;margin-top:6px}
+  .note{font-size:11.5px;color:#5b7295;margin-top:6px}
+  .warnbox{display:none;background:#2a1206;border:1px solid #78350f;border-radius:10px;padding:8px 10px;margin-top:8px;font-size:12px;color:#fbbf24}
+  .warnbox.show{display:block}
+  b.accent{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🤖 <b>八界</b> · 指挥系统</h1>
+    <span class="pill" id="st">连接中…</span>
+    <span class="pill" id="st2">—</span>
+  </header>
+
+  <!-- 驾驶 -->
+  <div class="card">
+    <div class="row"><h3 style="margin:0">🕹 虚拟摇杆 · 驾驶</h3>
+      <label class="sw"><input type="checkbox" id="arm" /> 启用运动</label></div>
+    <div class="joywrap">
+      <div id="joy"><div id="knob"></div></div>
+      <div class="joyhint">推杆前进/后退/转向<br>松手自动停<br>↑前 · ↓后 · 左右=转向</div>
+    </div>
+    <div class="warnbox" id="warn">⚠️ 已启用——推摇杆将真实驱动机器人，注意环境与人员！</div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn mini" data-cmd="停止" style="flex:1">⏹ 停止</button>
+      <button class="btn mini" data-cmd="回充" style="flex:1">🔌 回充</button>
+      <button class="btn mini" data-cmd="挥手打招呼" style="flex:1">👋 招手</button>
+    </div>
+    <button class="estop" id="estop">⛔ 紧急停止 (stop_all)</button>
+  </div>
+
+  <!-- 头部相机 -->
+  <div class="card">
+    <div class="row"><h3 style="margin:0">📷 头部相机（实时）</h3>
+      <label class="sw"><input type="checkbox" id="camOn" checked /> 实时</label></div>
+    <div style="margin-top:8px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#070c17">
+      <img id="cam" alt="等待画面…" style="width:100%;display:block" />
+    </div>
+    <button class="btn mini" id="camShot" style="margin-top:8px;width:100%">📷 立即抓拍</button>
+    <div class="note">取图会触发机器人一次摆位（正常）。</div>
+  </div>
+
+  <!-- 无人机遥控屏 -->
+  <div class="card">
+    <h3>🚁 无人机遥控屏（摄像头拍屏）</h3>
+    <div id="dcWrap" style="width:100%;height:48vh;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#070c17;border-radius:12px">
+      <img id="droneCam" alt="等待画面…" style="display:block;transition:transform .15s" />
+    </div>
+    <div class="row" style="margin-top:6px;gap:6px;flex-wrap:wrap">
+      <button class="btn mini" id="dcRotL">↺90°</button>
+      <button class="btn mini" id="dcRotR">↻90°</button>
+      <span class="sub" id="dcRotV">0°</span>
+    </div>
+    <div class="row" style="margin-top:6px;gap:6px;flex-wrap:wrap">
+      <span class="sub">对焦</span>
+      <button class="btn mini" id="focAuto">自动</button>
+      <button class="btn mini" id="focManual">手动</button>
+      <input type="range" id="focVal" min="0" max="250" step="5" value="60" style="flex:1;min-width:100px" />
+      <span class="sub" id="focV">60</span>
+    </div>
+    <div class="chips" id="osdBox" style="margin-top:8px"></div>
+    <div class="note">只读画面 · RM330 协议闭源</div>
+  </div>
+
+  <!-- 机械臂 -->
+  <div class="card">
+    <h3>🦾 机械臂模拟器</h3>
+    <div class="armwrap">
+      <canvas id="arm" width="220" height="220"></canvas>
+      <div class="armbtns">
+        <button class="btn mini" data-arm="home">🏠 归位</button>
+        <button class="btn mini" data-arm="grip_open">👐 夹爪开</button>
+        <button class="btn mini" data-arm="grip_close">✊ 夹爪关</button>
+        <button class="btn mini" data-arm="unbox">📦 开箱姿态</button>
+        <button class="btn mini" data-arm="grip_maint" style="grid-column:span 2">🔧 夹爪维护</button>
+      </div>
+    </div>
+    <div class="note">拖动黄点 → 松手后真机臂运动到该目标（robot_pose_ctrl）；或点下方预设姿态。</div>
+  </div>
+
+  <!-- 头部/升降 -->
+  <div class="card">
+    <h3>🔭 头部俯仰 / 升降</h3>
+    <div class="slider"><span>头部 <b class="accent" id="hv">0.83</b> rad（0底~1.3顶）</span>
+      <input type="range" id="head" min="0" max="1.3" step="0.05" value="0.83" /></div>
+    <div class="slider" style="margin-top:10px"><span>升降 <b class="accent" id="hev">0.00</b> m（0底~0.44顶）</span>
+      <input type="range" id="height" min="0" max="0.44" step="0.02" value="0" /></div>
+  </div>
+
+  <div class="card">
+    <h3>📷 / 🔊 其它</h3>
+    <div class="grid3">
+      <button class="btn mini" data-cmd="拍照">📷 抓拍</button>
+      <button class="btn mini" id="sayHello">🔊 说句话</button>
+      <button class="btn mini" data-cmd="抬头">🔭 抬头</button>
+    </div>
+    <div class="log" id="log"></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const origin=location.origin;
+function log(m,c){ const d=new Date();const t=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+  const el=document.createElement('div');el.textContent=`[${t}] ${m}`;if(c)el.style.color=c;$('log').appendChild(el);$('log').scrollTop=$('log').scrollHeight; }
+async function post(obj){ const c=new AbortController(); const t=setTimeout(()=>c.abort(),3000);
+  try{ const r=await fetch(origin+"/cmd",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(obj),signal:c.signal}); return await r.json(); }
+  catch(e){ return {ok:false,error:e.message}; } finally{ clearTimeout(t); } }
+
+/* ---- 通用按钮 ---- */
+document.querySelectorAll("[data-cmd]").forEach(b=>b.onclick=async()=>{ const j=await post({text:b.dataset.cmd}); log(b.dataset.cmd+" ⇒ "+((j&&j.detail)||"?"), j&&j.ok?"#22c55e":"#ef4444"); });
+
+/* ---- 急停 ---- */
+$("estop").onclick=async()=>{ $("arm").checked=false; $("warn").classList.remove("show"); joyActive=false; centerKnob(); const j=await post({action:"stop"}); log("⛔ 急停 "+((j&&j.detail)||""),"#ef4444"); };
+$("arm").onchange=()=>{ $("warn").classList.toggle("show",$("arm").checked); };
+$("sayHello").onclick=async()=>{ const j=await post({action:"speech",text:"你好，我是八界"}); log("播报 "+((j&&j.detail)||"")); };
+
+/* ---- 摇杆 ---- */
+const joy=$("joy"),knob=$("knob");let joyActive=false,R=70,lastTx=0;
+function vec(e){ const r=joy.getBoundingClientRect(); const cx=r.left+r.width/2,cy=r.top+r.height/2;
+  let dx=e.clientX-cx,dy=e.clientY-cy; const m=Math.hypot(dx,dy); if(m>R){dx=dx/m*R;dy=dy/m*R;} return {dx,dy,nx:dx/R,ny:dy/R}; }
+function setKnob(dx,dy){ knob.style.transform=`translate(${dx}px,${dy}px)`; }
+function centerKnob(){ setKnob(0,0); }
+function camPause(p){ camPaused=p; }
+let joyVec=null;
+function startJoy(e){ e.preventDefault(); if(!$("arm").checked){ log("请先勾『启用运动』","#f59e0b"); return; } joyActive=true; joy.setPointerCapture&&joy.setPointerCapture(e.pointerId); const v=vec(e); setKnob(v.dx,v.dy); joyVec={nx:v.nx,ny:v.ny}; camPause(true); }
+function move(e){ if(!joyActive)return; e.preventDefault(); const v=vec(e); setKnob(v.dx,v.dy); joyVec={nx:v.nx,ny:v.ny}; }
+function endJoy(){ if(!joyActive)return; joyActive=false; centerKnob(); joyVec=null; post({action:"stop"}); log("松杆停","#f59e0b"); camPause(false); }
+joy.addEventListener("pointerdown",startJoy);
+joy.addEventListener("pointermove",move);
+joy.addEventListener("pointerup",endJoy);
+joy.addEventListener("pointercancel",endJoy);
+joy.addEventListener("contextmenu",e=>e.preventDefault());
+let jSending=false;
+setInterval(()=>{
+  if(!joyActive||!joyVec||jSending) return;
+  const now=Date.now(); if(now-lastTx<1500) return; lastTx=now;
+  const dz=0.28; let d=0,a=0;
+  if(joyVec.ny<-dz) d=+(0.8*Math.min(1,-joyVec.ny)).toFixed(2);
+  if(joyVec.ny> dz) d=+(-0.8*Math.min(1,joyVec.ny)).toFixed(2);
+  if(joyVec.nx<-dz) a=+(1.1*Math.min(1,-joyVec.nx)).toFixed(2);
+  if(joyVec.nx>dz) a=+(-1.1*Math.min(1,joyVec.nx)).toFixed(2);
+  if(d!==0||a!==0){ jSending=true; post({action:"chassis",d,a}).finally(()=>{ jSending=false; }); }
+},120);
+
+/* ---- 头部/升降 滑块 ---- */
+let headT=null,heightT=null;
+$("head").oninput=()=>{ $("hv").textContent=$("head").value; clearTimeout(headT); headT=setTimeout(()=>post({action:"head",value:+$("head").value}),250); };
+$("height").oninput=()=>{ $("hev").textContent=$("height").value; clearTimeout(heightT); heightT=setTimeout(()=>post({action:"height",value:+$("height").value}),250); };
+
+/* ---- 机械臂模拟器（可拖动） ---- */
+const cv=$("arm"),cx=cv.getContext("2d");
+const POSES={ home:{s:-105,e:35,w:60,g:0.15}, grip_open:{s:-70,e:40,w:35,g:1}, grip_close:{s:-70,e:40,w:35,g:0}, unbox:{s:-35,e:25,w:15,g:0.1}, grip_maint:{s:-150,e:-20,w:120,g:0.6} };
+let cur={s:-105,e:35,w:60,g:0.15}, tgt={...cur};
+const BX=60,BY=200,L1=72,L2=64,PXPM=270; let tgtPt={x:BX+L1,y:BY-40};
+const clamp1=v=>Math.max(-1,Math.min(1,v));
+function ik(tx,ty){ let dx=tx-BX,dy=ty-BY,d=Math.hypot(dx,dy); const maxr=L1+L2-1; if(d>maxr){dx=dx/d*maxr;dy=dy/d*maxr;d=maxr;} else if(d<1e-3){d=1;dx=1;dy=0;}
+  const a=Math.atan2(dy,dx); const e=Math.acos(clamp1((L1*L1+L2*L2-d*d)/(2*L1*L2))); const s=a-Math.acos(clamp1((L1*L1+d*d-L2*L2)/(2*L1*d)));
+  return {s:s*180/Math.PI,e:e*180/Math.PI}; }
+function drawArm(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  cx.strokeStyle="#243b5a";cx.lineWidth=2;cx.beginPath();cx.moveTo(20,BY+6);cx.lineTo(cv.width-20,BY+6);cx.stroke();
+  const a1=cur.s*Math.PI/180, a2=(cur.s+cur.e)*Math.PI/180, a3=(cur.s+cur.e+cur.w)*Math.PI/180;
+  const j1x=BX+Math.cos(a1)*L1, j1y=BY+Math.sin(a1)*L1;
+  const j2x=j1x+Math.cos(a2)*L2, j2y=j1y+Math.sin(a2)*L2;
+  cx.lineCap="round";
+  cx.strokeStyle="#22d3ee";cx.lineWidth=9;cx.beginPath();cx.moveTo(BX,BY);cx.lineTo(j1x,j1y);cx.stroke();
+  cx.strokeStyle="#38bdf8";cx.lineWidth=7;cx.beginPath();cx.moveTo(j1x,j1y);cx.lineTo(j2x,j2y);cx.stroke();
+  cx.fillStyle="#1e3a5f";cx.beginPath();cx.arc(BX,BY,9,0,7);cx.fill();
+  const gx=j2x+Math.cos(a3)*16, gy=j2y+Math.sin(a3)*16; const spread=6+cur.g*10; const px=Math.cos(a3+Math.PI/2), py=Math.sin(a3+Math.PI/2);
+  cx.strokeStyle="#a78bfa";cx.lineWidth=5;
+  cx.beginPath();cx.moveTo(j2x+px*spread,j2y+py*spread);cx.lineTo(gx+px*spread,gy+py*spread);cx.stroke();
+  cx.beginPath();cx.moveTo(j2x-px*spread,j2y-py*spread);cx.lineTo(gx-px*spread,gy-py*spread);cx.stroke();
+  cx.fillStyle="#a78bfa";cx.beginPath();cx.arc(j2x,j2y,5,0,7);cx.fill();
+  cx.strokeStyle="#f59e0b";cx.lineWidth=2;cx.beginPath();cx.arc(tgtPt.x,tgtPt.y,11,0,7);cx.stroke();
+}
+function anim(){ for(const k of ["s","e","w","g"]){ cur[k]+=(tgt[k]-cur[k])*0.12; } drawArm(); requestAnimationFrame(anim); }
+anim();
+let armDrag=false;
+function armEvt(e){ const r=cv.getBoundingClientRect(); return {x:(e.clientX-r.left)*(cv.width/r.width), y:(e.clientY-r.top)*(cv.height/r.height)}; }
+cv.style.touchAction="none";
+cv.addEventListener("pointerdown",e=>{ e.preventDefault(); armDrag=true; cv.setPointerCapture&&cv.setPointerCapture(e.pointerId); const p=armEvt(e); tgtPt={x:p.x,y:p.y}; const k=ik(p.x,p.y); tgt.s=k.s; tgt.e=k.e; });
+cv.addEventListener("pointermove",e=>{ if(!armDrag)return; e.preventDefault(); const p=armEvt(e); tgtPt={x:p.x,y:p.y}; const k=ik(p.x,p.y); tgt.s=k.s; tgt.e=k.e; });
+function armEnd(){ if(!armDrag)return; armDrag=false;
+  const fx=+((tgtPt.x-BX)/PXPM).toFixed(3), fz=+((BY-tgtPt.y)/PXPM).toFixed(3);
+  const item={frame_id:"arm_camera_color_optical_frame",position:{x:fx,y:0,z:fz},orientation:{x:0,y:0,z:0,w:1}};
+  post({action:"pose",pose:item}).then(j=>log("🦾 位姿 x="+fx+" z="+fz+" ⇒ "+((j&&j.detail)||"?"), j&&j.ok?"#22c55e":"#ef4444")); }
+["pointerup","pointercancel"].forEach(ev=>cv.addEventListener(ev,armEnd));
+document.querySelectorAll("[data-arm]").forEach(b=>b.onclick=async()=>{
+  const mode=b.dataset.arm; tgt={...POSES[mode]};
+  const j=await post({action:"arm",mode}); log("臂 "+mode+" ⇒ "+((j&&j.detail)||"?")+(j&&j.ok?"":" 失败"), j&&j.ok?"#22c55e":"#ef4444");
+});
+
+/* ---- 头部相机 ---- */
+try{ const _dc=$("droneCam"); if(_dc) _dc.src="http://"+location.hostname+":8091/stream";
+  let _r=parseInt(localStorage.getItem("droneCamRot")||"0",10)||0;
+  function _fit(){ const w=$("dcWrap"); if(!_dc||!w) return; const W=w.clientWidth,H=w.clientHeight,iw=_dc.naturalWidth,ih=_dc.naturalHeight; if(!iw||!ih) return;
+    const s0=Math.min(W/iw,H/ih); const dW=iw*s0,dH=ih*s0; let k=1; if(_r%180!==0) k=Math.min(1,W/dH,H/dW);
+    _dc.style.width=dW+"px"; _dc.style.height=dH+"px"; _dc.style.transform="rotate("+_r+"deg) scale("+k+")"; $("dcRotV").textContent=_r+"°"; localStorage.setItem("droneCamRot",String(_r)); }
+  $("dcRotL").onclick=()=>{ _r=((_r-90)%360+360)%360; _fit(); };
+  $("dcRotR").onclick=()=>{ _r=(_r+90)%360; _fit(); };
+  _dc.addEventListener("load",_fit); window.addEventListener("resize",_fit);
+  _fit(); setTimeout(_fit,1200);
+}catch(e){}
+try{
+  const _cb="http://"+location.hostname+":8091";
+  const _fs=(a,v)=>fetch(_cb+"/focus?auto="+(a?1:0)+"&val="+v,{cache:"no-store"}).then(r=>r.text()).then(t=>log("对焦: "+t.replace(/\n/g," "))).catch(e=>log("对焦失败 "+e.message,"#ef4444"));
+  $("focAuto").onclick=()=>_fs(1,0);
+  $("focManual").onclick=()=>_fs(0,$("focVal").value);
+  $("focVal").oninput=()=>{ $("focV").textContent=$("focVal").value; };
+  $("focVal").onchange=()=>_fs(0,$("focVal").value);
+}catch(e){}
+try{ const _ob=$("osdBox"); const _esc=s=>String(s).replace(/[<>&]/g,"");
+  const _pull=async()=>{ try{ const r=await fetch("http://"+location.hostname+":8091/osd.json",{cache:"no-store"}); const j=await r.json();
+    const ts=j.texts||[]; if(ts.length){ _ob.innerHTML=ts.map(t=>'<span class="chip">'+_esc(t)+'</span>').join(""); }
+  }catch(e){} };
+  _pull(); setInterval(_pull,2500);
+}catch(e){}
+let camTimer=null,camPaused=false;
+function camTick(){ if(camPaused) return; $("cam").src=origin+"/cam.jpg?t="+Date.now(); }
+$("camShot").onclick=camTick;
+$("camOn").onchange=()=>{ if(camTimer){clearInterval(camTimer);camTimer=null;} if($("camOn").checked){ camTick(); camTimer=setInterval(camTick,2500); } };
+if($("camOn").checked){ camTick(); camTimer=setInterval(camTick,2500); }
+
+/* ---- 状态轮询 ---- */
+async function poll(){ try{ const r=await fetch(origin+"/state"); const j=await r.json(); const d=(j.data||{});
+  if(d.battery) $("st").textContent="🔋 "+Math.round(d.battery.value)+"%"+ (d.battery.isCharge?"⚡":"");
+  if(d.pos) $("st2").textContent="📍 "+(d.pos.room||"")+" ("+d.pos.x.toFixed(1)+","+d.pos.y.toFixed(1)+")";
+}catch(e){ $("st").textContent="状态离线"; } }
+setInterval(poll,2000); poll();
+log("指挥系统就绪 · 八界");
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

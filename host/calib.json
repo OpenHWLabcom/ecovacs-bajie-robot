@@ -1,0 +1,102 @@
+{
+ "trimDeg": -8,
+ "offsetDeg": 8.4,
+ "slope": 0.1012,
+ "cmdScale": 1.101,
+ "meanErrDeg": 8.4,
+ "samples": [
+  {
+   "name": "",
+   "bearing": -70,
+   "err": -1.2,
+   "n": 6
+  },
+  {
+   "name": "",
+   "bearing": -60,
+   "err": -1.2,
+   "n": 6
+  },
+  {
+   "name": "",
+   "bearing": -50,
+   "err": 2.5,
+   "n": 6
+  },
+  {
+   "name": "",
+   "bearing": -40,
+   "err": 3.6,
+   "n": 6
+  },
+  {
+   "name": "",
+   "bearing": -30,
+   "err": 5.8,
+   "n": 6
+  },
+  {
+   "name": "",
+   "bearing": -20,
+   "err": 6.8,
+   "n": 6
+  },
+  {
+   "name": "",
+   "bearing": -10,
+   "err": 8.4,
+   "n": 6
+  },
+  {
+   "name": "",
+   "bearing": 0,
+   "err": 7.3,
+   "n": 6
+  },
+  {
+   "name": "",
+   "bearing": 10,
+   "err": 15.7,
+   "n": 6
+  },
+  {
+   "name": "",
+   "bearing": 20,
+   "err": 17.2,
+   "n": 6
+  },
+  {
+   "name": "",
+   "bearing": 30,
+   "err": 17.1,
+   "n": 6
+  },
+  {
+   "name": "",
+   "bearing": 40,
+   "err": 13.3,
+   "n": 6
+  },
+  {
+   "name": "",
+   "bearing": 50,
+   "err": 11.8,
+   "n": 6
+  },
+  {
+   "name": "",
+   "bearing": 60,
+   "err": 10.4,
+   "n": 6
+  },
+  {
+   "name": "",
+   "bearing": 70,
+   "err": 8.3,
+   "n": 6
+  }
+ ],
+ "rounds": 6,
+ "ts": 1791874832,
+ "note": "samples = 逐方位中位(跨 6 轮)；控制台按方位表反解"
+}

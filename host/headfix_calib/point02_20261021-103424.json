@@ -1,0 +1,103 @@
+{
+  "id": 2,
+  "label": "右侧贴桌极限",
+  "note": "右侧极限位置；相机已碰桌（小臂是否碰桌待确认）",
+  "timestamp": "2026-10-21 10:34:24",
+  "q_rad": [
+    -0.141,
+    -0.928,
+    -1.014,
+    1.767,
+    -1.67,
+    -0.075
+  ],
+  "q_deg": [
+    -8.08,
+    -53.17,
+    -58.1,
+    101.24,
+    -95.68,
+    -4.3
+  ],
+  "lift": 0.4397,
+  "finger": 0.001,
+  "gripper_pos": [
+    0.7808,
+    0.0423,
+    0.7121
+  ],
+  "tip_pos": [
+    0.7659,
+    0.1708,
+    0.718
+  ],
+  "camera_pos": [
+    0.8672,
+    0.0507,
+    0.7265
+  ],
+  "tool_axis": [
+    -0.1153,
+    0.9923,
+    0.0458
+  ],
+  "tool_elev_deg": 2.62,
+  "tool_vs_vertical_deg": 87.38,
+  "gripper_axes_elev_deg": {
+    "x": -9.46,
+    "y": 80.18,
+    "z": 2.62
+  },
+  "camera_axes": {
+    "x": [
+      0.131,
+      0.049,
+      -0.991
+    ],
+    "y": [
+      -0.923,
+      -0.358,
+      -0.14
+    ],
+    "z": [
+      -0.362,
+      0.933,
+      -0.002
+    ]
+  },
+  "camera_axes_elev_deg": {
+    "x": -81.96,
+    "y": -8.04,
+    "z": -0.1
+  },
+  "camera_opt_elev_deg": -0.1,
+  "gripper_face_angle_to_table_deg": 9.82,
+  "camera_face_angle_to_table_deg": 81.96,
+  "camera_height_above_gripper": 0.0144,
+  "contact": {
+    "side": "right",
+    "camera": true,
+    "forearm": false
+  },
+  "forearm_min_z": 0.6716,
+  "table_z": 0.692,
+  "table_z_source": "given",
+  "tip_height_above_table": 0.026,
+  "camera_origin_height_above_table": 0.0345,
+  "camera_tf_gripper": {
+    "xyz": [
+      -0.088,
+      0.0,
+      -0.001
+    ],
+    "rpy_deg": [
+      -14.801,
+      0.693,
+      -88.331
+    ]
+  },
+  "images": {
+    "head": "headfix_calib/point02_head_20261021-103424.jpg",
+    "wrist": "headfix_calib/point02_wrist_20261021-103424.jpg"
+  }
+}

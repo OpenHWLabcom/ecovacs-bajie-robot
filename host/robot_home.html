@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>智能硬件开放实验室研发 · 机器人控制系统导航</title>
+<style>
+  :root{--bg:#070d18;--card:#101c2f;--card2:#0c1830;--line:#22344d;--txt:#e8f2ff;--sub:#8aa9c2;--cyan:#22d3ee;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;--violet:#a78bfa;--pink:#f472b6}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:radial-gradient(1200px 700px at 50% -250px,#12304a 0%,var(--bg) 58%);color:var(--txt);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif}
+  a{color:var(--cyan);text-decoration:none}
+  .wrap{max-width:1500px;margin:0 auto;padding:18px 22px 60px}
+  .labNav{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#0b1729;margin-bottom:16px}
+  .labBrand{font-weight:750;color:var(--cyan);letter-spacing:.5px}.labNavSub{color:var(--sub);font-size:12px}
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:16px}
+  h1{font-size:30px;margin:0;letter-spacing:.2px}h1 span{color:var(--cyan)}
+  .sub{color:var(--sub);font-size:12.5px}
+  .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#0e1a2c;color:var(--txt);border-radius:10px;padding:9px 13px;font:600 12.5px ui-monospace,monospace;cursor:pointer}
+  .btn:hover{border-color:#3a5a7a}.btn.primary{background:linear-gradient(180deg,#0e7490,#155e75);border-color:#22d3ee55}
+  .btn.warn{background:#3a2607;border-color:#f59e0b88;color:#fbbf24}.btn.busy{opacity:.65;cursor:wait}
+  .statusBar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .st{display:flex;align-items:center;gap:8px;background:#0c1830;border:1px solid var(--line);border-radius:12px;padding:8px 12px;font:12px ui-monospace,monospace;color:var(--sub)}
+  .st b{color:var(--txt);font-weight:650}
+  .dot{width:9px;height:9px;border-radius:50%;background:#64748b;box-shadow:0 0 0 transparent}
+  .dot.on{background:var(--green);box-shadow:0 0 10px #22c55e99}.dot.warn{background:var(--amber);box-shadow:0 0 10px #f59e0b99}.dot.bad{background:var(--red);box-shadow:0 0 10px #ef444499}
+  .searchRow{display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+  .searchRow input{flex:1;min-width:220px;background:#0b1729;border:1px solid var(--line);color:var(--txt);border-radius:11px;padding:11px 14px;font:13px ui-monospace,monospace;outline:none}
+  .searchRow input:focus{border-color:#22d3ee66}
+  .section{margin-bottom:22px}
+  .section h2{font-size:15px;margin:0 0 10px;color:#cfe6f8;display:flex;align-items:center;gap:9px}
+  .section h2 .tag{font:500 11px/1 ui-monospace,monospace;color:var(--sub);border:1px solid var(--line);border-radius:999px;padding:3px 7px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:1200px){.grid{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  .card{position:relative;display:flex;flex-direction:column;gap:8px;background:linear-gradient(180deg,#12223a,#0d1728);border:1px solid var(--line);border-left:3px solid var(--accent,#22d3ee);border-radius:14px;padding:14px 15px 13px;min-height:142px;box-shadow:0 10px 24px #0004;transition:transform .12s,border-color .12s,background .12s}
+  .card:hover{transform:translateY(-2px);border-color:#3a5a7a;background:linear-gradient(180deg,#152a46,#0e1a2c)}
+  .card .top{display:flex;align-items:center;gap:9px}
+  .card .ico{font-size:24px;line-height:1}
+  .card .title{font-size:15px;font-weight:700;color:#e8f2ff}
+  .card .desc{color:var(--sub);font-size:12px;line-height:1.55;flex:1}
+  .card .tags{display:flex;gap:5px;flex-wrap:wrap}
+  .card .tags span{font:10.5px ui-monospace,monospace;color:var(--sub);border:1px solid #2b4a66;border-radius:999px;padding:2px 7px}
+  .card .go{position:absolute;right:12px;top:12px;color:var(--accent,#22d3ee);font:11px ui-monospace,monospace;opacity:.9}
+  .recent{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .recent a{display:inline-flex;align-items:center;gap:6px;background:#0c1830;border:1px solid var(--line);border-radius:999px;padding:6px 11px;font:11.5px ui-monospace,monospace;color:var(--sub)}
+  .recent a:hover{border-color:#3a5a7a;color:var(--txt)}
+  .empty{color:var(--sub);font-size:12.5px;padding:8px 0}
+  .foot{margin-top:30px;color:var(--sub);font-size:11.5px;text-align:center}
+  .clock{font:12px ui-monospace,monospace;color:var(--sub)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="labNav"><span class="labBrand">智能硬件开放实验室研发</span><span class="labNavSub">八界机器人 · 控制系统导航</span><span class="clock" id="clock" style="margin-left:auto"></span></nav>
+  <header>
+    <div>
+      <h1>机器人控制系统 · <span>导航总页</span></h1>
+      <div class="sub">控制台 · 3D 机械臂 · 数据采集 · 训练分析 · 限位标定 · 相机与工具，一页进入</div>
+    </div>
+    <div style="display:flex;gap:9px;flex-wrap:wrap">
+      <button class="btn" id="modeBtn" title="切换真机 / 本地模式">🔌 真机模式</button>
+      <button class="btn" id="refreshBtn">🔄 刷新状态</button>
+      <button class="btn" id="fsBtn" title="整页全屏">⛶ 全屏</button>
+      <a class="btn primary" href="index.html" target="_blank" rel="noopener">🎛️ 主控制台</a>
+    </div>
+  </header>
+
+  <div class="statusBar">
+    <div class="st"><span class="dot" id="dotMode"></span>模式 <b id="stMode">真机</b></div>
+    <div class="st"><span class="dot" id="dotRobot"></span>机器人 <b id="stRobot">检查中…</b></div>
+    <div class="st"><span class="dot" id="dotRec"></span>采集 <b id="stRec">检查中…</b></div>
+    <div class="st"><span class="dot" id="dotLimits"></span>限位库 <b id="stLimits">检查中…</b></div>
+    <div class="st"><span class="dot" id="dotCams"></span>相机 <b id="stCams">检查中…</b></div>
+    <div class="st"><span class="dot" id="dotMem"></span>内存 <b id="stMem">检查中…</b></div>
+    <div class="st"><span class="dot" id="dotTest"></span>测试 <b id="stTest">检查中…</b></div>
+  </div>
+
+  <div class="searchRow">
+    <input id="search" placeholder="搜索页面 / 功能（例如：定点头、3D、夹爪、训练数据）"/>
+    <span class="sub" id="count">--</span>
+  </div>
+
+  <div class="recent" id="recent"></div>
+
+  <div id="groups"></div>
+
+  <div class="foot">智能硬件开放实验室研发 · 机器人控制系统导航</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const HOST=location.hostname||'127.0.0.1';
+const PAGES=[
+  {id:'console',group:'控制',icon:'🎛️',title:'主控制台',desc:'实时看板、开发控制台、机器人 App、关节执行、升降与夹爪',url:'index.html',tags:['控制','调试','关节'],color:'#22d3ee'},
+  {id:'arm3d',group:'控制',icon:'🤖',title:'3D 机械臂',desc:'真机 3D 网格、拖拽示教、定点头、限位保护、波浪模式',url:'arm3d.html',tags:['3D','真机','定点头'],color:'#a78bfa'},
+  {id:'grip',group:'控制',icon:'✊',title:'夹爪控制',desc:'夹爪开度滑杆、合爪 / 全闭 / 张爪、实时状态',url:'grip.html',tags:['夹爪','开合'],color:'#f472b6'},
+  {id:'voice',group:'控制',icon:'🎙️',title:'语音控制',desc:'语音指令、播报、麦克风状态',url:'voice.html',tags:['语音','交互'],color:'#f59e0b'},
+  {id:'cmd',group:'控制',icon:'🕹️',title:'指挥系统',desc:'机器人指挥 / 任务指令入口',url:'cmd.html',tags:['任务','指挥'],color:'#60a5fa'},
+
+  {id:'viewer',group:'数据与训练',icon:'📊',title:'训练数据综合分析台',desc:'任务筛选、质量指标、动作 Δp99、逐条回放、HDF5 数据集',url:'data_viewer.html',tags:['训练数据','分析','回放'],color:'#22d3ee'},
+  {id:'collect',group:'数据与训练',icon:'🎥',title:'定点头数据采集',desc:'3D 预览、真机/仿真定点头、实时状态、头腕相机、episode 标记',url:'headfix_collect.html',tags:['采集','定点头','episode'],color:'#a78bfa'},
+  {id:'limits',group:'数据与训练',icon:'📐',title:'限位数据库',desc:'爪头临界角点位、方向覆盖、SQLite 记录、CSV 导出',url:'headfix_limits.html',tags:['限位','标定','数据库'],color:'#f59e0b'},
+  {id:'annotate',group:'数据与训练',icon:'🏷️',title:'标注训练',desc:'抓取物 / 存放位置标注，头部与爪子相机画面',url:'annotate.html',tags:['标注','视觉'],color:'#22c55e'},
+
+  {id:'testplan',group:'测试与验收',icon:'✅',title:'测试计划清单',desc:'运动 / 标定 / 感知 / 数据 / 训练 / 可靠性测试清单与完成进度',url:'test_plan.html',tags:['测试','验收','进度'],color:'#22c55e'},
+
+  {id:'dance',group:'工具',icon:'💃',title:'舞蹈编辑器',desc:'关键帧编排、3D 预览、导入/导出、真机播放',url:'dance_editor.html',tags:['动作','编排','3D'],color:'#f472b6'},
+  {id:'camhead',group:'工具',icon:'📷',title:'头部相机',desc:'头部识别画面（percd，:8799）实时 MJPEG',url:`http://${HOST}:8799/`,tags:['相机','头部'],color:'#22d3ee',external:true},
+  {id:'camwrist',group:'工具',icon:'🎯',title:'爪子相机',desc:'手腕/爪子识别画面（percg，:8800）实时 MJPEG',url:`http://${HOST}:8800/`,tags:['相机','手腕'],color:'#22c55e',external:true}
+];
+const GROUPS=['控制','数据与训练','测试与验收','工具'];
+function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function setDot(id,state){const d=$(id); if(!d)return; d.className='dot '+(state||'');}
+async function jget(url,ms=2500){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(url,{cache:'no-store',signal:c.signal});return await r.json();}finally{clearTimeout(t);}}
+function pingImg(url){return new Promise(res=>{const i=new Image();let done=false;const f=v=>{if(done)return;done=true;res(v)};i.onload=()=>f(true);i.onerror=()=>f(false);i.src=url+'?t='+Date.now();setTimeout(()=>f(false),2500);});}
+
+const MODE_API=`http://${HOST}:8795`;
+let navMode={mode:'real',robot_online:false,reason:'',busy:false};
+function renderMode(){
+  const local=navMode.mode==='local';
+  setDot('dotMode',local?'warn':'on');
+  $('stMode').textContent=local?'本地模式':'真机模式';
+  const b=$('modeBtn');
+  b.textContent=local?'📍 本地模式 · 点此回真机':'🔌 真机模式 · 点此切本地';
+  b.classList.toggle('warn',local);
+  b.title=local?((navMode.reason||'机器人已断开')+(navMode.auto?'（机器人上线后会自动切回真机）':'')):'点击切换到本地模式（不连接机器人；机器人掉线会自动切）';
+}
+async function refreshMode(){
+  try{
+    const d=await jget(MODE_API+'/mode',2200);
+    if(d&&d.ok){ navMode=d; renderMode(); }
+  }catch(e){ setDot('dotMode','bad'); $('stMode').textContent='模式服务未连接'; }
+}
+$('modeBtn').onclick=async()=>{
+  const target=navMode.mode==='local'?'real':'local';
+  const b=$('modeBtn'); if(b.disabled) return;
+  b.disabled=true; b.classList.add('busy'); const old=b.textContent; b.textContent='切换中…';
+  try{
+    const r=await fetch(MODE_API+'/mode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:target})});
+    const j=await r.json();
+    if(j&&j.ok){ navMode.mode=target; navMode.reason=j.reason||''; renderMode(); }
+    else { b.textContent='切换失败'; setTimeout(()=>{b.textContent=old;},2000); }
+  }catch(e){ b.textContent='切换失败'; setTimeout(()=>{b.textContent=old;},2000); }
+  b.disabled=false; b.classList.remove('busy');
+  setTimeout(refreshMode,1200); setTimeout(refreshStatus,1600);
+};
+
+async function refreshStatus(){
+  // 机器人
+  try{
+    const d=await jget(`http://${HOST}:8796/joints`);
+    if(d&&d.status==='ok'&&!d.offline){
+      setDot('dotRobot','on'); $('stRobot').textContent=`在线 · ${d.lift!=null?(d.lift*100).toFixed(0):'?'}cm · 爪 ${d.finger!=null?(+d.finger).toFixed(2):'?'}`;
+    } else if(d&&d.offline){
+      setDot('dotRobot','warn'); $('stRobot').textContent='本地模式 · 未连接机器人';
+    } else { setDot('dotRobot','warn'); $('stRobot').textContent='桥在线 · 机器人 '+(d&&d.status||'?'); }
+  }catch(e){ setDot('dotRobot','warn'); $('stRobot').textContent='本地模式 · 桥未启动'; }
+  // 采集
+  try{
+    const d=await jget(`http://${HOST}:8789/status`);
+    if(d&&d.running){ setDot('dotRec','warn'); $('stRec').textContent='录制中 · '+((d.samples||0))+' 样本'; }
+    else { setDot('dotRec','on'); $('stRec').textContent='待机'; }
+  }catch(e){ setDot('dotRec','bad'); $('stRec').textContent=':8789 未连接'; }
+  // 限位库
+  try{
+    const d=await jget(`http://${HOST}:8788/stats`);
+    setDot('dotLimits','on'); $('stLimits').textContent=`${d.points||0} 点 · ${d.angle_min!=null?d.angle_min.toFixed(1):'--'}°–${d.angle_max!=null?d.angle_max.toFixed(1):'--'}°`;
+  }catch(e){ setDot('dotLimits','bad'); $('stLimits').textContent=':8788 未连接'; }
+  // 相机
+  const [h,w]=await Promise.all([pingImg(`http://${HOST}:8799/snap.jpg`),pingImg(`http://${HOST}:8800/snap.jpg`)]);
+  const n=(h?1:0)+(w?1:0); setDot('dotCams',n===2?'on':(n?'warn':'bad')); $('stCams').textContent=`${n}/2 路`;
+  // 内存
+  try{
+    const d=await jget(`http://${HOST}:8789/sys`);
+    const a=+d.mem_available_mb||0, t=+d.mem_total_mb||1;
+    setDot('dotMem',a<500?'bad':(a<1000?'warn':'on'));
+    $('stMem').textContent=`${(a/1024).toFixed(1)} / ${(t/1024).toFixed(1)} GB`;
+  }catch(e){ setDot('dotMem','bad'); $('stMem').textContent='--'; }
+}
+
+async function refreshTest(){
+  try{
+    const d=await jget('test_plan.json',3000);
+    let ov={}; try{ ov=JSON.parse(localStorage.getItem('robotTestOverrides')||'{}')||{}; }catch(e){ ov={}; }
+    let total=0, done=0;
+    for(const c of (d.categories||[])) for(const it of (c.items||[])){
+      total++; if(Object.prototype.hasOwnProperty.call(ov,it.id)?!!ov[it.id]:!!it.done) done++;
+    }
+    setDot('dotTest',done===total?'on':(done?'warn':'bad'));
+    $('stTest').textContent=`${done}/${total} 完成`;
+  }catch(e){ setDot('dotTest','bad'); $('stTest').textContent='清单不可用'; }
+}
+
+let filter='';
+function cardHTML(p){
+  const ext=p.external?' <span style="font-size:10px">↗</span>':'';
+  return `<a class="card" style="--accent:${p.color}" href="${p.url}" target="_blank" rel="noopener" data-id="${p.id}" data-title="${esc(p.title)}">
+    <span class="go">进入${ext}</span>
+    <div class="top"><span class="ico">${p.icon}</span><span class="title">${esc(p.title)}</span></div>
+    <div class="desc">${esc(p.desc)}</div>
+    <div class="tags">${p.tags.map(t=>`<span>${esc(t)}</span>`).join('')}</div>
+  </a>`;
+}
+function render(){
+  const q=filter.trim().toLowerCase();
+  let total=0;
+  const out=[];
+  for(const g of GROUPS){
+    const items=PAGES.filter(p=>p.group===g && (!q || (p.title+' '+p.desc+' '+p.tags.join(' ')).toLowerCase().includes(q)));
+    if(!items.length) continue;
+    total+=items.length;
+    out.push(`<section class="section"><h2>${g} <span class="tag">${items.length}</span></h2><div class="grid">${items.map(cardHTML).join('')}</div></section>`);
+  }
+  $('groups').innerHTML=out.join('')||'<div class="empty">没有匹配的页面</div>';
+  $('count').textContent=total+' / '+PAGES.length+' 个页面';
+  $('groups').querySelectorAll('.card').forEach(a=>a.addEventListener('click',()=>remember(a.dataset.id)));
+}
+function remember(id){
+  try{
+    let r=JSON.parse(localStorage.getItem('robotNavRecent')||'[]'); r=[id].concat(r.filter(x=>x!==id)).slice(0,6);
+    localStorage.setItem('robotNavRecent',JSON.stringify(r)); renderRecent();
+  }catch(e){}
+}
+function renderRecent(){
+  let r=[]; try{ r=JSON.parse(localStorage.getItem('robotNavRecent')||'[]'); }catch(e){}
+  const items=r.map(id=>PAGES.find(p=>p.id===id)).filter(Boolean);
+  $('recent').innerHTML=items.length?'<span class="sub" style="align-self:center;margin-right:4px">最近：</span>'+items.map(p=>`<a href="${p.url}" target="_blank" rel="noopener">${p.icon} ${esc(p.title)}</a>`).join(''):'';
+}
+$('search').oninput=e=>{filter=e.target.value;render();};
+$('refreshBtn').onclick=refreshStatus;
+$('fsBtn').onclick=()=>{
+  if(document.fullscreenElement){ document.exitFullscreen(); }
+  else { document.documentElement.requestFullscreen().catch(()=>{}); }
+};
+document.addEventListener('fullscreenchange',()=>{ $('fsBtn').textContent=document.fullscreenElement?'⛶ 退出全屏':'⛶ 全屏'; });
+setInterval(()=>{const d=new Date();$('clock').textContent=d.toLocaleString('zh-CN',{hour12:false});},1000);
+render(); renderRecent(); refreshStatus(); refreshTest(); refreshMode();
+setInterval(refreshStatus,10000); setInterval(refreshTest,30000); setInterval(refreshMode,2000);
+</script>
+</body>
+</html>

@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>智能硬件开放实验室研发 · 训练数据综合分析台</title>
+<style>
+  :root{
+    --bg:#070d18;--bg2:#0b1424;--card:#101c2f;--card2:#0d1728;--line:#22344d;
+    --txt:#e8f2ff;--sub:#8aa9c2;--cyan:#22d3ee;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;--violet:#a78bfa;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:radial-gradient(1200px 600px at 50% -200px,#12304a 0%,var(--bg) 55%);color:var(--txt);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif}
+  a{color:var(--cyan);text-decoration:none}
+  .labNav{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#0b1729;margin-bottom:14px}
+  .labBrand{font-weight:750;color:var(--cyan);letter-spacing:.5px}
+  .labNavSub{color:var(--sub);font-size:12px}
+  .wrap{max-width:1500px;margin:0 auto;padding:22px 22px 60px}
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px}
+  h1{font-size:26px;margin:0;letter-spacing:.2px}
+  h1 span{color:var(--cyan)}
+  .sub{color:var(--sub);font-size:12.5px}
+  .badge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#0e1a2c;border-radius:999px;padding:5px 10px;font-size:12px;color:var(--sub)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+  .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+  .card{background:linear-gradient(180deg,#12223a,#0d1728);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:0 10px 30px #0005}
+  .card .k{color:var(--sub);font-size:12px}
+  .card .v{font:700 24px/1.15 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--cyan);margin-top:6px}
+  .card .s{color:var(--sub);font-size:11.5px;margin-top:4px}
+  .progress{height:7px;background:#071322;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-top:9px}
+  .progress i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));width:0}
+  .layout{display:grid;grid-template-columns:330px 1fr;gap:14px;align-items:start}
+  .panel{background:linear-gradient(180deg,#101d31,#0b1424);border:1px solid var(--line);border-radius:16px;padding:14px}
+  .panel h2{font-size:14px;margin:0 0 10px;color:#cfe6f8;display:flex;align-items:center;gap:8px}
+  .panel h2 .tag{font:500 11px/1 ui-monospace,monospace;color:var(--sub);border:1px solid var(--line);border-radius:999px;padding:3px 7px}
+  .side{display:flex;flex-direction:column;gap:12px}
+  .timeline{display:flex;height:34px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#071322}
+  .tblock{height:100%;border-right:1px solid #071322;position:relative;min-width:6px;cursor:pointer;transition:filter .15s}
+  .tblock:hover{filter:brightness(1.35)}
+  .tblock.session_02{background:linear-gradient(180deg,#0e7490,#155e75)}
+  .tblock.session_01{background:linear-gradient(180deg,#7c3aed,#5b21b6)}
+  .tblock.task-desktop_pick{background:linear-gradient(180deg,#0e7490,#155e75)}
+  .tblock.task-headfix{background:linear-gradient(180deg,#7c3aed,#5b21b6)}
+  .tblock.task-shelf_pick{background:linear-gradient(180deg,#b45309,#92400e)}
+  .tblock.failed{filter:grayscale(.75);opacity:.55}
+  .filterBar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .filterBar label{display:flex;align-items:center;gap:6px;color:var(--sub);font-size:12px}
+  .filterBar select,.filterBar input{background:#0b1729;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:7px 9px;font:12px ui-monospace,monospace;outline:none}
+  .filterBar input{min-width:190px}
+  .ovGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:10px 0 14px}
+  .ovCard{background:#0c1830;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .ovCard .k{color:var(--sub);font-size:11px}
+  .ovCard .v{font:700 19px/1.2 ui-monospace,monospace;color:var(--cyan);margin-top:4px}
+  .ovCard .s{color:var(--sub);font-size:10.5px;margin-top:2px}
+  .okTxt{color:var(--green)} .warnTxt{color:var(--amber)} .err{color:var(--red)}
+  .stTrue{color:var(--green)} .stFalse{color:var(--red)} .stUnknown{color:var(--amber)}
+  @media(max-width:1100px){.ovGrid{grid-template-columns:repeat(3,1fr)}}
+  .tblock.single{background:linear-gradient(180deg,#334155,#1e293b)}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;color:var(--sub);font-size:11.5px;margin-top:7px}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:middle}
+  .epList{max-height:520px;overflow:auto;display:flex;flex-direction:column;gap:6px;padding-right:4px}
+  .epItem{border:1px solid var(--line);background:#0c1728;border-radius:11px;padding:9px 10px;cursor:pointer;transition:.15s}
+  .epItem:hover{border-color:#2b6f86;background:#0f2237}
+  .epItem.active{border-color:var(--cyan);background:#0d2a3a;box-shadow:0 0 0 1px #22d3ee44 inset}
+  .epItem .row1{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .epItem .lab{font-weight:650;font-size:13px}
+  .epItem .meta{color:var(--sub);font-size:11.5px;margin-top:3px;display:flex;gap:9px;flex-wrap:wrap}
+  .epItem .warn{color:#fca5a5}
+  .main{display:flex;flex-direction:column;gap:12px}
+  .main:fullscreen{background:var(--bg);padding:18px;overflow:auto;width:100vw;height:100vh}
+  .main.pseudo-fs{position:fixed;inset:0;z-index:9999;background:var(--bg);padding:18px;overflow:auto}
+  body.page-pseudo-fs{position:fixed;inset:0;z-index:99999;overflow:auto;background:var(--bg)}
+  .detailHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .detailHead .title{font-size:20px;font-weight:750;letter-spacing:.2px}
+  .detailHead .meta{color:var(--sub);font-size:12.5px;margin-top:3px}
+  .ok{color:var(--green)} .warnTxt{color:var(--amber)} .err{color:var(--red)}
+  .viewer{display:grid;grid-template-columns:1.55fr 1fr;gap:12px}
+  .imgBox{background:#02060d;border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative;min-height:220px;display:flex;align-items:center;justify-content:center}
+  .imgBox img{width:100%;height:100%;max-height:380px;object-fit:contain;display:block}
+  .imgBox .cap{position:absolute;left:9px;top:8px;background:#0009;border:1px solid #ffffff22;border-radius:999px;padding:3px 8px;font-size:11px;color:#cfe6f8}
+  .imgBox .stamp{position:absolute;right:9px;bottom:8px;background:#000a;border:1px solid #ffffff20;border-radius:7px;padding:3px 7px;font:11px/1.2 ui-monospace,monospace;color:#cfe6f8}
+  .rightImgs{display:flex;flex-direction:column;gap:12px}
+  .controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .btn{border:1px solid var(--line);background:#15263d;color:var(--txt);border-radius:10px;padding:9px 12px;font-size:13px;font-weight:650;cursor:pointer}
+  .btn:hover{border-color:var(--cyan)}
+  .btn.primary{background:#083344;border-color:#0e7490;color:#a5f3fc}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  input[type=range]{accent-color:var(--cyan)}
+  .slider{flex:1;min-width:180px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .gripWrap{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .gripBar{flex:1;height:12px;background:#071322;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .gripBar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--green));transition:width .12s}
+  .gripVal{width:58px;text-align:right;color:var(--cyan);font:600 14px/1 ui-monospace,monospace}
+  .gripState{width:44px;text-align:right;font-size:12px}
+  .charts{display:grid;grid-template-columns:1fr 320px;gap:12px}
+  .chartCard{background:#02060d;border:1px solid var(--line);border-radius:12px;padding:8px 8px 6px;overflow:hidden}
+  .chartCard .head{display:flex;justify-content:space-between;align-items:center;padding:2px 4px 6px;color:var(--sub);font-size:11.5px}
+  canvas{width:100%;display:block}
+  #jointChart,#eeChart{height:270px;max-height:270px}
+  #gripChart{height:120px;max-height:120px}
+  .legendJ{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .legendJ label{display:flex;align-items:center;gap:5px;font:11.5px/1 ui-monospace,monospace;color:#b9d4e8;cursor:pointer;border:1px solid var(--line);border-radius:999px;padding:4px 7px;background:#0a1525}
+  .legendJ input{accent-color:var(--cyan)}
+  .metaGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .metaGrid .m{background:#0b1729;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+  .metaGrid .m .k{color:var(--sub);font-size:11px}
+  .metaGrid .m .v{font:600 13px/1.3 ui-monospace,monospace;margin-top:3px;word-break:break-all}
+  .dataset{margin-top:16px}
+  .dataset .cards{grid-template-columns:repeat(4,1fr)}
+  .analysisCard{border:1px solid var(--line);border-radius:12px;background:#0b1729;margin-bottom:10px;overflow:hidden}
+  .analysisCard summary{cursor:pointer;list-style:none;display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:12px 14px}
+  .analysisCard summary::-webkit-details-marker{display:none}
+  .analysisCard summary .time{font:600 13px ui-monospace,monospace;color:var(--cyan)}
+  .analysisCard summary .m{color:var(--sub);font-size:12px}
+  .analysisCard[open] summary{border-bottom:1px solid var(--line);background:#0e2033}
+  .analysisBody{padding:12px 14px}
+  .analysisGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+  .analysisGrid .m{background:#0b1729;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+  .analysisGrid .m .k{color:var(--sub);font-size:11px}
+  .analysisGrid .m .v{font:600 13px/1.3 ui-monospace,monospace;margin-top:3px;color:var(--cyan)}
+  .tableWrap{overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:10px}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:620px}
+  th,td{padding:8px 10px;border-bottom:1px solid #17283d;text-align:left;white-space:nowrap}
+  th{color:var(--sub);font-weight:600;background:#0b1729;position:sticky;top:0}
+  tr:last-child td{border-bottom:0}
+  .splitTrain{color:var(--green)} .splitVal{color:var(--amber)}
+  .foot{color:var(--sub);font-size:11.5px;margin-top:16px;text-align:center}
+  .loading{color:var(--sub);font-size:12.5px;padding:12px}
+  @media(max-width:1100px){.cards{grid-template-columns:repeat(3,1fr)}.layout{grid-template-columns:1fr}.charts{grid-template-columns:1fr}.viewer{grid-template-columns:1fr}.metaGrid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:700px){.cards{grid-template-columns:repeat(2,1fr)}.wrap{padding:14px}.dataset .cards{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="labNav"><span class="labBrand">智能硬件开放实验室研发</span><span class="labNavSub">训练数据综合分析台 · 桌面拣书 / 定点头</span></nav>
+  <header>
+    <div>
+      <h1>训练数据 · <span>综合分析台</span></h1>
+      <div class="sub">八界 mvp03 · 桌面拣书 / 定点头 · 采集质量 · 动作统计 · 训练集</div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <div class="badge"><span class="dot"></span><span id="genTime">加载中…</span></div>
+      <a class="btn primary" href="headfix_collect.html" title="定点头训练数据采集">🎥 定点头采集</a>
+      <a class="btn" href="headfix_limits.html" title="爪头限位数据库">📐 限位数据库</a>
+      <button class="btn" id="analysisBtn" title="桌面拣书分析历史">📊 分析历史</button>
+      <button class="btn" id="pageFsBtn" title="整页全屏">⛶ 整页全屏</button>
+    </div>
+  </header>
+
+  <section class="panel filterBar">
+    <label>任务 <select id="taskFilter"><option value="">全部任务</option></select></label>
+    <label>状态 <select id="successFilter">
+      <option value="">全部</option><option value="true">成功</option><option value="false">失败</option><option value="unknown">未标注</option>
+    </select></label>
+    <label>搜索 <input id="searchInput" placeholder="label / 任务 / 备注 / 操作员"/></label>
+    <span class="tag" id="filterCount">--</span>
+    <span class="sub" id="filterHint">按任务/状态筛选后，下面的统计与列表同步更新</span>
+  </section>
+
+  <section class="cards">
+    <div class="card"><div class="k">Episode（当前筛选）</div><div class="v" id="sumEp">--</div><div class="s" id="sumEpSub">目标 80 条</div><div class="progress"><i id="sumProg"></i></div></div>
+    <div class="card"><div class="k">采集总时长</div><div class="v" id="sumDur">--</div><div class="s">当前筛选合计</div></div>
+    <div class="card"><div class="k">关节/夹爪样本</div><div class="v" id="sumSamples">--</div><div class="s">30Hz 记录</div></div>
+    <div class="card"><div class="k">相机图像</div><div class="v" id="sumFrames">--</div><div class="s">头部 + 手腕</div></div>
+    <div class="card"><div class="k">训练步（HDF5）</div><div class="v" id="sumSteps">--</div><div class="s" id="sumStepsSub">10Hz · 128×128 · 14 train / 3 val</div></div>
+  </section>
+
+  <section class="panel" id="overviewPanel">
+    <h2>综合分析 <span class="tag" id="ovTag">--</span><span class="sub" style="margin-left:auto">按当前筛选</span></h2>
+    <div class="ovGrid">
+      <div class="ovCard"><div class="k">成功率</div><div class="v" id="ovRate">--</div><div class="s" id="ovRateSub">--</div></div>
+      <div class="ovCard"><div class="k">平均时长</div><div class="v" id="ovAvgDur">--</div><div class="s" id="ovAvgDurSub">--</div></div>
+      <div class="ovCard"><div class="k">平均样本</div><div class="v" id="ovAvgSamples">--</div><div class="s" id="ovAvgSamplesSub">--</div></div>
+      <div class="ovCard"><div class="k">动作 Δp99</div><div class="v" id="ovDelta">--</div><div class="s" id="ovDeltaSub">rad / 步</div></div>
+      <div class="ovCard"><div class="k">图像帧率</div><div class="v" id="ovFps">--</div><div class="s" id="ovFpsSub">头 + 腕</div></div>
+      <div class="ovCard"><div class="k">质量告警</div><div class="v" id="ovFlags">--</div><div class="s" id="ovFlagsSub">条 episode</div></div>
+    </div>
+    <div class="tableWrap"><table id="taskTable"><thead></thead><tbody></tbody></table></div>
+  </section>
+
+  <div class="layout">
+    <aside class="side">
+      <div class="panel">
+        <h2>采集过程 <span class="tag" id="timelineTag">--</span></h2>
+        <div class="timeline" id="timeline"></div>
+        <div class="legend" id="timelineLegend"></div>
+        <div class="sub" style="margin-top:8px">块宽 = episode 时长；灰块 = 失败；点击块或下方列表加载。</div>
+      </div>
+      <div class="panel">
+        <h2>Episode 列表 <span class="tag" id="listTag">--</span></h2>
+        <div class="epList" id="epList"><div class="loading">加载索引…</div></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="panel">
+        <div class="detailHead">
+          <div>
+            <div class="title" id="epTitle">选择一条 episode</div>
+            <div class="meta" id="epMeta">—</div>
+          </div>
+          <div id="qualityBadge"></div>
+        </div>
+
+        <div class="viewer" style="margin-top:12px">
+          <div class="imgBox">
+            <img id="headImg" alt="头部相机"/>
+            <div class="cap">头部相机</div>
+            <div class="stamp" id="headStamp">--</div>
+          </div>
+          <div class="rightImgs">
+            <div class="imgBox" style="min-height:150px">
+              <img id="wristImg" alt="手腕相机"/>
+              <div class="cap">手腕相机</div>
+              <div class="stamp" id="wristStamp">--</div>
+            </div>
+            <div class="panel" style="padding:10px">
+              <div class="sub">夹爪状态</div>
+              <div class="gripWrap">
+                <span class="mono" style="color:var(--sub);font-size:11px">0</span>
+                <div class="gripBar"><i id="gripBar"></i></div>
+                <span class="mono" style="color:var(--sub);font-size:11px">0.69</span>
+                <span class="gripVal" id="gripVal">--</span>
+                <span class="gripState" id="gripState">--</span>
+              </div>
+              <div class="sub" style="margin-top:6px">闭合阈值 0.15 · 打开阈值 0.40</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="btn primary" id="playBtn">▶ 播放</button>
+          <button class="btn" id="prevBtn">◀</button>
+          <button class="btn" id="nextBtn">▶</button>
+          <input class="slider" id="frameSlider" type="range" min="0" max="100" value="0"/>
+          <span class="mono sub" id="timeLabel">0.0s</span>
+          <span class="mono sub" id="frameLabel">0 / 0</span>
+          <select class="btn" id="speedSel" style="padding:8px">
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="2">2×</option>
+          </select>
+          <button class="btn" id="fsBtn" style="margin-left:auto" title="全屏数据面板">⛶ 面板全屏</button>
+        </div>
+      </div>
+
+      <div class="charts">
+        <div class="chartCard">
+          <div class="head"><span>6 关节角（rad）· 时间轴</span><span id="jointRange">—</span></div>
+          <canvas id="jointChart" height="270"></canvas>
+          <div class="legendJ" id="jointLegend"></div>
+        </div>
+        <div class="chartCard">
+          <div class="head"><span>末端轨迹 X–Z（m）</span><span id="eeRange">—</span></div>
+          <canvas id="eeChart" height="270"></canvas>
+        </div>
+      </div>
+
+      <div class="chartCard">
+        <div class="head"><span>夹爪开度（0–0.69）</span><span id="gripRange">—</span></div>
+        <canvas id="gripChart" height="120"></canvas>
+      </div>
+
+      <div class="panel">
+        <h2>Episode 元数据</h2>
+        <div class="metaGrid" id="metaGrid"></div>
+      </div>
+    </main>
+  </div>
+
+  <section class="dataset" id="datasetSection">
+    <div class="panel">
+      <h2>训练数据（HDF5）· 桌面拣书<span class="tag" id="dsTag">阶段 2 试点</span></h2>
+      <div class="cards" id="dsCards">
+        <div class="card"><div class="k">训练步</div><div class="v" id="dsSteps">--</div><div class="s">10Hz 对齐</div></div>
+        <div class="card"><div class="k">图像尺寸</div><div class="v" id="dsImg">--</div><div class="s">RGB · 头部 + 手腕</div></div>
+        <div class="card"><div class="k">Train / Val</div><div class="v" id="dsSplit">--</div><div class="s">按 episode 切分</div></div>
+        <div class="card"><div class="k">数据集大小</div><div class="v" id="dsSize">--</div><div class="s"><a id="dsLink" href="#">下载 dataset.h5</a></div></div>
+      </div>
+      <div class="sub" id="dsStatsTitle" style="margin-top:14px">训练集均值 / 标准差（归一化用）</div>
+      <div class="tableWrap"><table id="statsTable"><thead></thead><tbody></tbody></table></div>
+      <div class="sub" style="margin-top:14px">processed index（train / val）</div>
+      <div class="tableWrap"><table id="dsIndexTable"><thead></thead><tbody></tbody></table></div>
+      <div class="sub" style="margin-top:10px"><a id="dsReadme" href="#">README / 数据格式说明</a> · <a id="dsStats" href="#">stats.json</a></div>
+    </div>
+  </section>
+
+  <section class="dataset" id="analysisSection" style="display:none">
+    <div class="panel">
+      <h2>桌面拣书 · 数据分析历史 <span class="tag" id="analysisCount">--</span>
+        <button class="btn" id="analysisRefresh" style="margin-left:auto;padding:6px 10px;font-size:12px">刷新</button>
+      </h2>
+      <div class="sub">每次分析按时间倒序排列；点击条目展开/折叠，最新在最上面。</div>
+      <div id="analysisList" style="margin-top:10px"><div class="loading">点击「数据分析」加载…</div></div>
+    </div>
+  </section>
+
+  <div class="foot" id="foot">智能硬件开放实验室研发</div>
+</div>
+
+<script>
+const S = { index:null, view:[], ep:null, samples:null, head:[], wrist:[], wristMap:[], idx:0, sampleIdx:0, playing:false, timer:null, speed:1, visible:[true,true,true,true,true,true], raf:0 };
+const $ = id => document.getElementById(id);
+const COLORS = ['#22d3ee','#a78bfa','#22c55e','#f59e0b','#f472b6','#60a5fa'];
+
+function fmtDur(s){ s=+s||0; if(s>=60){return (s/60).toFixed(1)+' min';} return s.toFixed(1)+' s'; }
+function fmtTime(s){ s=+s||0; const m=Math.floor(s/60), r=s-m*60; return m>0?`${m}:${r.toFixed(1).padStart(4,'0')}`:`${r.toFixed(1)}s`; }
+function esc(x){ return String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function parseCSV(text){
+  const lines=text.replace(/^\uFEFF/,'').trim().split(/\r?\n/); if(!lines.length) return [];
+  const hdr=lines[0].split(',');
+  return lines.slice(1).map(line=>{const p=line.split(','); const o={}; hdr.forEach((h,i)=>o[h]=p[i]); return o;});
+}
+function nearestIndex(arr, t){
+  if(!arr.length) return 0;
+  let lo=0, hi=arr.length-1;
+  while(lo<hi){ const mid=(lo+hi)>>1; if(arr[mid] < t) lo=mid+1; else hi=mid; }
+  if(lo>0 && Math.abs(arr[lo-1]-t) < Math.abs(arr[lo]-t)) return lo-1;
+  return lo;
+}
+function setupCanvas(c){
+  const dpr=Math.min(2, window.devicePixelRatio||1);
+  const rect=c.getBoundingClientRect();
+  const w=Math.max(1, Math.round(rect.width||c.clientWidth||600));
+  const h=Math.max(1, Math.round(rect.height||270));
+  if(c.width!==Math.round(w*dpr) || c.height!==Math.round(h*dpr)){ c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); }
+  const ctx=c.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+  return {ctx,w,h};
+}
+function drawAxes(ctx,w,h,m,yMin,yMax,xMax){
+  ctx.strokeStyle='#1b3048'; ctx.lineWidth=1; ctx.font='10px ui-monospace,monospace'; ctx.fillStyle='#7f9fb8';
+  for(let i=0;i<=4;i++){
+    const y=m.t+(h-m.t-m.b)*i/4;
+    ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(w-m.r,y); ctx.stroke();
+    const v=yMax-(yMax-yMin)*i/4;
+    ctx.fillText(v.toFixed(2), 4, y+3);
+  }
+  for(let i=0;i<=4;i++){
+    const x=m.l+(w-m.l-m.r)*i/4;
+    ctx.strokeStyle='#12243a'; ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,h-m.b); ctx.stroke();
+    ctx.fillStyle='#7f9fb8'; ctx.fillText((xMax*i/4).toFixed(1), x-8, h-6);
+  }
+}
+
+async function init(){
+  try{
+    const r=await fetch('book_pick/data/teleop/viewer_index.json',{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    S.index=await r.json();
+  }catch(e){
+    $('epList').innerHTML='<div class="loading err">无法加载 viewer_index.json：'+esc(e.message)+'<br>请用 http://&lt;主机&gt;:8790/data_viewer.html 打开</div>';
+    return;
+  }
+  $('genTime').textContent='生成于 '+S.index.generated_at;
+  buildFilters(); S.view=S.index.episodes.slice();
+  try{ const qt=new URLSearchParams(location.search).get('task'); if(qt){ $('taskFilter').value=qt; } }catch(e){}
+  applyFilters(); renderDataset(S.index.dataset);
+  window.addEventListener('resize', ()=>{ drawCharts(); });
+}
+
+function buildFilters(){
+  const sel=$('taskFilter');
+  const seen={};
+  for(const t of (S.index.tasks||[])) seen[t.task]=t.label;
+  sel.innerHTML='<option value="">全部任务</option>'+
+    Object.keys(seen).map(k=>`<option value="${esc(k)}">${esc(seen[k])}（${esc(k)}）</option>`).join('');
+  sel.onchange=applyFilters; $('successFilter').onchange=applyFilters;
+  let timer=null; $('searchInput').oninput=()=>{ clearTimeout(timer); timer=setTimeout(applyFilters,160); };
+}
+
+function applyFilters(){
+  if(!S.index) return;
+  const task=$('taskFilter').value, su=$('successFilter').value, q=$('searchInput').value.trim().toLowerCase();
+  S.view=S.index.episodes.filter(e=>{
+    if(task && e.task!==task) return false;
+    if(su==='true' && e.success!==true) return false;
+    if(su==='false' && e.success!==false) return false;
+    if(su==='unknown' && e.success!=='unknown') return false;
+    if(q){ const hay=[e.label,e.name,e.task,e.task_label,e.note,e.operator].join(' ').toLowerCase(); if(!hay.includes(q)) return false; }
+    return true;
+  });
+  $('filterCount').textContent=S.view.length+' / '+S.index.episodes.length+' 条';
+  $('listTag').textContent=S.view.length+' 条';
+  renderSummary(); renderOverview(); renderTimeline(); renderList();
+  if(S.view.length){ selectEpisode(0); }
+  else {
+    S.ep=null; stopPlay();
+    $('epTitle').textContent='没有匹配的 episode';
+    $('epMeta').textContent='调整上方筛选条件';
+    $('qualityBadge').innerHTML=''; $('metaGrid').innerHTML='';
+    $('headImg').removeAttribute('src'); $('wristImg').removeAttribute('src');
+    $('jointChart').getContext('2d').clearRect(0,0,9999,9999);
+    $('eeChart').getContext('2d').clearRect(0,0,9999,9999);
+    $('gripChart').getContext('2d').clearRect(0,0,9999,9999);
+  }
+}
+
+function renderSummary(){
+  const eps=S.view, t=S.index.totals;
+  const succ=eps.filter(e=>e.success===true).length;
+  const fail=eps.filter(e=>e.success===false).length;
+  const unk=eps.filter(e=>e.success==='unknown').length;
+  const dur=eps.reduce((a,e)=>a+(e.duration_s||0),0);
+  const samples=eps.reduce((a,e)=>a+e.samples,0);
+  const frames=eps.reduce((a,e)=>a+e.head_frames+e.wrist_frames,0);
+  $('sumEp').textContent=eps.length+' / '+t.target;
+  $('sumEpSub').textContent='成功 '+succ+' · 失败 '+fail+' · 未标注 '+unk;
+  $('sumProg').style.width=Math.min(100,succ/t.target*100)+'%';
+  $('sumDur').textContent=fmtDur(dur);
+  $('sumSamples').textContent=(samples/1000).toFixed(1)+'k';
+  $('sumFrames').textContent=(frames/1000).toFixed(1)+'k';
+  const ds=S.index.dataset;
+  $('sumSteps').textContent=ds?ds.steps.toLocaleString():'--';
+  if(ds){ $('dsSteps').textContent=ds.steps.toLocaleString(); $('dsImg').textContent=ds.image_size+'×'+ds.image_size; $('dsSplit').textContent=ds.train+' / '+ds.val; $('dsSize').textContent=ds.size_mb+' MB';
+    $('sumStepsSub').textContent=(ds.fps||10)+'Hz · '+ds.image_size+'×'+ds.image_size+' · '+ds.train+' train / '+ds.val+' val'; }
+}
+
+function renderOverview(){
+  const eps=S.view, n=eps.length;
+  const succ=eps.filter(e=>e.success===true).length;
+  const dur=eps.reduce((a,e)=>a+(e.duration_s||0),0);
+  const samples=eps.reduce((a,e)=>a+e.samples,0);
+  const frames=eps.reduce((a,e)=>a+e.head_frames+e.wrist_frames,0);
+  const dp=eps.map(e=>e.delta_p99).filter(v=>v!=null);
+  const flags=eps.filter(e=>e.quality&&e.quality.length).length;
+  const fail=eps.filter(e=>e.success===false).length;
+  const unk=eps.filter(e=>e.success==='unknown').length;
+  const rate=n?succ/n*100:0;
+  $('ovTag').textContent=n+' 条 episode';
+  $('ovRate').textContent=n?rate.toFixed(1)+'%':'--';
+  $('ovRate').className='v '+(rate>=80?'okTxt':(rate>=50?'warnTxt':'err'));
+  $('ovRateSub').textContent=`成功 ${succ} · 失败 ${fail} · 未标注 ${unk}`;
+  $('ovAvgDur').textContent=n?fmtDur(dur/n):'--';
+  $('ovAvgDurSub').textContent='总 '+fmtDur(dur);
+  $('ovAvgSamples').textContent=n?Math.round(samples/n):'--';
+  $('ovAvgSamplesSub').textContent='总 '+(samples/1000).toFixed(1)+'k';
+  $('ovDelta').textContent=dp.length?Math.max(...dp).toFixed(3):'--';
+  $('ovDeltaSub').textContent=dp.length?'最大 episode Δp99':'旧数据无 cmd 字段';
+  $('ovFps').textContent=dur>0?(frames/dur).toFixed(1):'--';
+  $('ovFpsSub').textContent='头+腕 · 共 '+(frames/1000).toFixed(1)+'k 张';
+  $('ovFlags').textContent=flags;
+  $('ovFlags').className='v '+(flags?'warnTxt':'okTxt');
+  $('ovFlagsSub').textContent='共 '+n+' 条中';
+  const by={};
+  for(const e of eps){
+    const t=by[e.task]||(by[e.task]={task:e.task,label:e.task_label||e.task,n:0,succ:0,fail:0,unk:0,samples:0,dur:0,flags:0,dp:[]});
+    t.n++; t.samples+=e.samples; t.dur+=e.duration_s||0; if(e.quality&&e.quality.length)t.flags++;
+    if(e.success===true)t.succ++; else if(e.success===false)t.fail++; else t.unk++;
+    if(e.delta_p99!=null)t.dp.push(e.delta_p99);
+  }
+  const rows=Object.values(by).sort((a,b)=>b.n-a.n);
+  $('taskTable').querySelector('thead').innerHTML='<tr><th>任务</th><th>Episode</th><th>成功</th><th>失败</th><th>未标注</th><th>样本</th><th>时长</th><th>平均样本</th><th>Δp99</th><th>质量告警</th></tr>';
+  $('taskTable').querySelector('tbody').innerHTML=rows.map(t=>`<tr>
+    <td>${esc(t.label)}</td><td class="mono">${t.n}</td><td class="mono stTrue">${t.succ}</td><td class="mono stFalse">${t.fail}</td><td class="mono stUnknown">${t.unk}</td>
+    <td class="mono">${t.samples.toLocaleString()}</td><td class="mono">${fmtDur(t.dur)}</td><td class="mono">${Math.round(t.samples/t.n)}</td>
+    <td class="mono">${t.dp.length?Math.max(...t.dp).toFixed(3):'--'}</td><td class="mono ${t.flags?'warnTxt':''}">${t.flags}</td></tr>`).join('');
+}
+
+function renderTimeline(){
+  const eps=S.view; const total=eps.reduce((a,e)=>a+(e.duration_s||0),0)||1;
+  $('timelineTag').textContent=eps.length+' 条';
+  $('timeline').innerHTML=eps.map((e,i)=>{
+    const w=Math.max(0.7,(e.duration_s||1)/total*100);
+    const cls='task-'+(e.task||'desktop_pick')+(e.success===false?' failed':'');
+    return `<div class="tblock ${cls}" style="flex:0 0 ${w}%" title="${esc(e.label)} · ${fmtDur(e.duration_s)} · ${e.success===true?'成功':(e.success===false?'失败':'未标注')}" onclick="selectEpisode(${i})"></div>`;
+  }).join('');
+  const by={};
+  for(const e of eps){ const k=e.task||'desktop_pick'; by[k]=(by[k]||0)+1; }
+  const colors={desktop_pick:'#155e75',headfix:'#5b21b6',shelf_pick:'#92400e'};
+  $('timelineLegend').innerHTML=Object.keys(by).map(k=>`<span><i style="background:${colors[k]||'#1e293b'}"></i>${esc((S.index.tasks.find(t=>t.task===k)||{}).label||k)}（${by[k]} 条）</span>`).join('');
+}
+
+function renderList(){
+  const eps=S.view;
+  $('epList').innerHTML=eps.map((e,i)=>{
+    const q=e.quality&&e.quality.length?`<span class="warn">⚠ ${esc(e.quality.join('；'))}</span>`:'';
+    const st=e.success===true?'<span class="ok">✓ 成功</span>':(e.success===false?'<span class="err">✗ 失败</span>':'<span class="warn">· 未标注</span>');
+    return `<div class="epItem" data-i="${i}" onclick="selectEpisode(${i})">
+      <div class="row1"><span class="lab">${esc(e.label)}</span>${st}</div>
+      <div class="meta"><span>${esc(e.task_label||e.task)}</span><span>${fmtDur(e.duration_s)}</span><span>${e.samples} 样本</span><span>${e.head_frames+e.wrist_frames} 图</span>${e.delta_p99!=null?`<span>Δp99 ${(+e.delta_p99).toFixed(3)}</span>`:''}${q}</div>
+      <div class="meta"><span>${esc(e.operator||e.source||'')}</span><span>${esc(e.start_iso)}</span></div>
+    </div>`;
+  }).join('');
+}
+
+async function selectEpisode(i){
+  const eps=S.view; if(!eps[i]) return;
+  document.querySelectorAll('.epItem').forEach(el=>el.classList.toggle('active', +el.dataset.i===i));
+  stopPlay();
+  const e=eps[i]; S.ep=e; S.idx=0; S.sampleIdx=0;
+  $('epTitle').textContent=e.label;
+  $('epMeta').textContent=`${esc(e.task_label||e.task)} · ${e.start_iso} → ${e.end_iso} · ${e.samples} 样本 · ${e.head_frames+e.wrist_frames} 图 · 夹持 ${e.hold_s??'--'}s`;
+  const stBadge=e.success===true?'<span class="badge ok">✓ 成功</span>':(e.success===false?'<span class="badge err">✗ 失败</span>':'<span class="badge warnTxt">· 未标注</span>');
+  $('qualityBadge').innerHTML=stBadge+((e.quality&&e.quality.length)?`<span class="badge warnTxt">⚠ ${esc(e.quality.join('；'))}</span>`:`<span class="badge ok">✓ 质量检查通过</span>`);
+  const mg=$('metaGrid');
+  mg.innerHTML=[
+    ['episode',e.name],['task',e.task_label||e.task],['mode',e.mode||'--'],['success',e.success===true?'true':(e.success===false?'false':'unknown')],
+    ['duration',fmtDur(e.duration_s)],['samples',e.samples],['head frames',e.head_frames],['wrist frames',e.wrist_frames],
+    ['sample fps',e.sample_fps??'--'],['frame fps',e.frame_fps??'--'],['Δp99',e.delta_p99??'--'],['Δmax',e.delta_max??'--'],
+    ['max joint age',e.max_joint_age!=null?e.max_joint_age+' s':'--'],['operator',e.operator||'--'],
+    ['quality',(e.quality&&e.quality.length)?e.quality.join('；'):'OK'],['note',e.note||'--']
+  ].map(([k,v])=>`<div class="m"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`).join('');
+  $('epList').querySelector(`[data-i="${i}"]`)?.scrollIntoView({block:'nearest'});
+
+  $('headImg').removeAttribute('src'); $('wristImg').removeAttribute('src');
+  $('frameSlider').max=0; $('frameSlider').value=0; $('frameLabel').textContent='0 / 0'; $('timeLabel').textContent='0.0s';
+  try{
+    const sTxt=await fetch(e.dir+'/samples.csv',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('samples '+r.status);return r.text();});
+    const fTxt=await fetch(e.dir+'/frames.csv',{cache:'no-store'}).then(r=>r.ok?r.text():'').catch(()=>'');
+    const sr=parseCSV(sTxt); const fr=parseCSV(fTxt);
+    S.samples={
+      t: sr.map(r=>+r.t),
+      j: [1,2,3,4,5,6].map(k=>sr.map(r=>+r['j'+k])),
+      finger: sr.map(r=>+r.finger),
+      ee: [sr.map(r=>+r.ee_x), sr.map(r=>+r.ee_y), sr.map(r=>+r.ee_z)],
+    };
+    S.head=fr.filter(r=>r.kind==='head').map(r=>({t:+r.t,file:r.file})).sort((a,b)=>a.t-b.t);
+    S.wrist=fr.filter(r=>r.kind==='wrist').map(r=>({t:+r.t,file:r.file})).sort((a,b)=>a.t-b.t);
+    S.wristMap=S.head.map(h=>nearestIndex(S.wrist.map(w=>w.t),h.t));
+    $('frameSlider').max=Math.max(0,S.head.length-1);
+    $('frameSlider').value=0;
+    renderJointLegend();
+    updateFrame();
+  }catch(err){
+    $('qualityBadge').innerHTML=`<span class="badge err">加载失败：${esc(err.message)}</span>`;
+  }
+}
+
+function renderJointLegend(){
+  $('jointLegend').innerHTML=[0,1,2,3,4,5].map(i=>`<label style="border-color:${COLORS[i]}55"><input type="checkbox" ${S.visible[i]?'checked':''} onchange="toggleJoint(${i},this.checked)"><span style="color:${COLORS[i]}">j${i+1}</span></label>`).join('');
+}
+function toggleJoint(i,on){ S.visible[i]=!!on; drawCharts(); }
+
+function updateFrame(){
+  if(!S.ep||!S.samples) return;
+  if(!S.head.length){ drawCharts(); return; }
+  const idx=Math.max(0,Math.min(S.head.length-1,S.idx));
+  S.idx=idx;
+  const h=S.head[idx], wS=S.wrist[S.wristMap[idx]]||S.wrist[idx];
+  if(h) $('headImg').src=S.ep.dir+'/'+h.file;
+  if(wS) $('wristImg').src=S.ep.dir+'/'+wS.file;
+  const st=S.samples.t;
+  const si=nearestIndex(st,h.t); S.sampleIdx=si;
+  const t0=st[0], rel=h.t-t0;
+  $('frameSlider').value=idx;
+  $('frameLabel').textContent=(idx+1)+' / '+S.head.length;
+  $('timeLabel').textContent=fmtTime(rel);
+  if(h) $('headStamp').textContent=fmtTime(rel);
+  if(wS) $('wristStamp').textContent=fmtTime(wS.t-t0);
+  const g=S.samples.finger[si];
+  if(Number.isFinite(g)){
+    $('gripVal').textContent=g.toFixed(3);
+    $('gripBar').style.width=Math.max(0,Math.min(100,g/0.69*100)).toFixed(1)+'%';
+    const s=g<0.15?'闭合':(g>0.40?'打开':'半开');
+    $('gripState').textContent=s; $('gripState').style.color=s==='闭合'?'#fca5a5':(s==='打开'?'#86efac':'#fde68a');
+  }
+  drawCharts();
+}
+
+function drawCharts(){
+  if(!S.ep||!S.samples) return;
+  if(S.raf) return;
+  S.raf=requestAnimationFrame(()=>{ S.raf=0; drawJointChart(); drawEEChart(); drawGripChart(); });
+}
+
+function drawJointChart(){
+  const c=$('jointChart'); const {ctx,w,h}=setupCanvas(c); const m={l:44,r:12,t:12,b:24};
+  const T=S.samples.t.length; const t0=S.samples.t[0]; const dur=Math.max(0.1,S.samples.t[T-1]-t0);
+  let mn=Infinity,mx=-Infinity;
+  for(let k=0;k<6;k++){ if(!S.visible[k]) continue; for(const v of S.samples.j[k]){ if(Number.isFinite(v)){ mn=Math.min(mn,v); mx=Math.max(mx,v); } } }
+  if(!Number.isFinite(mn)){ ctx.fillStyle='#8aa9c2'; ctx.fillText('请勾选至少一个关节',m.l,40); return; }
+  const pad=Math.max(0.05,(mx-mn)*0.08); mn-=pad; mx+=pad;
+  $('jointRange').textContent=`${mn.toFixed(2)} … ${mx.toFixed(2)} rad`;
+  drawAxes(ctx,w,h,m,mn,mx,dur);
+  const X=t=>m.l+(w-m.l-m.r)*((t-t0)/dur);
+  const Y=v=>h-m.b-(h-m.t-m.b)*((v-mn)/(mx-mn));
+  for(let k=0;k<6;k++){
+    if(!S.visible[k]) continue;
+    ctx.beginPath(); ctx.strokeStyle=COLORS[k]; ctx.lineWidth=1.5; ctx.globalAlpha=.95;
+    const step=Math.max(1,Math.floor(T/2200));
+    for(let i=0;i<T;i+=step){ const x=X(S.samples.t[i]), y=Y(S.samples.j[k][i]); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+    ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+  const ct=S.samples.t[S.sampleIdx]; const cx=X(ct);
+  ctx.strokeStyle='#ffffff99'; ctx.setLineDash([4,4]); ctx.beginPath(); ctx.moveTo(cx,m.t); ctx.lineTo(cx,h-m.b); ctx.stroke(); ctx.setLineDash([]);
+}
+
+function drawEEChart(){
+  const c=$('eeChart'); const {ctx,w,h}=setupCanvas(c); const m={l:44,r:12,t:12,b:24};
+  const xs=S.samples.ee[0], zs=S.samples.ee[2];
+  let mnx=Infinity,mxx=-Infinity,mnz=Infinity,mxz=-Infinity;
+  for(let i=0;i<xs.length;i++){ if(Number.isFinite(xs[i])&&Number.isFinite(zs[i])){ mnx=Math.min(mnx,xs[i]);mxx=Math.max(mxx,xs[i]);mnz=Math.min(mnz,zs[i]);mxz=Math.max(mxz,zs[i]); } }
+  if(!Number.isFinite(mnx)){ ctx.fillStyle='#8aa9c2';ctx.fillText('无末端轨迹',m.l,30);return; }
+  const px=Math.max(0.01,(mxx-mnx)*0.1), pz=Math.max(0.01,(mxz-mnz)*0.1); mnx-=px;mxx+=px;mnz-=pz;mxz+=pz;
+  $('eeRange').textContent=`X ${mnx.toFixed(2)}…${mxx.toFixed(2)} · Z ${mnz.toFixed(2)}…${mxz.toFixed(2)}`;
+  ctx.strokeStyle='#1b3048'; ctx.lineWidth=1; ctx.font='10px ui-monospace,monospace'; ctx.fillStyle='#7f9fb8';
+  for(let i=0;i<=4;i++){ const y=m.t+(h-m.t-m.b)*i/4; ctx.beginPath();ctx.moveTo(m.l,y);ctx.lineTo(w-m.r,y);ctx.stroke(); ctx.fillText((mxz-(mxz-mnz)*i/4).toFixed(2),4,y+3); }
+  for(let i=0;i<=4;i++){ const x=m.l+(w-m.l-m.r)*i/4; ctx.strokeStyle='#12243a';ctx.beginPath();ctx.moveTo(x,m.t);ctx.lineTo(x,h-m.b);ctx.stroke(); ctx.fillStyle='#7f9fb8'; ctx.fillText((mnx+(mxx-mnx)*i/4).toFixed(2),x-8,h-6); }
+  const X=v=>m.l+(w-m.l-m.r)*((v-mnx)/(mxx-mnx)); const Y=v=>h-m.b-(h-m.t-m.b)*((v-mnz)/(mxz-mnz));
+  ctx.beginPath(); ctx.strokeStyle='#22d3ee'; ctx.lineWidth=2;
+  for(let i=0;i<xs.length;i++){ if(!Number.isFinite(xs[i]))continue; const x=X(xs[i]),y=Y(zs[i]); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+  ctx.stroke();
+  // start/end
+  ctx.fillStyle='#22c55e'; ctx.beginPath(); ctx.arc(X(xs[0]),Y(zs[0]),4,0,7); ctx.fill();
+  ctx.fillStyle='#f59e0b'; ctx.beginPath(); ctx.arc(X(xs[xs.length-1]),Y(zs[zs.length-1]),4,0,7); ctx.fill();
+  const i=S.sampleIdx; ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(X(xs[i]),Y(zs[i]),5,0,7); ctx.fill();
+  ctx.fillStyle='#22c55e'; ctx.fillText('起点',m.l+4,h-6); ctx.fillStyle='#f59e0b'; ctx.fillText('终点',m.l+40,h-6);
+}
+
+function drawGripChart(){
+  const c=$('gripChart'); const {ctx,w,h}=setupCanvas(c); const m={l:44,r:12,t:8,b:18};
+  const T=S.samples.t.length, t0=S.samples.t[0], dur=Math.max(0.1,S.samples.t[T-1]-t0);
+  const maxV=0.69;
+  $('gripRange').textContent='0 … 0.69';
+  drawAxes(ctx,w,h,m,0,maxV,dur);
+  const X=t=>m.l+(w-m.l-m.r)*((t-t0)/dur); const Y=v=>h-m.b-(h-m.t-m.b)*(v/maxV);
+  ctx.strokeStyle='#ef444455'; ctx.setLineDash([4,4]); ctx.beginPath(); ctx.moveTo(m.l,Y(0.15)); ctx.lineTo(w-m.r,Y(0.15)); ctx.stroke();
+  ctx.strokeStyle='#22c55e55'; ctx.beginPath(); ctx.moveTo(m.l,Y(0.40)); ctx.lineTo(w-m.r,Y(0.40)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.beginPath(); ctx.strokeStyle='#22d3ee'; ctx.lineWidth=1.8;
+  for(let i=0;i<T;i++){ const x=X(S.samples.t[i]), y=Y(S.samples.finger[i]); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+  ctx.stroke();
+  const cx=X(S.samples.t[S.sampleIdx]), cy=Y(S.samples.finger[S.sampleIdx]);
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(cx,cy,4,0,7); ctx.fill();
+}
+
+function stopPlay(){ S.playing=false; if(S.timer){clearTimeout(S.timer);S.timer=null;} $('playBtn').textContent='▶ 播放'; }
+function togglePlay(){
+  if(S.playing){ stopPlay(); return; }
+  if(!S.head.length) return;
+  if(S.idx>=S.head.length-1) S.idx=0;
+  S.playing=true; $('playBtn').textContent='⏸ 暂停';
+  const tick=()=>{
+    if(!S.playing) return;
+    if(S.idx>=S.head.length-1){ stopPlay(); return; }
+    S.idx++; updateFrame();
+    S.timer=setTimeout(tick, 1000/10/S.speed);
+  };
+  tick();
+}
+$('playBtn').onclick=togglePlay;
+$('prevBtn').onclick=()=>{ stopPlay(); S.idx=Math.max(0,S.idx-1); updateFrame(); };
+$('nextBtn').onclick=()=>{ stopPlay(); S.idx=Math.min(S.head.length-1,S.idx+1); updateFrame(); };
+$('frameSlider').oninput=function(){ stopPlay(); S.idx=+this.value; updateFrame(); };
+$('speedSel').onchange=function(){ S.speed=+this.value; };
+/* ⛶ 全屏：数据面板 / 整页 */
+const mainEl=document.querySelector('main.main')||document.querySelector('.main');
+const fsBtn=$('fsBtn');
+const pageFsBtn=$('pageFsBtn');
+function setFsLabels(){
+  const fs=document.fullscreenElement;
+  const panelPseudo=mainEl.classList.contains('pseudo-fs');
+  const pagePseudo=document.body.classList.contains('page-pseudo-fs');
+  fsBtn.textContent=(fs===mainEl||panelPseudo)?'⛶ 退出全屏':'⛶ 面板全屏';
+  pageFsBtn.textContent=(fs===document.documentElement||pagePseudo)?'⛶ 退出全屏':'⛶ 整页全屏';
+}
+function toggleFS(){
+  if(document.fullscreenElement){ document.exitFullscreen(); return; }
+  if(mainEl.requestFullscreen){
+    mainEl.requestFullscreen().catch(()=>{ mainEl.classList.toggle('pseudo-fs'); setFsLabels(); });
+  }else{
+    mainEl.classList.toggle('pseudo-fs'); setFsLabels();
+  }
+}
+function togglePageFS(){
+  if(document.fullscreenElement){ document.exitFullscreen(); return; }
+  if(document.documentElement.requestFullscreen){
+    document.documentElement.requestFullscreen().catch(()=>{ document.body.classList.toggle('page-pseudo-fs'); setFsLabels(); });
+  }else{
+    document.body.classList.toggle('page-pseudo-fs'); setFsLabels();
+  }
+}
+fsBtn.onclick=toggleFS;
+pageFsBtn.onclick=togglePageFS;
+setFsLabels();
+document.addEventListener('fullscreenchange',()=>{
+  setFsLabels();
+  setTimeout(()=>{ updateFrame(); drawCharts(); },180);
+});
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'){ e.preventDefault(); togglePlay(); }
+  if(e.code==='ArrowLeft'){ stopPlay(); S.idx=Math.max(0,S.idx-1); updateFrame(); }
+  if(e.code==='ArrowRight'){ stopPlay(); S.idx=Math.min(S.head.length-1,S.idx+1); updateFrame(); }
+});
+
+function renderDataset(ds){
+  if(!ds){ $('datasetSection').style.display='none'; return; }
+  $('dsSteps').textContent=ds.steps.toLocaleString(); $('dsImg').textContent=ds.image_size+'×'+ds.image_size;
+  $('dsSplit').textContent=ds.train+' / '+ds.val; $('dsSize').textContent=ds.size_mb+' MB';
+  $('dsLink').href=ds.path; $('dsReadme').href=ds.readme; $('dsStats').href=ds.path.replace('dataset.h5','stats.json');
+  const st=ds.stats||{};
+  const keys=[['obs_joint','观测关节'],['action_joint','动作关节'],['action_delta','动作增量']];
+  let head='<tr><th>统计</th>'+[1,2,3,4,5,6].map(i=>'<th>j'+i+'</th>').join('')+'</tr>';
+  let body='';
+  for(const [k,name] of keys){ if(!st[k]) continue; body+=`<tr><td>${name} mean</td>`+st[k].mean.map(v=>`<td class="mono">${(+v).toFixed(3)}</td>`).join('')+'</tr>'; body+=`<tr><td>${name} std</td>`+st[k].std.map(v=>`<td class="mono">${(+v).toFixed(3)}</td>`).join('')+'</tr>'; }
+  if(st.obs_finger){ body+=`<tr><td>夹爪 mean / std</td><td class="mono" colspan="6">${(+st.obs_finger.mean[0]).toFixed(3)} / ${(+st.obs_finger.std[0]).toFixed(3)}</td></tr>`; }
+  $('statsTable').querySelector('thead').innerHTML=head; $('statsTable').querySelector('tbody').innerHTML=body;
+  const idx=ds.index||[];
+  $('dsIndexTable').querySelector('thead').innerHTML='<tr><th>episode</th><th>label</th><th>split</th><th>steps</th><th>duration</th></tr>';
+  $('dsIndexTable').querySelector('tbody').innerHTML=idx.map(r=>`<tr><td class="mono">${esc(r.episode)}</td><td>${esc(r.label)}</td><td class="${r.split==='train'?'splitTrain':'splitVal'}">${esc(r.split)}</td><td class="mono">${esc(r.steps)}</td><td class="mono">${esc(r.duration_s)}s</td></tr>`).join('');
+}
+
+/* 📊 数据分析历史 */
+let analysisLoaded=false;
+async function loadAnalysisHistory(){
+  const list=$('analysisList');
+  list.innerHTML='<div class="loading">加载分析历史…</div>';
+  try{
+    const r=await fetch('book_pick/data/processed/desktop_pick/analysis_history/history.json',{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    let hist=await r.json();
+    hist.sort((a,b)=>(b.time||'').localeCompare(a.time||'')||(b.id||'').localeCompare(a.id||''));
+    $('analysisCount').textContent=hist.length+' 次';
+    if(!hist.length){ list.innerHTML='<div class="loading">还没有分析记录。运行 analyze_dataset.py 后再刷新。</div>'; return; }
+    list.innerHTML=hist.map((h,i)=>renderAnalysisCard(h,i)).join('');
+    const first=list.querySelector('details[open]');
+    if(first) onAnalysisToggle(first);
+    analysisLoaded=true;
+  }catch(e){
+    list.innerHTML='<div class="loading err">加载失败：'+esc(e.message)+'</div>';
+  }
+}
+function renderAnalysisCard(h,i){
+  const t=h.time||h.id||'';
+  return `<details class="analysisCard" data-file="${esc(h.file||'')}" data-report="${esc(h.report||'')}" ${i===0?'open':''} ontoggle="onAnalysisToggle(this)">
+    <summary>
+      <span class="time">${esc(t)}</span>
+      <span class="m">${h.episodes??'--'} 条 · ${(h.steps||0).toLocaleString()} 步 · ${fmtDur(h.duration_s)}</span>
+      <span class="m">Δp99 ${(+h.delta_p99||0).toFixed(3)} · Δmax ${(+h.delta_max||0).toFixed(3)}</span>
+      <span class="m">开 ${((h.finger_open||0)*100).toFixed(0)}% / 合 ${((h.finger_closed||0)*100).toFixed(0)}%</span>
+      <span class="m" style="margin-left:auto;color:var(--sub)">▾</span>
+    </summary>
+    <div class="analysisBody"><div class="loading">展开加载…</div></div>
+  </details>`;
+}
+async function onAnalysisToggle(el){
+  if(!el.open) return;
+  const body=el.querySelector('.analysisBody');
+  if(body.dataset.loaded) return;
+  const file=el.dataset.file;
+  if(!file){ body.innerHTML='<div class="loading err">缺少分析文件</div>'; return; }
+  try{
+    const r=await fetch('book_pick/data/processed/desktop_pick/analysis_history/'+file,{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    body.innerHTML=renderAnalysisBody(d, el.dataset.report, file);
+    body.dataset.loaded='1';
+  }catch(e){
+    body.innerHTML='<div class="loading err">加载失败：'+esc(e.message)+'</div>';
+  }
+}
+function renderAnalysisBody(d, report, file){
+  const s=d.summary||{}; const eps=d.episodes||[];
+  const g=[
+    ['episodes',s.episodes??'--'],
+    ['steps',(s.steps||0).toLocaleString()],
+    ['duration',fmtDur(s.duration_s)],
+    ['Δ mean',(s.delta_abs_mean??0).toFixed(4)],
+    ['Δ p95',(s.delta_abs_p95??0).toFixed(4)],
+    ['Δ p99',(s.delta_abs_p99??0).toFixed(4)],
+    ['Δ max',(s.delta_abs_max??0).toFixed(4)],
+    ['finger 开/合',((s.finger_open_frac||0)*100).toFixed(1)+'% / '+((s.finger_closed_frac||0)*100).toFixed(1)+'%']
+  ];
+  const grid=g.map(([k,v])=>`<div class="m"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`).join('');
+  const rows=eps.map(r=>`<tr><td class="mono">${esc(r.episode)}</td><td>${esc(r.label)}</td><td class="${r.split==='train'?'splitTrain':'splitVal'}">${esc(r.split)}</td><td class="mono">${r.steps}</td><td class="mono">${(+r.duration_s).toFixed(1)}s</td><td class="mono">${(+r.delta_abs_max).toFixed(3)}</td><td class="mono">${(r.finger_open_frac*100).toFixed(0)}% / ${(r.finger_closed_frac*100).toFixed(0)}%</td><td class="mono">${(+r.head_mean).toFixed(1)}</td><td class="mono">${(+r.wrist_mean).toFixed(1)}</td></tr>`).join('');
+  let jm='';
+  if(s.joint_mean&&s.joint_std){
+    jm=`<div class="sub" style="margin-top:12px">关节均值 / 标准差（rad）</div><div class="tableWrap"><table><thead><tr><th>关节</th>${[1,2,3,4,5,6].map(i=>'<th>j'+i+'</th>').join('')}</tr></thead><tbody><tr><td>mean</td>${s.joint_mean.map(v=>`<td class="mono">${(+v).toFixed(3)}</td>`).join('')}</tr><tr><td>std</td>${s.joint_std.map(v=>`<td class="mono">${(+v).toFixed(3)}</td>`).join('')}</tr></tbody></table></div>`;
+  }
+  const links=`<div class="sub" style="margin-top:10px">${report?`<a href="book_pick/data/processed/desktop_pick/analysis_history/${esc(report)}" target="_blank">报告 .md</a> · `:''}${file?`<a href="book_pick/data/processed/desktop_pick/analysis_history/${esc(file)}" target="_blank">analysis.json</a>`:''}</div>`;
+  return `<div class="analysisGrid">${grid}</div>${jm}<div class="sub" style="margin-top:12px">每条 episode</div><div class="tableWrap"><table><thead><tr><th>episode</th><th>label</th><th>split</th><th>steps</th><th>dur</th><th>Δmax</th><th>finger 开/合</th><th>head mean</th><th>wrist mean</th></tr></thead><tbody>${rows}</tbody></table></div>${links}`;
+}
+$('analysisBtn').onclick=()=>{
+  const sec=$('analysisSection');
+  if(sec.style.display==='none'){
+    sec.style.display='block'; $('analysisBtn').textContent='📊 收起分析';
+    if(!analysisLoaded) loadAnalysisHistory();
+    setTimeout(()=>sec.scrollIntoView({behavior:'smooth',block:'start'}),50);
+  }else{
+    sec.style.display='none'; $('analysisBtn').textContent='📊 分析历史';
+  }
+};
+$('analysisRefresh').onclick=()=>loadAnalysisHistory();
+init();
+if(location.hash==='#analysis') setTimeout(()=>$('analysisBtn').click(),250);
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

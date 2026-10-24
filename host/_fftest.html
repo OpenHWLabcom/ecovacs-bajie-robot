@@ -1,0 +1,12 @@
+<!doctype html><meta charset=utf-8><title>FFTEST starting</title>
+<body style="font:20px monospace;background:#111;color:#0f0">
+<div id=out>testing...</div>
+<script>
+var gl=null,info='no-gl';
+try{var c=document.createElement('canvas');gl=c.getContext('webgl2')||c.getContext('webgl');
+ if(gl){var e=gl.getExtension('WEBGL_debug_renderer_info');info=e?gl.getParameter(e.UNMASKED_RENDERER_WEBGL):'ok';}
+}catch(e){info='err:'+e.message}
+var n=0,t0=performance.now(),fps=0;
+function tick(){n++;var dt=performance.now()-t0;if(dt<3000)requestAnimationFrame(tick);else{fps=(n/(dt/1000)).toFixed(1);document.getElementById('out').textContent='FPS='+fps+' GL='+info;document.title='FFTEST FPS='+fps+' GL='+info;}}
+requestAnimationFrame(tick);
+</script>

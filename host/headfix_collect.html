@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>智能硬件开放实验室研发 · 定点头训练数据采集</title>
+<style>
+  :root{--bg:#070d18;--bg2:#0b1424;--card:#101c2f;--line:#22344d;--txt:#e8f2ff;--sub:#8aa9c2;--cyan:#22d3ee;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;--violet:#a78bfa}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:radial-gradient(1200px 600px at 50% -200px,#12304a 0%,var(--bg) 55%);color:var(--txt);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif}
+  a{color:var(--cyan);text-decoration:none}
+  .wrap{max-width:1500px;margin:0 auto;padding:18px 20px 60px}
+  .labNav{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#0b1729;margin-bottom:14px}
+  .labBrand{font-weight:750;color:var(--cyan);letter-spacing:.5px}
+  .labNavSub{color:var(--sub);font-size:12px}
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+  h1{font-size:25px;margin:0}h1 span{color:var(--cyan)}
+  .sub{color:var(--sub);font-size:12.5px}
+  .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#0e1a2c;color:var(--txt);border-radius:10px;padding:9px 13px;font:600 13px ui-monospace,monospace;cursor:pointer}
+  .btn:hover{border-color:#3a5a7a}.btn.primary{background:linear-gradient(180deg,#0e7490,#155e75);border-color:#22d3ee55}
+  .btn.rec{background:linear-gradient(180deg,#b91c1c,#7f1d1d);border-color:#ef444488}
+  .btn.good{background:linear-gradient(180deg,#15803d,#166534);border-color:#22c55e66}
+  .btn.stop{background:#1f2937}
+  .grid{display:grid;grid-template-columns:1.35fr .9fr;gap:14px;align-items:start}
+  @media(max-width:1050px){.grid{grid-template-columns:1fr}}
+  .panel{background:linear-gradient(180deg,#101d31,#0b1424);border:1px solid var(--line);border-radius:16px;padding:14px}
+  .panel h2{font-size:14px;margin:0 0 10px;color:#cfe6f8;display:flex;align-items:center;gap:8px}
+  .tag{font:500 11px/1 ui-monospace,monospace;color:var(--sub);border:1px solid var(--line);border-radius:999px;padding:3px 7px}
+  #view{width:100%;height:560px;border:1px solid var(--line);border-radius:12px;background:#0b0f14;display:block}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px}
+  .field label{color:var(--sub);font-size:11.5px}
+  .field input,.field select,.field textarea{background:#0b1729;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:8px 10px;font:13px ui-monospace,monospace;outline:none}
+  .field textarea{min-height:54px;resize:vertical}
+  .statusGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:4px}
+  .stat{background:#0c1830;border:1px solid var(--line);border-radius:11px;padding:9px 11px}
+  .stat .k{color:var(--sub);font-size:11px}
+  .stat .v{font:700 18px/1.2 ui-monospace,monospace;color:var(--cyan);margin-top:3px}
+  .stat .v.small{font-size:13px;line-height:1.35}
+  .stat .s{color:var(--sub);font-size:10.5px;margin-top:2px}
+  .okTxt{color:var(--green)}.warnTxt{color:var(--amber)}.errTxt{color:var(--red)}
+  .recDot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#64748b;margin-right:6px}
+  .recDot.on{background:var(--red);box-shadow:0 0 10px var(--red);animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  .cams{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+  .cam{position:relative;background:#050a13;border:1px solid var(--line);border-radius:10px;overflow:hidden;min-height:150px}
+  .cam img{width:100%;display:block;min-height:150px;object-fit:cover}
+  .cam .cap{position:absolute;left:8px;top:8px;font:11px ui-monospace,monospace;background:#000a;padding:2px 6px;border-radius:6px;color:#bfe9ff}
+  .list{display:flex;flex-direction:column;gap:8px;max-height:360px;overflow:auto;padding-right:2px}
+  .ep{background:#0c1830;border:1px solid var(--line);border-radius:11px;padding:9px 11px}
+  .ep .top{display:flex;gap:8px;align-items:center;justify-content:space-between}
+  .ep .name{font:600 12.5px ui-monospace,monospace;color:#dff3ff}
+  .ep .meta{color:var(--sub);font-size:11px;margin-top:3px;display:flex;gap:9px;flex-wrap:wrap}
+  .ep .acts{display:flex;gap:5px;margin-top:7px}
+  .mini{border:1px solid var(--line);background:#0b1729;color:var(--sub);border-radius:7px;padding:3px 7px;font:11px ui-monospace,monospace;cursor:pointer}
+  .mini.good{color:#86efac;border-color:#22c55e55}.mini.bad{color:#fca5a5;border-color:#ef444455}
+  .hint{color:var(--sub);font-size:11.5px}
+  .foot{margin-top:26px;color:var(--sub);font-size:11.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="labNav"><span class="labBrand">智能硬件开放实验室研发</span><span class="labNavSub">定点头训练数据采集</span></nav>
+  <header>
+    <div>
+      <h1>定点头 · <span>训练数据采集</span></h1>
+      <div class="sub">爪尖固定 · 机械臂绕圈 · 爪头不翻转（倾 ≤45° / 转 ≤45°） · 记录关节 / 指令 / 头腕图像</div>
+    </div>
+    <div class="row">
+      <a class="btn" href="data_viewer.html?task=headfix">📊 训练数据综合分析台</a>
+      <a class="btn" href="headfix_limits.html">📐 限位数据库</a>
+      <span class="tag" id="svcState">采集服务检查中…</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>🤖 定点头预览 <span class="tag">爪尖固定</span><span class="sub" id="hfState" style="margin-left:auto">未启动</span></h2>
+      <iframe id="view" src="arm3d.html?v=84&lowmem=1&embed=1&collect=1" title="定点头 3D 预览"></iframe>
+      <div class="hint" style="margin-top:8px">预览同步真机姿态；点「开始采集」会先启动记录，再启动真机定点头。停止时先停动作再停记录。</div>
+      <div class="cams">
+        <div class="cam"><img id="camHead" alt="头部相机"/><div class="cap">头部相机</div></div>
+        <div class="cam"><img id="camWrist" alt="手腕相机"/><div class="cap">手腕相机</div></div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="panel">
+        <h2>🎥 采集控制 <span class="tag" id="recTag">待机</span></h2>
+        <div class="row">
+          <div class="field"><label>标签 label</label><input id="label" placeholder="headfix_082500"/></div>
+          <div class="field" style="max-width:130px"><label>时长（秒，0=手动）</label><input id="duration" type="number" min="0" step="5" value="30"/></div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <div class="field"><label>操作员</label><input id="operator" placeholder="管理员"/></div>
+          <div class="field"><label>模式</label><select id="mode"><option value="real">真机定点头（会动）</option><option value="manual">仅采集（手动操作）</option><option value="sim">仿真定点头（不动真机，测试）</option></select></div>
+        </div>
+        <div class="field" style="margin-top:8px"><label>备注 note</label><textarea id="note" placeholder="本次采集说明（可选）"></textarea></div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn rec" id="startBtn">⏺ 开始采集</button>
+          <button class="btn stop" id="stopBtn" disabled>⏹ 停止</button>
+          <button class="btn" id="syncBtn">🔄 同步真机姿态</button>
+          <button class="btn mini" id="closeGrip" title="夹爪全闭（/grip 0.0）">✊ 合爪</button>
+          <button class="btn mini" id="openGrip" title="夹爪张开（/grip 0.69）">🖐 张爪</button>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <span class="hint">采集结束后标记：</span>
+          <button class="btn good mini" id="markOk" disabled>✅ 成功</button>
+          <button class="btn mini" id="markBad" disabled>❌ 失败</button>
+          <button class="btn mini" id="markUnknown" disabled>· 未标注</button>
+          <label class="hint" style="margin-left:auto"><input type="checkbox" id="autoOk" checked/> 停止后自动标记成功</label>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>📈 实时状态 <span class="tag" id="statusTag">--</span></h2>
+        <div class="statusGrid">
+          <div class="stat"><div class="k">采集时长</div><div class="v" id="stElapsed">--</div><div class="s" id="stDir">—</div></div>
+          <div class="stat"><div class="k">样本</div><div class="v" id="stSamples">--</div><div class="s">30Hz</div></div>
+          <div class="stat"><div class="k">图像</div><div class="v" id="stFrames">--</div><div class="s">头部 + 手腕</div></div>
+          <div class="stat"><div class="k">爪尖误差</div><div class="v" id="stTip">--</div><div class="s">定点头锁定点</div></div>
+          <div class="stat"><div class="k">爪头姿态</div><div class="v small" id="stOrient">--</div><div class="s">倾角 / 滚转</div></div>
+          <div class="stat"><div class="k">当前关节</div><div class="v small" id="stJoints">--</div><div class="s">J1…J6 rad</div></div>
+        </div>
+        <div class="hint" id="stMsg" style="margin-top:8px">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:14px">
+    <h2>📚 最近定点头 episode <span class="tag" id="epCount">--</span><span class="sub" style="margin-left:auto">停止后自动刷新综合分析台索引</span></h2>
+    <div class="list" id="epList"><div class="hint">加载中…</div></div>
+  </div>
+
+  <div class="foot">智能硬件开放实验室研发</div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const HOST = location.hostname || '127.0.0.1';
+const API = `http://${HOST}:8789`;
+let frame=null, recRunning=false, starting=false, stopRequested=false, stopping=false, lastDir=null, hfStarted=false, pollTimer=null, sessionArmed=false, autoMarkedFor=null;
+let lastJoints=null;
+
+function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function fmtDur(s){s=+s||0; if(s>=60)return (s/60).toFixed(1)+' min'; return s.toFixed(1)+' s';}
+function nowStamp(){const d=new Date();return String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0')+String(d.getSeconds()).padStart(2,'0');}
+async function api(path,opt){const r=await fetch(API+path,Object.assign({cache:'no-store'},opt||{})); const j=await r.json(); if(!r.ok) throw new Error(j.err||('HTTP '+r.status)); return j;}
+
+function init(){
+  frame=$('view');
+  frame.addEventListener('load',onFrameLoad);
+  $('startBtn').onclick=startRec; $('stopBtn').onclick=stopRec;
+  $('syncBtn').onclick=syncPose;
+  $('closeGrip').onclick=()=>gripTo(0.0);
+  $('openGrip').onclick=()=>gripTo(0.69);
+  $('markOk').onclick=()=>mark(true); $('markBad').onclick=()=>mark(false); $('markUnknown').onclick=()=>mark('unknown');
+  $('label').value='headfix_'+nowStamp();
+  pollTimer=setInterval(poll,1000);
+  setInterval(pollJoints,1000);
+  refreshEps();
+  setInterval(refreshCams,700);
+  setInterval(refreshStatus,1000);
+  poll(); refreshStatus(); refreshCams();
+}
+function onFrameLoad(){
+  try{
+    const d=frame.contentDocument;
+    if(d){ const ss=d.getElementById('sideStack'); if(ss) ss.style.display='none'; const hf=d.getElementById('headFixHud'); if(hf) hf.style.display='none'; }
+    if(frame.contentWindow && frame.contentWindow.bFol) frame.contentWindow.bFol.click();
+  }catch(e){}
+  syncPose();
+}
+async function syncPose(){
+  try{
+    const j=await fetch(`http://${HOST}:8796/joints`,{cache:'no-store'}).then(r=>r.json());
+    lastJoints=j;
+    const w=frame.contentWindow;
+    if(w&&w.arm3dSetJoints&&j.rad){ w.arm3dSetJoints(j.rad); if(j.lift!=null&&w.arm3dSetLift)w.arm3dSetLift(j.lift); if(j.finger!=null&&w.arm3dSetGrip)w.arm3dSetGrip(j.finger); }
+  }catch(e){}
+}
+async function pollJoints(){
+  try{
+    const j=await fetch(`http://${HOST}:8796/joints`,{cache:'no-store'}).then(r=>r.json());
+    lastJoints=j;
+    const w=frame&&frame.contentWindow;
+    if(w && !w.headFixRealOn && w.arm3dSetJoints && j.rad){
+      w.arm3dSetJoints(j.rad);
+      if(j.lift!=null&&w.arm3dSetLift)w.arm3dSetLift(j.lift);
+      if(j.finger!=null&&w.arm3dSetGrip)w.arm3dSetGrip(j.finger);
+    }
+  }catch(e){}
+}
+function refreshCams(){
+  $('camHead').src=`http://${HOST}:8799/snap.jpg?t=${Date.now()}`;
+  $('camWrist').src=`http://${HOST}:8800/snap.jpg?t=${Date.now()}`;
+}
+async function gripTo(v){
+  try{
+    await fetch(`http://${HOST}:8796/grip`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({v})});
+    $('stMsg').textContent='夹爪指令 → '+v;
+    setTimeout(()=>{ try{ const w=frame.contentWindow; if(w&&w.arm3dSetGrip) w.arm3dSetGrip(v);}catch(e){} },300);
+  }catch(e){ $('stMsg').textContent='夹爪指令失败：'+e.message; }
+}
+function refreshStatus(){
+  const w=frame&&frame.contentWindow;
+  if(!w) return;
+  try{
+    if((w.headFixRealOn||w.headFixOn)&&w.tipWorld&&w.headFixP0){
+      const e=w.tipWorld().distanceTo(w.headFixP0);
+      $('stTip').textContent=(e*1000).toFixed(1)+' mm';
+      $('stTip').className='v '+(e<0.003?'okTxt':(e<0.008?'warnTxt':'errTxt'));
+    } else { $('stTip').textContent='--'; $('stTip').className='v'; }
+    if(w.headFixOrient && (w.headFixRealOn||w.headFixOn)){
+      const o=w.headFixOrient();
+      $('stOrient').textContent=(o.tilt*180/Math.PI).toFixed(0)+'° / '+(o.roll*180/Math.PI).toFixed(0)+'°';
+      $('stOrient').className='v small '+(o.ok?'okTxt':'errTxt');
+    } else { $('stOrient').textContent='--'; $('stOrient').className='v small'; }
+    const on=!!(w.headFixRealOn||w.headFixOn);
+    $('hfState').textContent=on?'定点头运行中':'未启动';
+    $('hfState').className='sub '+(on?'okTxt':'');
+  }catch(e){}
+  if(lastJoints&&lastJoints.rad){ $('stJoints').textContent=lastJoints.rad.map(v=>v.toFixed(2)).join(' '); }
+}
+
+async function startRec(){
+  if(recRunning||starting) return;
+  starting=true; stopRequested=false;
+  $('startBtn').disabled=true; $('stopBtn').disabled=false; $('stMsg').textContent='启动采集…';
+  if($('mode').value==='real'){
+    const w=frame.contentWindow;
+    if(!(w&&w.LC&&w.LC.ready)){
+      $('stMsg').textContent='3D 碰撞模型加载中，等待就绪…';
+      const ok=w&&w.waitLcReady?await w.waitLcReady(25):false;
+      if(!ok){ $('stMsg').textContent='碰撞模型未就绪，请刷新后重试'; return; }
+    }
+  }
+  if(stopRequested){ starting=false; $('startBtn').disabled=false; $('stopBtn').disabled=true; $('stMsg').textContent='已取消启动'; return; }
+  if($('mode').value==='real' && !confirm('将启动真机定点头并开始录像。\n确认机器人周围安全、手放在停止键旁？')){ if(!recRunning){ starting=false; $('startBtn').disabled=false; $('stopBtn').disabled=true; $('stMsg').textContent='已取消'; } return; }
+  let tip=null, limits={tilt_deg:45, roll_deg:45};
+  try{ if(frame.contentWindow.tipWorld){ const p=frame.contentWindow.tipWorld(); tip={x:+p.x.toFixed(4),y:+p.y.toFixed(4),z:+p.z.toFixed(4)}; } }catch(e){}
+  const body={task:'headfix', label:$('label').value.trim(), operator:$('operator').value.trim(),
+    duration:parseFloat($('duration').value)||0, mode:$('mode').value, note:$('note').value.trim(), tip, limits};
+  try{
+    $('stMsg').textContent='启动采集…';
+    const r=await api('/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    starting=false;
+    if(stopRequested){ stopRequested=false; recRunning=true; $('stMsg').textContent='启动完成，正在停止…'; return stopRec(); }
+    recRunning=true; sessionArmed=true; autoMarkedFor=null; lastDir=r.dir||r.abs_dir||null;
+    $('startBtn').disabled=true; $('stopBtn').disabled=false; $('recTag').textContent='录制中'; $('recTag').className='tag errTxt';
+    $('markOk').disabled=true; $('markBad').disabled=true; $('markUnknown').disabled=true;
+    $('stMsg').textContent='已开始记录：'+(r.dir||'');
+    if($('mode').value==='real'){
+      hfStarted=true;
+      try{
+        await frame.contentWindow.headFixRealStart();
+        $('stMsg').textContent='记录中 · 定点头已启动';
+      }catch(e){ $('stMsg').textContent='记录中，但定点头启动失败：'+e.message; }
+    } else if($('mode').value==='sim'){
+      hfStarted=true;
+      try{
+        frame.contentWindow.headFixStart();
+        $('stMsg').textContent='记录中 · 仿真定点头已启动（不动真机）';
+      }catch(e){ $('stMsg').textContent='记录中，但仿真定点头启动失败：'+e.message; }
+    }
+    poll();
+  }catch(e){ starting=false; $('startBtn').disabled=false; $('stopBtn').disabled=true; $('stMsg').textContent='启动失败：'+e.message; }
+}
+async function stopRec(){
+  if(starting){ stopRequested=true; $('stMsg').textContent='启动中，停止请求已排队…'; return; }
+  if(stopping) return;
+  stopping=true;
+  // 即使页面状态过期也照常下发停止；后端会顺手清理遗留 logger
+  try{
+    if(frame.contentWindow&&frame.contentWindow.headFixRealOn) frame.contentWindow.headFixRealStop();
+    if(frame.contentWindow&&frame.contentWindow.headFixOn) frame.contentWindow.headFixStop();
+  }catch(e){}
+  hfStarted=false;
+  try{
+    $('stMsg').textContent='停止记录…';
+    const r=await api('/stop',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    recRunning=false; sessionArmed=false; lastDir=r.dir||r.abs_dir||lastDir;
+    $('startBtn').disabled=false; $('stopBtn').disabled=true; $('recTag').textContent='已停止'; $('recTag').className='tag';
+    $('markOk').disabled=false; $('markBad').disabled=false; $('markUnknown').disabled=false;
+    $('stMsg').textContent='已停止：'+(r.dir||'');
+    stopping=false;
+    if($('autoOk').checked) await autoMark(lastDir);
+    refreshEps(); setTimeout(syncPose,600);
+  }catch(e){ stopping=false; $('stMsg').textContent='停止失败：'+e.message; }
+}
+async function autoMark(dir){
+  if(!dir||!$('autoOk').checked||autoMarkedFor===dir) return;
+  autoMarkedFor=dir;
+  try{
+    await api('/meta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dir,success:true})});
+    $('stMsg').textContent='已自动标记成功：'+String(dir).split('/').pop();
+    refreshEps();
+  }catch(e){ /* 自动标记失败不阻塞停止 */ }
+}
+async function mark(v){
+  if(!lastDir){ $('stMsg').textContent='还没有可标记的 episode'; return; }
+  try{
+    await api('/meta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dir:lastDir,success:v})});
+    $('stMsg').textContent='已标记：'+(v===true?'成功':(v===false?'失败':'未标注'));
+    refreshEps();
+  }catch(e){ $('stMsg').textContent='标记失败：'+e.message; }
+}
+
+async function poll(){
+  try{
+    const s=await api('/status');
+    $('svcState').textContent='采集服务 :8789 ✓'; $('svcState').className='tag okTxt';
+    if(s.running){
+      recRunning=true;
+      $('stElapsed').textContent=fmtDur(s.elapsed);
+      $('stSamples').textContent=(s.samples||0).toLocaleString();
+      $('stFrames').textContent=((s.head_frames||0)+(s.wrist_frames||0)).toLocaleString();
+      $('stDir').textContent=(s.dir||'').split('/').pop()||'—';
+      $('statusTag').textContent='录制中'; $('statusTag').className='tag errTxt';
+      $('startBtn').disabled=true; $('stopBtn').disabled=false;
+    } else {
+      if(recRunning){
+        // 时长到点：记录自动结束，把定点头也停掉
+        recRunning=false;
+        lastDir=s.last_dir||lastDir;
+        sessionArmed=false;
+        try{
+          if(frame.contentWindow&&frame.contentWindow.headFixRealOn) frame.contentWindow.headFixRealStop();
+          if(frame.contentWindow&&frame.contentWindow.headFixOn) frame.contentWindow.headFixStop();
+        }catch(e){}
+        $('startBtn').disabled=false; $('stopBtn').disabled=true; $('recTag').textContent='已停止'; $('recTag').className='tag';
+        $('markOk').disabled=false; $('markBad').disabled=false; $('markUnknown').disabled=false;
+        if(!stopping) $('stMsg').textContent='已停止（时长到点）';
+        if($('autoOk').checked) autoMark(lastDir);
+        refreshEps();
+      }
+      $('statusTag').textContent='待机'; $('statusTag').className='tag';
+    }
+  }catch(e){
+    $('svcState').textContent='采集服务不可用 :8789'; $('svcState').className='tag errTxt';
+  }
+}
+
+async function refreshEps(){
+  try{
+    const r=await api('/episodes?task=headfix&limit=12');
+    const eps=r.episodes||[]; $('epCount').textContent=eps.length+' 条';
+    if(!eps.length){ $('epList').innerHTML='<div class="hint">还没有定点头数据。设置标签后点「开始采集」。</div>'; return; }
+    $('epList').innerHTML=eps.map(e=>{
+      const st=e.success===true?'<span class="okTxt">✓ 成功</span>':(e.success===false?'<span class="errTxt">✗ 失败</span>':'<span class="warnTxt">· 未标注</span>');
+      return `<div class="ep"><div class="top"><span class="name">${esc(e.label)}</span><span>${st}</span></div>
+        <div class="meta"><span>${esc(e.start_iso||e.name)}</span><span>${fmtDur(e.duration_s)}</span><span>${e.samples} 样本</span><span>${e.head_frames+e.wrist_frames} 图</span><span>${esc(e.mode||'')}</span></div>
+        <div class="acts"><button class="mini good" onclick="markEp('${esc(e.abs_dir)}',true)">标成功</button><button class="mini bad" onclick="markEp('${esc(e.abs_dir)}',false)">标失败</button><a class="mini" href="data_viewer.html?task=headfix" target="_blank">分析</a></div></div>`;
+    }).join('');
+  }catch(e){ $('epList').innerHTML='<div class="hint errTxt">加载失败：'+esc(e.message)+'</div>'; }
+}
+async function markEp(dir,v){
+  try{ await api('/meta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dir,success:v})}); refreshEps(); }
+  catch(e){ $('stMsg').textContent='标记失败：'+e.message; }
+}
+
+init();
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

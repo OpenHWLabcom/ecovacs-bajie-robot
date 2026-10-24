@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>智能硬件开放实验室研发 · 夹爪控制</title>
+<style>
+  :root{--bg:#0b1220;--card:#121c2e;--line:#26374f;--txt:#e7f1ff;--sub:#8fb0c8;--cyan:#22d3ee;--green:#22c55e;--red:#ef4444;--amber:#f59e0b}
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(circle at 50% -20%,#16324a 0%,var(--bg) 55%);color:var(--txt);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:18px}
+  .wrap{width:min(520px,100%)}
+  h1{font-size:19px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  .sub{color:var(--sub);font-size:12.5px;margin-bottom:14px}
+  .card{background:linear-gradient(180deg,#152238,#101a2b);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 8px 30px #0006}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  button{flex:1;min-width:120px;border:1px solid var(--line);background:#17263c;color:var(--txt);border-radius:14px;padding:16px 12px;font-size:16px;font-weight:600;cursor:pointer;touch-action:manipulation}
+  button:active{transform:scale(.98)}
+  button.open{border-color:#0e7490;background:#083344;color:#a5f3fc}
+  button.close{border-color:#7f1d1d;background:#2a0f12;color:#fecaca}
+  button.half{border-color:#92400e;background:#2a1a08;color:#fde68a}
+  .big{font-size:22px;font-weight:700;letter-spacing:.5px}
+  .stat{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);color:var(--sub);font-size:13px}
+  .val{color:var(--cyan);font:600 18px/1 ui-monospace,SFMono-Regular,Menlo,monospace}
+  .bar{height:10px;background:#0a1424;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-top:10px}
+  .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#22d3ee,#22c55e);transition:width .2s}
+  .warn{color:#fca5a5;font-size:12.5px;margin-top:10px;line-height:1.5}
+  .ok{color:#86efac}
+  .err{color:#fca5a5}
+  input[type=range]{width:100%;accent-color:#22d3ee}
+  .small{font-size:12px;color:var(--sub)}
+  a{color:var(--cyan)}
+  .labNav{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;background:#0b1729;padding:9px 12px;margin-bottom:12px}
+  .labBrand{font-weight:750;color:var(--cyan)}
+  .labNavSub{color:var(--sub);font-size:12px}
+  .foot{color:var(--sub);font-size:11.5px;text-align:center;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="labNav"><span class="labBrand">智能硬件开放实验室研发</span><span class="labNavSub">夹爪控制</span></div>
+  <h1>🤏 夹爪控制 <span class="small">八界 mvp03</span></h1>
+  <div class="sub">实测通道：<code>:8796/grip</code> → 下板 <code>set_grip.py</code></div>
+
+  <div class="card">
+    <div class="row">
+      <button class="open big" onclick="setGrip(0.50)">👐 开爪<br><span class="small">0.50</span></button>
+      <button class="close big" onclick="setGrip(0.185)">✊ 合爪<br><span class="small">0.185</span></button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="half" onclick="setGrip(0.35)">半开 0.35</button>
+      <button class="half" onclick="setGrip(0.62)">大开 0.62</button>
+      <button class="close" onclick="setGrip(0.0)">⛔ 全闭 0.00</button>
+    </div>
+    <div class="stat"><span>当前夹爪位置</span><span class="val" id="finger">--</span></div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="warn">⚠️ 按按钮前确认夹爪内没有手指/异物；动作时手离开夹爪行程。</div>
+  </div>
+
+  <div class="card">
+    <div class="small" style="margin-bottom:8px">自定义开度（0–0.69）</div>
+    <input id="slider" type="range" min="0" max="0.69" step="0.005" value="0.185" oninput="onSlide(this.value)"/>
+    <div class="stat"><span>设定值（拖动即执行）</span><span class="val" id="sv">0.185</span></div>
+    <div class="small" style="margin-top:6px">松手不用再点按钮，拖动过程中自动下发。</div>
+  </div>
+
+  <div class="card">
+    <div class="stat" style="border-top:0;padding-top:0"><span>状态</span><span id="status" class="small">就绪</span></div>
+    <div class="small">控制页地址：<code id="url"></code></div>
+  </div>
+  <div class="foot">智能硬件开放实验室研发</div>
+</div>
+
+<script>
+const API = 'http://' + location.hostname + ':8796';
+const $ = id => document.getElementById(id);
+let busy = false;
+
+let lastSent = 0, pending = null, timer = null;
+async function setGrip(v, force){
+  v = Math.max(0, Math.min(0.69, +v));
+  const now = Date.now();
+  if(!force && now - lastSent < 150){ pending = v; if(timer) return; timer = setTimeout(()=>{ timer=null; const p=pending; pending=null; if(p!=null) setGrip(p, true); }, 160); return; }
+  lastSent = now;
+  $('status').textContent = '发送 ' + v.toFixed(3) + '…'; $('status').className = 'small';
+  try{
+    const r = await fetch(API + '/grip', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({v:v})});
+    const j = await r.json();
+    if(j.ok){ $('status').textContent = '已执行 ' + v.toFixed(3) + (j.via==='stream'?' · 快速通道':''); $('status').className = 'small ok'; }
+    else { $('status').textContent = '失败：' + (j.err||j.rc||'unknown'); $('status').className = 'small err'; }
+  }catch(e){ $('status').textContent = '网络错误：' + e.message; $('status').className = 'small err'; }
+  if(pending != null && pending !== v){ const p=pending; pending=null; setGrip(p, true); }
+  else setTimeout(refresh, 150);
+}
+function onSlide(v){
+  $('sv').textContent = (+v).toFixed(3);
+  setGrip(+v, false);
+}
+
+async function refresh(){
+  try{
+    const r = await fetch(API + '/joints', {cache:'no-store'});
+    const j = await r.json();
+    if(j && j.finger != null){
+      const f = +j.finger;
+      $('finger').textContent = f.toFixed(3);
+      $('bar').style.width = Math.max(0, Math.min(100, f/0.69*100)).toFixed(1) + '%';
+      if(!busy) { $('status').textContent = '在线'; $('status').className = 'small ok'; }
+    } else {
+      $('finger').textContent = '--';
+      if(!busy) { $('status').textContent = '等待关节数据'; $('status').className = 'small'; }
+    }
+  }catch(e){
+    if(!busy){ $('status').textContent = '桥未连接：' + e.message; $('status').className = 'small err'; }
+  }
+}
+$('url').textContent = location.href;
+refresh(); setInterval(refresh, 500);
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

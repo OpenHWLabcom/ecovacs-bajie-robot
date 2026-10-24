@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>智能硬件开放实验室研发 · 机械臂舞蹈编辑器</title>
+<style>
+  :root{--bg:#070d18;--card:#101c2f;--line:#22344d;--txt:#e8f2ff;--sub:#8aa9c2;--cyan:#22d3ee;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;--violet:#a78bfa}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:radial-gradient(1200px 600px at 50% -200px,#12304a 0%,var(--bg) 55%);color:var(--txt);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans SC",sans-serif}
+  a{color:var(--cyan);text-decoration:none}
+  .wrap{max-width:1500px;margin:0 auto;padding:20px 20px 50px}
+  .labNav{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;background:#0b1729;padding:10px 14px;margin-bottom:14px}
+  .labBrand{font-weight:750;color:var(--cyan)}.labNavSub{color:var(--sub);font-size:12px}
+  header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  h1{font-size:24px;margin:0}
+  .sub{color:var(--sub);font-size:12.5px}
+  .layout{display:grid;grid-template-columns:360px 1fr;gap:14px;align-items:start}
+  .panel{background:linear-gradient(180deg,#101d31,#0b1424);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+  .panel h2{font-size:14px;margin:0 0 10px;color:#cfe6f8;display:flex;align-items:center;gap:8px}
+  .tag{font:500 11px/1 ui-monospace,monospace;color:var(--sub);border:1px solid var(--line);border-radius:999px;padding:3px 7px}
+  .sliderRow{display:grid;grid-template-columns:34px 1fr 62px;gap:8px;align-items:center;margin:5px 0}
+  .sliderRow label{color:var(--sub);font:12px ui-monospace,monospace}
+  input[type=range]{width:100%;accent-color:var(--cyan)}
+  .val{font:12px ui-monospace,monospace;color:var(--cyan);text-align:right}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+  .btn{border:1px solid var(--line);background:#15263d;color:var(--txt);border-radius:9px;padding:8px 10px;font-size:12.5px;font-weight:600;cursor:pointer}
+  .btn:hover{border-color:var(--cyan)}
+  .btn.primary{background:#083344;border-color:#0e7490;color:#a5f3fc}
+  .btn.green{background:#14532d;border-color:#16a34a;color:#bbf7d0}
+  .btn.red{background:#3b0d12;border-color:#dc2626;color:#fecaca}
+  .field{display:flex;align-items:center;gap:6px;color:var(--sub);font-size:12px}
+  .field input[type=number],.field input[type=text]{background:#0a1424;border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:6px 8px;width:74px;font:12px ui-monospace,monospace}
+  .field input[type=text]{width:140px}
+  .kfList{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto;margin-top:8px}
+  .kfItem{border:1px solid var(--line);border-radius:10px;background:#0c1728;padding:7px 8px;cursor:pointer}
+  .kfItem:hover{border-color:#2b6f86}
+  .kfItem.active{border-color:var(--cyan);background:#0d2a3a}
+  .kfItem .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .kfItem .idx{font:700 12px ui-monospace,monospace;color:var(--cyan)}
+  .kfItem .q{color:var(--sub);font:11px ui-monospace,monospace;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kfItem .mini{border:1px solid var(--line);background:#12223a;color:#cfe6f8;border-radius:6px;padding:2px 5px;font-size:11px;cursor:pointer;margin-left:3px}
+  .kfItem .mini:hover{border-color:var(--cyan)}
+  .timeline{display:flex;height:34px;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#071322;margin-top:8px}
+  .tblock{height:100%;border-right:1px solid #071322;min-width:8px;background:linear-gradient(180deg,#0e7490,#155e75);cursor:pointer;position:relative}
+  .tblock:hover{filter:brightness(1.3)}
+  .tblock span{position:absolute;left:5px;top:8px;font:10px ui-monospace,monospace;color:#d8fbff}
+  .preview{position:relative}
+  #arm3dF{width:100%;height:600px;border:1px solid var(--line);border-radius:12px;background:#02060d;display:block}
+  .status{color:var(--sub);font-size:12px;min-height:18px;margin-top:8px}
+  .note{color:var(--sub);font-size:11.5px;line-height:1.6;margin-top:8px}
+  .foot{color:var(--sub);font-size:11.5px;text-align:center;margin-top:18px}
+  @media(max-width:1100px){.layout{grid-template-columns:1fr}#arm3dF{height:480px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="labNav"><span class="labBrand">智能硬件开放实验室研发</span><span class="labNavSub">机械臂舞蹈编辑器</span></nav>
+  <header>
+    <div><h1>💃 机械臂舞蹈编辑器</h1><div class="sub">关键帧编舞 · 3D 预览 · 导出 JSON · 先仿真后真机</div></div>
+    <div class="note">安全规则：<a href="MOTION_RULES.md" target="_blank">MOTION_RULES.md</a></div>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <div class="panel">
+        <h2>当前姿态 <span class="tag">拖动滑杆</span></h2>
+        <div id="sliders"></div>
+        <div class="row">
+          <button class="btn" id="btnRead">📡 读取真机</button>
+          <button class="btn" id="btnReady">🎯 抓取准备位</button>
+          <button class="btn" id="btnZero">0 归零</button>
+        </div>
+        <div class="row">
+          <div class="field">立柱 <input id="lift" type="range" min="0" max="44" step="1" value="0" style="width:120px"/> <span id="liftV" class="val">0cm</span></div>
+          <div class="field">夹爪 <input id="grip" type="range" min="0" max="0.69" step="0.005" value="0.185" style="width:110px"/> <span id="gripV" class="val">0.185</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>关键帧 <span class="tag" id="kfCount">0</span></h2>
+        <div class="row">
+          <div class="field">段时长 <input id="dur" type="number" min="0.2" step="0.1" value="1.2" /> s</div>
+          <div class="field">停留 <input id="dwell" type="number" min="0" step="0.1" value="0.3" /> s</div>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="btnAdd">📸 添加当前姿态</button>
+          <button class="btn" id="btnClear">清空</button>
+        </div>
+        <div class="kfList" id="kfList"><div class="note">还没有关键帧。拖动滑杆摆姿势，然后点「添加当前姿态」。</div></div>
+        <div class="timeline" id="timeline"></div>
+      </div>
+
+      <div class="panel">
+        <h2>预览 / 导出</h2>
+        <div class="row">
+          <button class="btn green" id="btnPlay">▶ 预览</button>
+          <button class="btn red" id="btnStop">■ 停止</button>
+          <select class="btn" id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
+          <label class="field"><input type="checkbox" id="loop"/> 循环</label>
+        </div>
+        <div class="row">
+          <div class="field">名称 <input id="danceName" type="text" value="my_dance" /></div>
+          <button class="btn" id="btnExport">💾 导出 JSON</button>
+          <label class="btn" style="display:inline-flex;align-items:center;gap:6px">📂 导入<input id="importFile" type="file" accept=".json,application/json" hidden/></label>
+          <button class="btn" id="btnExample">加载示例</button>
+        </div>
+        <div class="status"><span id="status">就绪</span> <span class="note" id="playTime" style="margin-left:8px"></span></div>
+        <div class="note" id="debug" style="font:11px ui-monospace,monospace;color:#5f93ab"></div>
+        <div class="note">预览只动 3D 仿真，不动真机。真机播放：导出 JSON 后运行<br><code>python3 dance_player.py --dance dances/&lt;name&gt;.json --execute --speed 0.5</code></div>
+      </div>
+    </aside>
+
+    <main class="preview">
+      <div class="panel">
+        <h2>3D 预览 <span class="tag" id="previewTag">仿真</span></h2>
+        <iframe id="arm3dF" src="arm3d.html?embed=1&lowmem=1&v=20261023" allow="fullscreen" allowfullscreen></iframe>
+      </div>
+      <div class="panel">
+        <h2>时间轴</h2>
+        <div class="note" id="timelineInfo">添加关键帧后显示时间轴。</div>
+      </div>
+    </main>
+  </div>
+
+  <div class="foot">智能硬件开放实验室研发</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const LIM=[178.8,178.8,189.1,178.8,178.8,178.8];
+const LOW=[-178.8,-178.8,-169.0,-178.8,-178.8,-178.8];
+const READY=[0.186,2.694,2.150,-0.285,-1.065,0.0];
+const KF=[];
+let q=READY.slice(), lift=0, grip=0.185, playing=false, playTimer=null, selected=-1;
+const frame=$('arm3dF');
+
+function rad2deg(x){return +(x*180/Math.PI).toFixed(1);}
+function deg2rad(x){return x*Math.PI/180;}
+function clamp(v,a,b){return Math.max(a,Math.min(b,+v));}
+
+function buildSliders(){
+  const box=$('sliders');
+  box.innerHTML='';
+  for(let i=0;i<6;i++){
+    const row=document.createElement('div'); row.className='sliderRow';
+    row.innerHTML=`<label>j${i+1}</label><input id="q${i}" type="range" min="${LOW[i]}" max="${LIM[i]}" step="0.1" value="${rad2deg(q[i])}"><span class="val" id="qv${i}">${rad2deg(q[i])}°</span>`;
+    box.appendChild(row);
+  }
+}
+function syncSliders(){
+  for(let i=0;i<6;i++){ const s=$('q'+i), v=$('qv'+i); if(s){ s.value=rad2deg(q[i]); v.textContent=rad2deg(q[i])+'°'; } }
+  $('lift').value=Math.round(lift*100); $('liftV').textContent=Math.round(lift*100)+'cm';
+  $('grip').value=(+grip).toFixed(3); $('gripV').textContent=(+grip).toFixed(3);
+}
+function setPose(qq,ll,gg,quiet){
+  q=qq.map((v,i)=>clamp(v,deg2rad(LOW[i]),deg2rad(LIM[i]))); lift=clamp(ll,0,0.44); grip=clamp(gg,0,0.69);
+  syncSliders(); applyPreview();
+  if(!quiet) $('status').textContent='姿态已更新';
+}
+function applyPreview(){
+  try{
+    const w=frame.contentWindow; if(!w) return;
+    try{ if(w.LC) w.LC.demoOn=false; }catch(e){}
+    // 预览期间不要让 3D 页的“跟随真机”覆盖
+    try{ if(w.followOn){ w.followOn=false; if(w.ftimer){ clearInterval(w.ftimer); w.ftimer=null; } } }catch(e){}
+    w.userEdited=true; w.liftEdited=true;
+    if(w.arm3dPreviewPose){ w.arm3dPreviewPose(q.slice(), lift, grip); return; }
+    // 直接写 3D 页的 Q + apply，绕过 arm3dSetJoints 的 userEdited/demo 保护
+    if(w.Q){ w.Q = q.slice(); if(w.apply) w.apply(); if(w.syncAll) w.syncAll(); }
+    else if(w.arm3dSetJoints){ w.userEdited=false; w.arm3dSetJoints(q.slice()); w.userEdited=true; }
+    if(w.arm3dSetLift) w.arm3dSetLift(lift);
+    if(w.arm3dSetGrip) w.arm3dSetGrip(grip);
+  }catch(e){}
+}
+function wait3dReady(timeoutS){
+  return new Promise(resolve=>{
+    const t0=Date.now();
+    (function poll(){
+      try{
+        const w=frame.contentWindow;
+        if(w && w.loaded>=w.total && w.nodes && w.nodes.length>=11){ resolve(true); return; }
+      }catch(e){}
+      if(Date.now()-t0>timeoutS*1000){ resolve(false); return; }
+      setTimeout(poll,300);
+    })();
+  });
+}
+buildSliders(); syncSliders();
+for(let i=0;i<6;i++){
+  $('q'+i).oninput=function(){ q[i]=deg2rad(+this.value); $('qv'+i).textContent=(+this.value).toFixed(1)+'°'; applyPreview(); };
+}
+$('lift').oninput=function(){ lift=(+this.value)/100; $('liftV').textContent=this.value+'cm'; applyPreview(); };
+$('grip').oninput=function(){ grip=+this.value; $('gripV').textContent=(+this.value).toFixed(3); applyPreview(); };
+frame.addEventListener('load',()=>{ setTimeout(applyPreview,300); setTimeout(applyPreview,1200); });
+
+$('btnRead').onclick=async()=>{
+  try{
+    const j=await fetch('http://'+location.hostname+':8796/joints',{cache:'no-store'}).then(r=>r.json());
+    if(!j||!j.rad) throw new Error('无关节数据');
+    setPose(j.rad, j.lift!=null?j.lift:lift, j.finger!=null?j.finger:grip, true);
+    $('status').textContent='已读取真机姿态';
+  }catch(e){ $('status').textContent='读取失败：'+e.message; }
+};
+$('btnReady').onclick=()=>{ setPose(READY, lift, 0.185, true); $('status').textContent='已载入抓取准备位'; };
+$('btnZero').onclick=()=>{ setPose([0,0,0,0,0,0],0,0.185,true); $('status').textContent='已归零'; };
+
+function renderList(){
+  $('kfCount').textContent=KF.length;
+  const box=$('kfList');
+  if(!KF.length){ box.innerHTML='<div class="note">还没有关键帧。拖动滑杆摆姿势，然后点「添加当前姿态」。</div>'; renderTimeline(); return; }
+  box.innerHTML=KF.map((k,i)=>{
+    const deg=k.q.map(x=>rad2deg(x));
+    return `<div class="kfItem ${i===selected?'active':''}" data-i="${i}">
+      <div class="top"><span class="idx">#${i+1}</span><span class="note">${k.dur.toFixed(1)}s · 停 ${k.dwell.toFixed(1)}s</span>
+      <span><button class="mini" data-act="up" data-i="${i}">↑</button><button class="mini" data-act="down" data-i="${i}">↓</button><button class="mini" data-act="del" data-i="${i}">🗑</button></span></div>
+      <div class="q">j1 ${deg[0]} · j2 ${deg[1]} · j3 ${deg[2]} · j4 ${deg[3]} · j5 ${deg[4]} · j6 ${deg[5]} · lift ${(k.lift*100).toFixed(0)}cm · grip ${(+k.grip).toFixed(2)}</div>
+    </div>`;
+  }).join('');
+  box.querySelectorAll('.kfItem').forEach(el=>el.onclick=(e)=>{
+    if(e.target.closest('.mini')) return;
+    selected=+el.dataset.i; const k=KF[selected]; setPose(k.q,k.lift,k.grip,true); renderList(); $('status').textContent='已载入关键帧 #'+(selected+1);
+  });
+  box.querySelectorAll('.mini').forEach(b=>b.onclick=(e)=>{
+    e.stopPropagation(); const i=+b.dataset.i, act=b.dataset.act;
+    if(act==='up'&&i>0){ [KF[i-1],KF[i]]=[KF[i],KF[i-1]]; selected=i-1; }
+    if(act==='down'&&i<KF.length-1){ [KF[i+1],KF[i]]=[KF[i],KF[i+1]]; selected=i+1; }
+    if(act==='del'){ KF.splice(i,1); selected=Math.min(selected,KF.length-1); }
+    renderList();
+  });
+  renderTimeline();
+}
+function renderTimeline(){
+  const box=$('timeline');
+  if(!KF.length){ box.innerHTML=''; $('timelineInfo').textContent='添加关键帧后显示时间轴。'; return; }
+  const total=KF.reduce((a,k,i)=>a+(i?k.dur:0),0)||1;
+  box.innerHTML=KF.map((k,i)=>{
+    const w=Math.max(3,(i?k.dur:0.5)/total*100);
+    return `<div class="tblock" style="flex:0 0 ${w}%" data-i="${i}" title="#${i+1} ${k.dur.toFixed(1)}s"><span>${i+1}</span></div>`;
+  }).join('');
+  box.querySelectorAll('.tblock').forEach(el=>el.onclick=()=>{ selected=+el.dataset.i; const k=KF[selected]; setPose(k.q,k.lift,k.grip,true); renderList(); });
+  $('timelineInfo').textContent='总时长约 '+total.toFixed(1)+' 秒（不含停留） · 点击色块载入对应关键帧';
+}
+
+$('btnAdd').onclick=()=>{
+  const dur=Math.max(0.2,parseFloat($('dur').value)||1.2);
+  const dwell=Math.max(0,parseFloat($('dwell').value)||0);
+  KF.push({q:q.slice(),lift:lift,grip:grip,dur:dur,dwell:dwell});
+  selected=KF.length-1; renderList(); $('status').textContent='已添加关键帧 #'+KF.length;
+};
+$('btnClear').onclick=()=>{ if(!KF.length) return; if(!confirm('清空所有关键帧？')) return; KF.length=0; selected=-1; renderList(); $('status').textContent='已清空'; };
+
+function stopPlay(){ playing=false; if(playTimer){ cancelAnimationFrame(playTimer); playTimer=null; } $('btnPlay').textContent='▶ 预览'; }
+function smooth(t){ return t*t*(3-2*t); }
+async function playPreview(){
+  if(playing){ stopPlay(); return; }
+  if(KF.length<2){ $('status').textContent='至少需要 2 个关键帧'; return; }
+  $('status').textContent='等待 3D 就绪…';
+  if(!await wait3dReady(20)){ $('status').textContent='3D 未就绪（检查 arm3d 是否加载）'; return; }
+  playing=true; $('btnPlay').textContent='⏸ 暂停'; $('status').textContent='预览中…';
+  const speed=parseFloat($('speed').value)||1;
+  const t0=performance.now();
+  const segs=[]; let tcur=0;
+  for(let i=1;i<KF.length;i++){ const d=KF[i].dur/speed; segs.push({a:KF[i-1],b:KF[i],start:tcur,dur:Math.max(0.1,d),dwell:KF[i].dwell}); tcur+=d; }
+  function tick(now){
+    try{
+      if(!playing) return;
+      const t=(now-t0)/1000;
+      $('playTime').textContent=t.toFixed(1)+' / '+tcur.toFixed(1)+'s';
+      if(t>=tcur){
+        if($('loop').checked){ playing=false; if(playTimer){cancelAnimationFrame(playTimer);playTimer=null;} playPreview(); return; }
+        stopPlay(); $('status').textContent='预览完成'; return;
+      }
+      let s=segs[segs.length-1];
+      for(const x of segs){ if(t>=x.start && t<=x.start+x.dur){ s=x; break; } }
+      const u=Math.min(1,(t-s.start)/s.dur), e=smooth(u);
+      const qq=s.a.q.map((v,i)=>v+(s.b.q[i]-v)*e);
+      const ll=s.a.lift+(s.b.lift-s.a.lift)*e;
+      const gg=s.a.grip+(s.b.grip-s.a.grip)*e;
+      setPose(qq,ll,gg,true);
+      playTimer=requestAnimationFrame(tick);
+    }catch(e){ $('status').textContent='预览错误: '+e.message; stopPlay(); }
+  }
+  playTimer=requestAnimationFrame(tick);
+}
+$('btnPlay').onclick=playPreview; $('btnStop').onclick=stopPlay;
+
+function exportDance(){
+  const name=($('danceName').value||'dance').replace(/[^\w.-]+/g,'_');
+  let t=0; const kfs=KF.map((k,i)=>{ if(i) t+=k.dur; return {t:+t.toFixed(3),q:k.q.map(x=>+x.toFixed(5)),lift:+k.lift.toFixed(4),grip:+k.grip.toFixed(4),dwell:+k.dwell.toFixed(2)}; });
+  const data={name,keyframes:kfs};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name+'.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  $('status').textContent='已导出 '+name+'.json（放到 robot-viz/dances/ 后用 dance_player.py 播放）';
+}
+$('btnExport').onclick=exportDance;
+$('importFile').onchange=function(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result); const kfs=d.keyframes||d;
+      if(!Array.isArray(kfs)||!kfs.length) throw new Error('没有 keyframes');
+      KF.length=0; let prev=0;
+      kfs.forEach((k,i)=>{
+        const qq=(k.q||k.rad||[]).map(Number); if(qq.length!==6) throw new Error('第'+(i+1)+'帧 q 不是 6 个值');
+        const t=+k.t||0; const dur=i===0?(+k.dur||1.2):Math.max(0.2,(t-prev)||+k.dur||1.2); prev=t;
+        KF.push({q:qq,lift:+(k.lift||0),grip:k.grip!=null?+k.grip:0.185,dur,dwell:+(k.dwell||0)});
+      });
+      $('danceName').value=d.name||'imported'; selected=-1; renderList(); $('status').textContent='已导入 '+KF.length+' 帧';
+    }catch(err){ $('status').textContent='导入失败：'+err.message; }
+  };
+  r.readAsText(f); e.target.value='';
+};
+$('btnExample').onclick=async()=>{
+  try{
+    const d=await fetch('dances/example.json',{cache:'no-store'}).then(r=>r.json());
+    const kfs=d.keyframes; KF.length=0; let prev=0;
+    kfs.forEach((k,i)=>{ const t=+k.t||0; const dur=i===0?(+k.dur||1.2):Math.max(0.2,(t-prev)||1.2); prev=t; KF.push({q:k.q.map(Number),lift:+(k.lift||0),grip:k.grip!=null?+k.grip:0.185,dur,dwell:+(k.dwell||0)}); });
+    $('danceName').value=d.name||'example'; selected=-1; renderList(); setPose(KF[0].q,KF[0].lift,KF[0].grip,true); $('status').textContent='已加载示例 '+KF.length+' 帧';
+  }catch(e){ $('status').textContent='加载示例失败：'+e.message; }
+};
+renderList();
+setInterval(()=>{
+  try{
+    const w=frame.contentWindow;
+    const iq=(w&&w.arm3dQ)?w.arm3dQ():null;
+    const ld=(w&&w.total!=null)?('加载 '+(w.loaded||0)+'/'+w.total):'加载 ?';
+    $('debug').textContent='编辑器 q: '+q.map(x=>rad2deg(x)).join(', ')+'°  |  3D Q: '+(iq?iq.map(x=>rad2deg(x)).join(', ')+'°':'未加载')+'  |  '+ld;
+  }catch(e){}
+},500);
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

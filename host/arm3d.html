@@ -1,0 +1,1335 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>智能硬件开放实验室研发 · 八界机械臂 3D</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:radial-gradient(circle at 50% 16%,#143449 0%,#0a1a26 52%,#061019 100%);font:13px/1.4 system-ui,-apple-system,"PingFang SC",sans-serif;color:#dff6ff}
+#grid{position:fixed;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(96,205,255,.075) 1px,transparent 1px),linear-gradient(90deg,rgba(96,205,255,.075) 1px,transparent 1px);
+  background-size:40px 40px;
+  -webkit-mask-image:radial-gradient(circle at 50% 42%,#000 26%,transparent 76%);mask-image:radial-gradient(circle at 50% 42%,#000 26%,transparent 76%)}
+#c{display:block;width:100%;height:100%}
+#title{position:fixed;left:16px;top:38px;pointer-events:none;font-size:13px;letter-spacing:1px;color:#8fe3ff;text-shadow:0 0 12px rgba(60,200,255,.5)}
+#labFoot{position:fixed;right:14px;bottom:10px;pointer-events:none;font-size:11px;letter-spacing:.5px;color:#5f93ab;opacity:.85;text-shadow:0 0 8px rgba(0,0,0,.6)}
+#title b{color:#22d3ee}
+#st{position:fixed;left:16px;top:58px;pointer-events:none;font:11px ui-monospace,monospace;color:#5f93ab}
+#data{position:fixed;left:14px;bottom:120px;pointer-events:none;font:10px/1.45 ui-monospace,monospace;color:#cfeaff;background:rgba(9,24,34,.6);border:1px solid rgba(90,200,240,.32);border-radius:10px;padding:7px 10px;box-shadow:0 0 24px rgba(20,120,170,.18)}
+#data .k{color:#67e8f9}
+#data .d{float:right;color:#9fdcff}
+#cap{position:fixed;right:16px;top:34px;pointer-events:none;font:11px ui-monospace,monospace;color:#5f93ab;text-align:right;line-height:1.6}
+#tools{position:fixed;right:14px;bottom:14px;display:flex;gap:8px;z-index:60}   /* v62: 全屏/控制按钮置顶 */
+#tools button{width:40px;height:40px;border-radius:50%;border:1px solid rgba(80,190,230,.45);background:rgba(10,26,36,.7);color:#bfe9ff;font-size:17px;cursor:pointer;box-shadow:0 0 16px rgba(20,120,170,.2)}
+#tools button:hover{background:rgba(34,184,216,.3)}
+#exbtn{position:fixed;right:14px;bottom:146px;z-index:8;padding:10px 18px;border-radius:22px;border:1px solid rgba(110,240,170,.65);background:rgba(16,54,38,.82);color:#b9ffd6;font-size:14px;cursor:pointer;box-shadow:0 0 18px rgba(40,200,120,.35)}
+#exbtn:hover{background:rgba(30,120,80,.9)}
+#exbtn:active{transform:scale(.97)}
+#sideStack{position:fixed;right:14px;bottom:196px;z-index:8;display:flex;flex-direction:column;gap:7px;align-items:stretch;pointer-events:auto}
+#sideStack button{position:static!important;right:auto!important;bottom:auto!important;width:150px;text-align:left;padding:8px 12px;border-radius:12px;font-size:12.5px;white-space:nowrap;touch-action:none;user-select:none;cursor:grab}
+#sideStack button.dragged{position:fixed!important;right:auto!important;bottom:auto!important;z-index:91;cursor:grab;box-shadow:0 6px 18px rgba(0,0,0,.55)}
+#modbtn{position:fixed;right:220px;bottom:196px;z-index:8;padding:8px 14px;border-radius:20px;border:1px solid rgba(160,140,255,.65);background:rgba(30,24,58,.82);color:#d6ccff;font-size:13px;cursor:pointer;box-shadow:0 0 16px rgba(120,80,255,.30)}
+#modbtn:hover{background:rgba(70,50,140,.9)}
+#wavebtn{position:fixed;right:130px;bottom:196px;z-index:8;padding:8px 14px;border-radius:20px;border:1px solid rgba(80,200,230,.65);background:rgba(10,38,50,.82);color:#bfefff;font-size:13px;cursor:pointer;box-shadow:0 0 16px rgba(40,160,200,.30)}
+#wavebtn:hover{background:rgba(24,90,112,.9)}
+#wavebtn.on{background:rgba(14,116,144,.95);color:#eafcff;border-color:rgba(103,232,249,.9);box-shadow:0 0 18px rgba(34,211,238,.55)}
+#headfixbtn{background:rgba(8,52,42,.86);border-color:rgba(80,220,180,.65);color:#bfffe4}
+#headfixbtn:hover{background:rgba(16,100,80,.92)}
+#headfixbtn.on{background:rgba(14,116,144,.95);color:#eafcff;border-color:rgba(103,232,249,.9);box-shadow:0 0 18px rgba(34,211,238,.55)}
+#headfixrealbtn{background:rgba(62,14,14,.86);border-color:rgba(255,120,120,.65);color:#ffd1d1}
+#headfixrealbtn:hover{background:rgba(120,28,28,.92)}
+#headfixrealbtn.on{background:rgba(153,27,27,.95);color:#fff;border-color:rgba(255,120,120,.9);box-shadow:0 0 18px rgba(255,60,60,.35)}
+#guardbtn{position:fixed;right:334px;bottom:196px;z-index:8;padding:8px 14px;border-radius:20px;border:1px solid rgba(255,190,80,.6);background:rgba(60,44,10,.82);color:#ffe9b8;font-size:13px;cursor:pointer;box-shadow:0 0 14px rgba(200,140,20,.25)}
+#guardbtn:hover{background:rgba(120,86,20,.9)}
+#limbtn{position:fixed;right:452px;bottom:196px;z-index:8;padding:8px 14px;border-radius:20px;border:1px solid rgba(90,220,180,.65);background:rgba(10,50,40,.82);color:#bfffe4;font-size:13px;cursor:pointer;box-shadow:0 0 14px rgba(30,180,130,.3)}
+#limbtn:hover{background:rgba(20,100,80,.9)}
+#limban{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:20;display:none;padding:7px 16px;border-radius:10px;background:rgba(120,10,10,.92);border:1px solid #ff5a5a;color:#ffd9d9;font:13px ui-monospace,monospace;box-shadow:0 0 22px rgba(255,40,40,.5)}
+#limstat{position:fixed;right:16px;top:56px;z-index:7;font:11px ui-monospace,monospace;color:#8fd6a8;pointer-events:none;text-align:right}
+#limhud{position:fixed;left:50%;transform:translateX(-50%);bottom:64px;z-index:9;display:none;padding:6px 14px;border-radius:10px;background:rgba(6,26,22,.85);border:1px solid rgba(80,220,170,.5);color:#c8ffe9;font:12px ui-monospace,monospace;white-space:nowrap}
+#headFixHud{position:fixed;left:50%;transform:translateX(-50%);top:48px;z-index:21;display:none;padding:7px 16px;border-radius:10px;background:rgba(6,26,22,.88);border:1px solid rgba(80,220,170,.55);color:#c8ffe9;font:12px ui-monospace,monospace;white-space:nowrap;box-shadow:0 0 18px rgba(30,180,130,.25)}
+#limglow{position:fixed;inset:0;pointer-events:none;z-index:19;display:none;box-shadow:inset 0 0 90px 22px rgba(255,40,40,.55)}
+#bgbtn{position:fixed;right:560px;bottom:196px;z-index:8;padding:8px 14px;border-radius:20px;border:1px solid rgba(140,160,200,.55);background:rgba(24,32,44,.82);color:#dfe9ff;font-size:13px;cursor:pointer;box-shadow:0 0 14px rgba(120,140,200,.25)}
+#bgbtn:hover{background:rgba(50,66,96,.9)}
+html.bgwhite,body.bgwhite{background:#ffffff}
+body.bgwhite #grid{background-image:linear-gradient(rgba(30,110,150,.10) 1px,transparent 1px),linear-gradient(90deg,rgba(30,110,150,.10) 1px,transparent 1px)}
+body.bgwhite #title{color:#0e5f78;text-shadow:none}
+body.bgwhite #title b{color:#0891b2}
+body.bgwhite #st{color:#2b6a86}
+body.bgwhite #cap{color:#4a7d95}
+body.bgwhite #limstat{color:#0b8a5f}
+body.bgwhite #bgbtn{background:rgba(255,255,255,.92);color:#0e5f78;border-color:rgba(80,180,220,.6)}
+#modpanel{position:fixed;right:180px;bottom:220px;z-index:9;display:none;flex-direction:column;gap:6px;background:rgba(12,16,28,.96);border:1px solid rgba(150,130,240,.5);border-radius:12px;padding:10px;min-width:220px}
+#modpanel button{text-align:left;padding:8px 10px;border-radius:8px;border:1px solid rgba(120,110,200,.4);background:rgba(40,36,70,.8);color:#d8d2ff;font-size:12px;cursor:pointer}
+#modpanel button:hover{background:rgba(80,66,150,.8)}
+#bar{position:fixed;left:0;right:0;bottom:0;display:none;flex-wrap:wrap;gap:6px 14px;align-items:center;justify-content:center;padding:12px 14px 16px;background:linear-gradient(transparent,rgba(6,16,25,.92) 45%);z-index:5}
+#bar.on{display:flex}
+#bar .g{display:flex;align-items:center;gap:6px;color:#9fc4d6;font:11px ui-monospace,monospace}
+#bar input[type=range]{width:104px;accent-color:#22b8d8}
+#bar .v{width:40px;text-align:right;color:#7fe3ff}
+#bar button{margin-left:6px;background:rgba(34,184,216,.16);border:1px solid rgba(80,180,220,.5);color:#bfe9ff;border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer}
+#ball{position:fixed;right:20px;bottom:72px;width:62px;height:62px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#eafcff,#63c6e6 55%,#1d6f8c);border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 16px rgba(0,0,0,.45),0 0 18px rgba(70,200,255,.4);z-index:7;cursor:grab;touch-action:none}
+#ball:active{cursor:grabbing}
+#walk{position:fixed;left:14px;top:64px;z-index:7;background:rgba(9,24,34,.66);border:1px solid rgba(90,200,240,.32);border-radius:10px;padding:8px 10px;font:11px ui-monospace,monospace;color:#bfe9ff;user-select:none;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+#walk .wttl{color:#67e8f9;letter-spacing:1px;margin-bottom:6px}
+#walk .wgrid{display:grid;grid-template-columns:repeat(3,32px);gap:4px}
+#walk button{width:32px;height:26px;border-radius:6px;border:1px solid rgba(80,180,220,.5);background:rgba(34,184,216,.16);color:#bfe9ff;cursor:pointer;font-size:12px;padding:0;line-height:1}
+#walk button:hover{background:rgba(34,184,216,.34)}
+#walk #walkHud{margin-top:7px;color:#7fe3ff;white-space:nowrap}
+#walk .wfol{display:flex;gap:5px;align-items:center;margin-top:6px;color:#9fc4d6;cursor:pointer}
+#walk #walkSt{margin-top:6px;color:#9fc4d6;font-size:10px;max-width:162px;white-space:normal;line-height:1.35}
+/* v53/v55: 实拍组（头部/爪子/识别） */
+#campip{position:fixed;right:14px;top:64px;z-index:7;display:none;border:1px solid rgba(90,200,240,.4);border-radius:10px;overflow:hidden;background:#05121a;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+#campip.on{display:block}
+#campip img{display:block;width:555px;height:315px;object-fit:cover;background:#03121a}
+#campip .clbl{position:absolute;left:6px;top:4px;font:10px ui-monospace,monospace;color:#9fe3ff;background:rgba(0,0,0,.45);padding:1px 6px;border-radius:5px;pointer-events:none}
+#campip #camhide{position:absolute;right:4px;top:3px;width:18px;height:18px;line-height:16px;padding:0;border-radius:50%;border:1px solid rgba(255,120,120,.5);background:rgba(40,10,10,.6);color:#ffcccc;font-size:11px;cursor:pointer}
+#camshow{position:fixed;right:14px;top:64px;z-index:7;display:none;padding:8px 14px;border-radius:20px;border:1px solid rgba(120,220,150,.6);background:rgba(12,44,26,.82);color:#c8ffd8;font-size:13px;cursor:pointer}
+#camshow.on{display:block}
+#campip2,#campip3{position:fixed;z-index:7;display:none;border:1px solid rgba(90,200,240,.4);border-radius:10px;overflow:hidden;background:#05121a;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+#campip3.on{display:block}
+#campip2{display:none !important}
+#campip3{right:249px;top:390px;width:320px}
+#campip2 img{display:block;width:240px;height:150px;object-fit:cover;background:#03121a}
+#campip3 img{display:block;width:320px;height:200px;object-fit:cover;background:#03121a}
+#campip2 .clbl,#campip3 .clbl{position:absolute;left:6px;top:4px;font:10px ui-monospace,monospace;color:#9fe3ff;background:rgba(0,0,0,.45);padding:1px 6px;border-radius:5px;pointer-events:none}
+
+#glog{position:fixed;left:14px;top:150px;z-index:8;width:338px;max-height:46vh;display:flex;flex-direction:column;
+  background:rgba(6,18,26,.86);border:1px solid rgba(80,210,180,.45);border-radius:12px;overflow:hidden;
+  box-shadow:0 6px 22px rgba(0,0,0,.5);font:10.5px/1.45 ui-monospace,monospace;color:#bfe9df}
+#glog .gh{display:flex;align-items:center;gap:6px;padding:6px 8px;background:rgba(10,40,38,.9);border-bottom:1px solid rgba(80,210,180,.3);font-size:11px;color:#8ff0d0}
+#glog .gh b{font-weight:600;letter-spacing:.5px}
+#glog .gh span{margin-left:auto;color:#7fd0c0;font-size:10px}
+#glog .gh button{border:1px solid rgba(90,240,190,.6);background:rgba(10,60,48,.9);color:#b8ffe8;border-radius:8px;padding:2px 8px;font-size:10.5px;cursor:pointer}
+#glog .gh button:active{transform:translateY(1px)}
+#glbody{overflow:auto;padding:6px 8px;white-space:pre-wrap;word-break:break-all}
+#glbody div{padding:1px 0;border-bottom:1px dashed rgba(60,120,110,.12)}
+#glbody .ok{color:#7dffc2}
+#glbody .bad{color:#ff9a9a}
+#glbody .warn{color:#ffd98a}
+#glbody .dim{color:#8fb8c8}
+
+
+/* v60: 信息方块可拖动 */
+#walk,#data,#glog,#campip,#campip3,#limstat{pointer-events:auto;cursor:move;touch-action:none}
+#glog button{cursor:pointer}
+
+
+/* v61: 相机面板可拖动修复（图片不吞事件） */
+#campip img,#campip3 img{pointer-events:none;-webkit-user-drag:none;user-select:none}
+#campip .clbl,#campip3 .clbl{pointer-events:none}
+
+#quickbar{position:fixed;left:50%;top:3px;transform:translateX(-50%);z-index:70;display:flex;gap:2px;max-width:96vw;overflow-x:auto;padding:2px 3px;border-radius:999px;background:rgba(6,16,25,.58);border:1px solid rgba(80,190,230,.28);box-shadow:0 2px 10px rgba(0,0,0,.28);white-space:nowrap}
+#quickbar button{border-radius:999px;border:1px solid rgba(80,190,230,.40);background:rgba(20,50,70,.85);color:#dff6ff;font:9px/1.1 ui-monospace,monospace;padding:2px 5px;cursor:pointer}
+#quickbar button:hover{background:rgba(34,120,160,.9)}
+#quickbar button.qready{border-color:#0e7490;background:rgba(14,116,144,.9)}
+#quickbar button.qexec{border-color:#16a34a;background:rgba(22,163,74,.9);color:#eafff0}
+#quickbar button.qstop{border-color:#ef4444aa;background:rgba(120,20,20,.88);color:#ffd1d1}
+</style></head><body>
+<div id="grid"></div>
+<canvas id="c"></canvas>
+<div id="quickbar">
+  <button id="qfs" title="全屏">⛶ 全屏</button>
+  <button id="qready" class="qready" title="抓取准备姿态">🎯 抓取准备</button>
+  <button id="qsync" title="机械臂同步：读取真机关节/升降/夹爪">🔄 同步</button>
+  <button id="qexec" class="qexec" title="确定执行：把当前模拟目标下发真机">✅ 执行</button>
+  <button id="qstop" class="qstop" title="停止机器人">⛔ 停止</button>
+</div>
+<div id="title">智能硬件开放实验室研发 <b>·</b> 八界机械臂 6 关节 <span style="color:#5f93ab">/ 真机网格 · v87</span></div>
+<div id="labFoot">智能硬件开放实验室研发</div>
+<div id="st"></div>
+<div id="data"></div>
+<div id="cap">拖=旋转视角 · 滚轮=朝鼠标缩放 · 右键=平移 · 行走/升降=左上面板/键盘</div>
+<div id="tools"><button id="tog" title="控制">⚙</button><button id="anno" title="标注训练">🏷</button></div>
+<button id="exbtn" title="执行：机械臂移动到拖动设定的目标">▶ 执行</button>
+<div id="sideStack">
+  <button id="bgbtn" title="当前：默认暗色（点击切白底）">◾ 默认</button>
+  <button id="limbtn" title="限位检测：扫描关节范围与波浪包络（模拟内运行，不动机器人）">🧪 限位检测</button>
+  <button id="guardbtn" title="默认关；需要限位保护时点开。关闭时鼠标可自由拖动">🛡 拖拽保护: 关</button>
+  <button id="modbtn" title="运动模式（点击选择）">🎛 模式: 标准</button>
+  <button id="wavebtn" title="一键开/关「波浪模式」（全臂波浪 + 摇头）">🌊 波浪</button>
+  <button id="headfixbtn" title="固定爪尖位置，改变力臂构型（仅仿真）">🎯 定点头</button>
+  <button id="headfixrealbtn" title="固定爪尖，真机慢速摆臂（会动机器人，注意安全）">🎯 定点头·真机</button>
+</div>
+<div id="modpanel"></div>
+<div id="limban"></div>
+<div id="limstat"></div>
+<div id="limhud"></div>
+<div id="headFixHud"></div>
+<div id="limglow"></div>
+<div id="campip"><img id="camimg" alt="识别合成"><div class="clbl">🧠 深度识别 · 点云图(左) + 识别画面(右)</div><button id="camhide" title="收起实拍画面">✕</button></div>
+<button id="camshow" title="显示实拍画面">📷 实拍</button>
+
+<div id="campip3"><img id="camimg3" alt="爪子识别"><div class="clbl">🎯 爪子相机识别</div></div>
+<div id="ball" title="拖我转视角"></div>
+<div id="bar"></div>
+
+<div id="glog">
+  <div class="gh"><b>🤖 抓取日志</b><span id="glst">连接中…</span><button id="glrun">▶ 抓取</button></div>
+  <div id="glbody"></div>
+</div>
+
+<div id="walk">
+  <div class="wttl">🚶 行走 / 🛗 升降</div>
+  <div class="wgrid">
+    <button data-w="fwd" title="前进 (W/↑)">↑</button>
+    <button data-w="home" title="底盘归位">🏠</button>
+    <button data-w="liftup" title="立柱升">🛗+</button>
+    <button data-w="tl" title="左转 (A/Q)">↺</button>
+    <button data-w="back" title="后退 (S/↓)">↓</button>
+    <button data-w="tr" title="右转 (D/E)">↻</button>
+    <button data-w="liftdn" title="立柱降">🛗−</button>
+    <button data-w="zero" title="立柱归零" style="font-size:11px">0</button>
+    <button data-w="stop" title="停止机器人 (stop_all)" style="border-color:#7f1d1d;color:#fca5a5">⛔</button>
+  </div>
+  <div id="walkHud">x 0.00  y 0.00  yaw 0°</div>
+  <label class="wfol"><input type="checkbox" id="walkCtl" checked /> 🎮 控真机(行走/升降)</label>
+  <label class="wfol"><input type="checkbox" id="walkFollow" /> 跟随真机行走</label>
+  <div id="walkSt">—</div>
+</div>
+<script src="vendor/three.min.js"></script>
+<script src="vendor/STLLoader.js"></script>
+<script src="vendor/OrbitControls.js"></script>
+<script>
+var MIL=Math.PI/180;
+var scene=new THREE.Scene();
+var camera=new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 0.005, 200);
+camera.up.set(0,0,1);
+var LOWMEM=/[?&]lowmem=1\b/.test(location.search);   // 嵌入主控制台/采集页时降显存，避免 Jetson OOM
+var renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:!LOWMEM,alpha:true,powerPreference:LOWMEM?'low-power':'default'});
+var MAXPR=LOWMEM?1.25:Math.min(2,devicePixelRatio||1);
+renderer.setSize(innerWidth,innerHeight); renderer.setPixelRatio(MAXPR); renderer.outputEncoding=THREE.sRGBEncoding; renderer.setClearAlpha(0);
+scene.add(new THREE.HemisphereLight(0xbfe6ff,0x12202b,1.35));
+var L1=new THREE.DirectionalLight(0xffffff,1.05); L1.position.set(2,-3,4); scene.add(L1);
+var L2=new THREE.DirectionalLight(0x35c8ff,0.9); L2.position.set(-3,2,-1); scene.add(L2);
+var L3=new THREE.DirectionalLight(0x66ddff,0.6); L3.position.set(0,3,-3); scene.add(L3);
+/* 地面网格（科技感） */
+var g=new THREE.GridHelper(6,60,0x1e6a86,0x143342); g.material.transparent=true; g.material.opacity=0.45; g.rotation.x=Math.PI/2; scene.add(g);
+/* 🚶 底盘根节点(行走) —— 机械臂整链挂在它下面，移动它=机器人行走 */
+var robot=new THREE.Group(); scene.add(robot);
+var BASE={x:0,y:0,yaw:0};
+function applyBase(){ robot.position.set(BASE.x,BASE.y,0); robot.rotation.z=BASE.yaw; if(window.__a3dWalkHud) window.__a3dWalkHud(); }
+/* 行走圆盘（可拖动）+ 外圈：位于底盘中心，随底盘移动 */
+var walkDisc=new THREE.Mesh(new THREE.CircleGeometry(0.36,56), new THREE.MeshBasicMaterial({color:0x22b8d8,transparent:true,opacity:0.10,side:THREE.DoubleSide,depthWrite:false})); walkDisc.position.z=0.001; robot.add(walkDisc);
+var walkRim=new THREE.Mesh(new THREE.RingGeometry(0.34,0.355,64), new THREE.MeshBasicMaterial({color:0x2fd0ff,side:THREE.DoubleSide,transparent:true,opacity:0.55})); walkRim.position.z=0.002; robot.add(walkRim);
+var controls=new THREE.OrbitControls(camera,renderer.domElement);
+var _lastAct=performance.now();
+controls.addEventListener('change',function(){_lastAct=performance.now();});
+controls.enableDamping=true; controls.dampingFactor=0.09; controls.minDistance=0.02; controls.maxDistance=20;
+controls.minPolarAngle=0.12; controls.maxPolarAngle=Math.PI*0.5;
+controls.autoRotate=false; controls.autoRotateSpeed=0.55;   // 自动旋转(慢) 默认关（拖关节时更稳）
+controls.enableZoom=false;   // 改用自定义「朝鼠标缩放」(zoom-to-cursor)
+controls.update();
+var savedCam=null; try{ savedCam=JSON.parse(localStorage.getItem('a3dcamPose')||'null'); }catch(e){} if(!savedCam||!savedCam.pos) savedCam=null;
+if(savedCam&&savedCam.pos){ try{ camera.position.fromArray(savedCam.pos); controls.target.fromArray(savedCam.tgt||[0,0,0.5]); controls.update(); }catch(e){} }
+
+var CHAIN=[
+ {m:'lift_link',          xyz:[-0.0145,0.09948,0.265], rpy:[0,0,0], lift:true},   // URDF: base(0.07)+lift_base(0.095)+lift_joint(0.1)→z=0.265
+ {m:'arm_base_link',      xyz:[-0.0435,-0.1625,0.29],  rpy:[0,90,0]},
+ {m:'arm1_link',          xyz:[0,0,0.1421],            rpy:[0,-90,0], axis:[1,0,0], dof:0},
+ {m:'arm2_link',          xyz:[0.0424,-0.060,0],       rpy:[0,0,0],   axis:[0,-1,0], dof:1},
+ {m:'arm3_link',          xyz:[0.3245,0.0097,0],       rpy:[0,0,0],   axis:[0,1,0],  dof:2},
+ {m:'arm4_link',          xyz:[0.0752,0.0503,0],       rpy:[0,0,0],   axis:[1,0,0],  dof:3},
+ {m:'arm5_link',          xyz:[0.3253,0.0425,0],       rpy:[0,0,0],   axis:[0,-1,0], dof:4},
+ {m:'arm6_link',          xyz:[0.056,-0.0425,0.0765],  rpy:[0,90,0],  axis:[0,0,1],  dof:5},
+ {m:'gripper_link',       xyz:[0,0,0.0729],            rpy:[0,0,0]},
+ {m:'gripper_left_link',  xyz:[0,0.018,0.037],         rpy:[0,2.3404,90], axis:[0,1,0],  grip:1},
+ {m:'gripper_right_link', xyz:[0,-0.018,0.037],        rpy:[0,-2.3404,90],axis:[0,-1,0], grip:1}
+];
+var Q=[0,0,0,0,0,0].map(function(d){return d*MIL;}), LIFT=0, GRIP=0.28, PITCH=0;
+/* 夹爪：GRIP = 真机 finger 值(0=闭合 .. 0.69=张开)；网格零位是张开的，闭爪需在关节角上退 GRIP_OFF。
+   GRIP_OFF=0.24 是两指尖刚好接触、不交叉的角度（0.32 会让两指越过中线 → 看起来穿透，2026-10-24 实测） */
+var GRIP_OFF=0.24, GRIP_MAX=0.69;
+/* 🎨 J1..J6 区分色 + 可动范围(限位) */
+var JCOL=["#ef4444","#f97316","#eab308","#22c55e","#06b6d4","#a855f7"];
+var JLIM=[[-178.8,178.8],[-178.8,178.8],[-169.0,189.1],[-178.8,178.8],[-178.8,178.8],[-178.8,178.8]];
+var JLIMTXT=["±178.8°","±178.8°","-169~189°","±178.8°","±178.8°","±178.8°"];
+/* 关节限位检查：允许 ±360° 等价表示；marginDeg=预留余量（度） */
+function jointLimitOk(q, marginDeg){
+  marginDeg=marginDeg||0;
+  for(var i=0;i<6;i++){
+    var deg=q[i]*180/Math.PI, ok=false;
+    for(var k=-1;k<=1;k++){ var d=deg+k*360; if(d>=JLIM[i][0]+marginDeg && d<=JLIM[i][1]-marginDeg){ ok=true; break; } }
+    if(!ok) return false;
+  }
+  return true;
+}
+var nodes=[], total=0, loaded=0;
+var SHELL=new THREE.MeshStandardMaterial({color:0x16303f,metalness:0.65,roughness:0.35,transparent:true,opacity:0.5});
+var SHELL2=new THREE.MeshStandardMaterial({color:0x0d1c26,metalness:0.7,roughness:0.3,transparent:true,opacity:0.55});
+var WIRE=new THREE.LineBasicMaterial({color:0x3fd8ff,transparent:true,opacity:0.5});
+var loader=new THREE.STLLoader(), st=document.getElementById('st');
+/* 🏷 关节彩色标签（精灵）：J1..J6 + 可动范围 */
+var jLabels=[];
+function drawJLabel(k, deg){
+  var L=jLabels[k]; if(!L) return; var g2=L.ctx;
+  g2.clearRect(0,0,320,104);
+  g2.fillStyle='rgba(7,20,30,.82)'; g2.fillRect(0,0,320,104);
+  g2.strokeStyle=JCOL[k]; g2.lineWidth=7; g2.strokeRect(4,4,312,96);
+  g2.textBaseline='middle';
+  g2.fillStyle=JCOL[k]; g2.font='bold 50px ui-monospace,monospace';
+  g2.fillText('J'+(k+1),16,42);
+  g2.fillText(((deg>=0?'+':'')+deg.toFixed(1))+'°',96,42);
+  g2.fillStyle='#9fd8ff'; g2.font='24px ui-monospace,monospace';
+  g2.fillText('可动 '+JLIMTXT[k],16,82);
+  L.tex.needsUpdate=true;
+}
+function makeJLabel(k, col, txt){
+  var c2=document.createElement('canvas'); c2.width=320; c2.height=104;
+  var tex=new THREE.CanvasTexture(c2); tex.minFilter=THREE.LinearFilter;
+  var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false}));
+  sp.scale.set(0.235,0.0765,1);
+  jLabels[k]={ctx:c2.getContext('2d'),tex:tex,last:null};
+  drawJLabel(k, 0);
+  return sp;
+}
+function updateJLabels(){
+  for(var k=0;k<6;k++){ var L=jLabels[k]; if(!L) continue; var deg=Q[k]*180/Math.PI;
+    if(L.last==null || Math.abs(deg-L.last)>=0.25){ L.last=deg; drawJLabel(k,deg); } }
+}
+function addLink(i, parent){
+  var c=CHAIN[i];
+  var grp=new THREE.Group(); grp.position.set(c.xyz[0],c.xyz[1],c.xyz[2]); grp.rotation.set(c.rpy[0]*MIL,c.rpy[1]*MIL,c.rpy[2]*MIL,'XYZ'); parent.add(grp);
+  var jn=new THREE.Group(); grp.add(jn); nodes[i]={g:grp,jn:jn,c:c}; total++;
+  if(c.dof!=null){ try{
+    var jc=JCOL[c.dof];
+    var jax=new THREE.Vector3(c.axis[0],c.axis[1],c.axis[2]).normalize();
+    var ring=new THREE.Mesh(new THREE.TorusGeometry(0.056,0.0075,10,44), new THREE.MeshBasicMaterial({color:jc}));
+    ring.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1), jax);
+    grp.add(ring);
+    var axl=new THREE.Line(new THREE.BufferGeometry().setFromPoints([jax.clone().multiplyScalar(-0.115), jax.clone().multiplyScalar(0.115)]), new THREE.LineBasicMaterial({color:jc,transparent:true,opacity:0.9}));
+    grp.add(axl);
+    var sp=makeJLabel(c.dof, jc, JLIMTXT[c.dof]);
+    sp.position.copy(jax.clone().multiplyScalar(-0.135));
+    grp.add(sp);
+  }catch(e){} }
+  loader.load('meshes/'+c.m+'.STL', function(geo){ geo.computeVertexNormals();
+    var mm=new THREE.Mesh(geo, /gripper|head/.test(c.m)?SHELL2:SHELL); mm.userData.dof=(c.dof!=null?c.dof:null); jn.add(mm);
+    try { var ed=new THREE.LineSegments(new THREE.EdgesGeometry(geo,26), WIRE); ed.userData.dof=(c.dof!=null?c.dof:null); jn.add(ed); } catch(e){}
+    loaded++; st.textContent=loaded<total?('网格 '+loaded+'/'+total):('网格就绪 · '+total+' 件'); },
+    undefined, function(){ loaded++; });
+  if(i+1<CHAIN.length) addLink(i+1, jn);
+}
+addLink(0, robot);
+/* 🔧 修正：URDF 里左右指都是 gripper_link 的子节点，不是串联（原递归把右指挂到左指下面，爪尖偏移 ~19mm） */
+try{
+  if(nodes[8]&&nodes[8].jn&&nodes[10]&&nodes[10].g){
+    nodes[8].jn.add(nodes[10].g);
+    nodes[10].g.position.fromArray(CHAIN[10].xyz);
+    nodes[10].g.rotation.set(CHAIN[10].rpy[0]*MIL,CHAIN[10].rpy[1]*MIL,CHAIN[10].rpy[2]*MIL,'XYZ');
+  }
+}catch(e){}
+/* 🗣 头部模组（head_pitch_link）：随立柱升降，绕 -Y 抬头 */
+var headGrp=new THREE.Group(); headGrp.position.set(0.066,0.099,0.738); robot.add(headGrp); total++;
+loader.load('meshes/head_pitch_link.STL', function(geo){ geo.computeVertexNormals();
+  var mm=new THREE.Mesh(geo, SHELL2); headGrp.add(mm);
+  try { var ed=new THREE.LineSegments(new THREE.EdgesGeometry(geo,26), WIRE); headGrp.add(ed); } catch(e){}
+  loaded++; st.textContent=loaded<total?('网格 '+loaded+'/'+total):('网格就绪 · '+total+' 件');
+}, undefined, function(){ loaded++; });
+/* 🦿 底盘 base_link（URDF: base_footprint→base_link @z0.07，半径~0.22 圆盘）——补上后机器人才落在地面上 */
+total++;
+(function(){ var g2=new THREE.Group(); g2.position.set(0,0,0.07); robot.add(g2);
+  loader.load('meshes/base_link.STL', function(geo){ geo.computeVertexNormals();
+    var mm=new THREE.Mesh(geo, SHELL); g2.add(mm);
+    try{ var ed=new THREE.LineSegments(new THREE.EdgesGeometry(geo,26), WIRE); g2.add(ed); }catch(e){}
+    loaded++; st.textContent=loaded<total?('网格 '+loaded+'/'+total):('网格就绪 · '+total+' 件');
+  }, undefined, function(){ loaded++; });
+})();
+function apply(){
+  nodes.forEach(function(n){ var c=n.c;
+    if(c.dof!=null){ var ax=new THREE.Vector3(c.axis[0],c.axis[1],c.axis[2]).normalize(); n.jn.quaternion.setFromAxisAngle(ax, Q[c.dof]); }
+    if(c.grip!=null){ var ax=new THREE.Vector3(c.axis[0],c.axis[1],c.axis[2]).normalize(); n.jn.quaternion.setFromAxisAngle(ax, GRIP-GRIP_OFF); }
+    if(c.lift){ n.g.position.z=c.xyz[2]+LIFT; } });
+  if(headGrp){ headGrp.position.z=0.738+LIFT; headGrp.rotation.y=-PITCH; }
+  updData();
+}
+function fit(){ var b=new THREE.Box3().setFromObject((typeof robot!=='undefined'?robot:scene)); if(b.isEmpty())return; var c=b.getCenter(new THREE.Vector3()), s=b.getSize(new THREE.Vector3()), r=Math.max(s.x,s.y,s.z)||1; controls.target.copy(c); camera.position.copy(c).add(new THREE.Vector3(r*0.35,-r*1.9,r*0.75)); controls.update(); }
+window.arm3dFit=fit;
+/* 数据面板 */
+var dataEl=document.getElementById('data'), RS='';
+var _mDeg=[null,null,null,null,null,null], _mVel=[null,null,null,null,null,null], _mT=0;
+function updData(){
+  var M=(window.__a3dMotor&&(Date.now()-window.__a3dMotor.ts<3000))?window.__a3dMotor:null;
+  var now=Date.now(), dt=(now-_mT)/1000; _mT=now;
+  var cells=[];
+  for(var i=0;i<6;i++){
+    var deg=Q[i]*180/Math.PI;
+    var v=null;
+    if(M&&M.vel&&M.vel[i]!=null) v=M.vel[i]*57.29578;
+    else if(_mDeg[i]!=null&&dt>0.01) v=(deg-_mDeg[i])/dt;
+    if(v!=null) _mVel[i]=(_mVel[i]==null)?v:(_mVel[i]*0.55+v*0.45);
+    var spT=_mVel[i];
+    var tq=(M&&M.eff&&M.eff[i]!=null)?M.eff[i].toFixed(2):'—';
+    cells.push('<span style="color:'+JCOL[i]+';font-weight:700">J'+(i+1)+'</span>'
+      +'<span style="text-align:right;color:#dbeeff">'+((deg>=0?'+':'')+deg.toFixed(1))+'\u00b0</span>'
+      +'<span style="text-align:right;color:#9fdcff">'+tq+'</span>'
+      +'<span style="text-align:right;color:#9fdcff">'+(spT==null?'—':spT.toFixed(0))+'</span>');
+    _mDeg[i]=deg;
+  }
+  var rows='<div style="display:grid;grid-template-columns:24px 52px 38px 26px 24px 52px 38px 26px;gap:3px 4px;align-items:center">'+cells.join('')+'</div>';
+  rows+='<div style="margin-top:5px;border-top:1px solid rgba(90,200,240,.2);padding-top:4px;display:flex;gap:9px;color:#9fc4d6"><span>立柱 <b style="color:#7fe3ff">'+(LIFT*100).toFixed(0)+'cm</b></span><span>抬头 <b style="color:#7fe3ff">'+(PITCH*180/Math.PI).toFixed(0)+'°</b></span><span>夹爪 <b style="color:#7fe3ff">'+(GRIP/GRIP_MAX*100).toFixed(0)+'%</b></span><span style="margin-left:auto;color:#5f93ab">角度 力矩N·m 转速°/s</span></div>';
+  var g8=nodes[8]&&nodes[8].g;
+  if(g8){ var v2=new THREE.Vector3().setFromMatrixPosition(g8.matrixWorld);
+    rows+='<div style="margin-top:3px;color:#9fc4d6">末端 <span style="color:#7fe3ff">'+v2.x.toFixed(2)+' '+v2.y.toFixed(2)+' '+v2.z.toFixed(2)+'</span> · 臂展 <span style="color:#7fe3ff">'+Math.hypot(v2.x,v2.y,v2.z).toFixed(2)+'m</span></div>'; }
+  if(RS) rows+='<div style="margin-top:3px;border-top:1px solid rgba(90,200,240,.2);padding-top:3px;color:#9fc4d6">真机 '+RS+'</div>';
+  dataEl.innerHTML=rows; }
+setInterval(function(){ fetch("http://"+location.hostname+":8792/state",{cache:"no-store"}).then(function(r){return r.json();}).then(function(s){ var b=s.battery||{}; RS='\u{1F50B}'+Math.round(b.value!=null?b.value:0)+'% \u00b7 \u544a\u8b66'+((s.alarm&&s.alarm.length)||0)+' \u00b7 '+((s.workState&&s.workState.cmd)||'-'); if(window.__a3dFollowWalk&&s&&s.pos){ var px=+s.pos.x||0, py=+s.pos.y||0, pyaw=+s.pos.yaw||0; var ddx=px-BASE.x, ddy=py-BASE.y; BASE.x=px; BASE.y=py; BASE.yaw=pyaw; applyBase(); camera.position.x+=ddx; camera.position.y+=ddy; controls.target.x+=ddx; controls.target.y+=ddy; controls.update(); } }).catch(function(){}); },2500);
+/* 控制条 */
+var bar=document.getElementById('bar'), sliders=[];
+function setBar(v){ bar.classList.toggle('on', !!v); }
+function mkSlider(label,min,max,val,step,onInput){ var g=document.createElement('span'); g.className='g';
+  g.innerHTML=label+' <input type="range" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'"><span class="v">'+val+'</span>';
+  var inp=g.querySelector('input'), v=g.querySelector('.v'); inp.oninput=function(){ onInput(+inp.value); v.textContent=inp.value; }; bar.appendChild(g); return inp; }
+for(var i=0;i<6;i++){ (function(i){ sliders[i]=mkSlider('j'+(i+1), -178.8, 178.8, Math.round(Q[i]/MIL), 1, function(x){ var _c=Q.slice(); _c[i]=x*MIL; var _q=lcActive()?lcGuardMove(_c,Q.slice()):_c; for(var _k=0;_k<6;_k++) Q[_k]=_q[_k]; userEdited=true; apply(); notify(); }); })(i); }
+var liftS=mkSlider('头高/立柱', 0, 44, 0, 0.1, function(x){ LIFT=x/100; liftEdited=true; apply(); sendLiftReal(LIFT); try{ if(window.parent&&window.parent.arm6On3DLift) window.parent.arm6On3DLift(LIFT); }catch(e){} });
+var lastHeadSent=0;
+function sendHeadReal(v){ if(!sendReal) return; var t=Date.now(); if(t-lastHeadSent<150) return; lastHeadSent=t;
+  try{ fetch('http://'+location.hostname+':8792/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'head',value:+v.toFixed(3)})}); }catch(e){} }
+var lastLiftSent=0, lastGripSent=0;
+function sendLiftReal(v){ if(!sendReal) return; var t=Date.now(); if(t-lastLiftSent<80) return; lastLiftSent=t;
+  try{ fetch('http://'+location.hostname+':8792/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'height',value:+v.toFixed(3)})}); }catch(e){} }
+function sendGripReal(v){ if(!sendReal) return; var t=Date.now(); if(t-lastGripSent<140) return; lastGripSent=t;
+  try{ fetch('http://'+location.hostname+':8796/grip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({v:+v.toFixed(3)})}); }catch(e){} }
+var pitchS=mkSlider('抬头(真机)', 0, 75, 0, 0.5, function(x){ PITCH=x*MIL; apply(); sendHeadReal(PITCH); });
+var gripS=mkSlider('夹爪', 0, 100, Math.round(GRIP/GRIP_MAX*100), 1, function(x){ GRIP=GRIP_MAX*(x/100); gripEdited=true; apply(); sendGripReal(GRIP); try{ if(window.parent&&window.parent.arm6On3DGrip) window.parent.arm6On3DGrip(GRIP/GRIP_MAX); }catch(e){} });
+function notify(){ try{ if(window.parent&&window.parent!==window&&window.parent.arm6On3DJoints) window.parent.arm6On3DJoints(Q.slice()); }catch(e){} }
+function syncAll(){ for(var i=0;i<6;i++){ if(sliders[i]){ sliders[i].value=Math.round(Q[i]/MIL); sliders[i].parentNode.querySelector('.v').textContent=sliders[i].value; } } if(liftS){ liftS.value=(LIFT*100).toFixed(1); var lv=liftS.parentNode.querySelector('.v'); if(lv) lv.textContent=(LIFT*100).toFixed(1); }
+  if(pitchS){ pitchS.value=(PITCH*180/Math.PI).toFixed(1); var pv=pitchS.parentNode.querySelector('.v'); if(pv) pv.textContent=(PITCH*180/Math.PI).toFixed(1); }
+  if(gripS) gripS.value=Math.round(GRIP/GRIP_MAX*100); }
+var bA=document.createElement('button'); bA.textContent='适应视角'; bA.onclick=function(){ try{ localStorage.removeItem('a3dcamPose'); }catch(e){} fit(); }; bar.appendChild(bA);
+var bFx=document.createElement('button'); bFx.textContent='📌 固定角度'; bFx.onclick=function(){ try{ localStorage.setItem('a3dcamPose', JSON.stringify({pos:camera.position.toArray(), tgt:controls.target.toArray()})); }catch(e){} bFx.textContent='✅ 已固定'; setTimeout(function(){ bFx.textContent='📌 固定角度'; },1600); }; bar.appendChild(bFx);
+var bR=document.createElement('button'); bR.textContent='复位'; bR.onclick=function(){ Q=[0,0,0,0,0,0].map(function(d){return d*MIL;}); LIFT=0; GRIP=0.28; PITCH=0; apply(); syncAll(); fit(); }; bar.appendChild(bR);
+/* 🔗 跟随真机 */
+var followOn=false, ftimer=null, autoPaused=false, resumeT=null, userEdited=false, liftEdited=false, gripEdited=false;
+function pauseFollowAuto(){ if(followOn){ followOn=false; autoPaused=true; try{ bFol.textContent='⏸ 同步已暂停(拖完点执行)'; }catch(e){} if(ftimer){clearInterval(ftimer);ftimer=null;} } }
+function resumeFollowSoon(){ if(resumeT){clearTimeout(resumeT);resumeT=null;} if(autoPaused){ resumeT=setTimeout(function(){ resumeT=null; if(autoPaused && !followOn){ autoPaused=false; bFol.click(); } },5000); } }
+function followTick(){ if(window.LC&&LC.demoOn) return; fetch("http://"+location.hostname+":8796/joints",{cache:"no-store"}).then(function(r){return r.json();}).then(function(j){ if(!j) return; if(j.rad && !userEdited){ for(var i=0;i<6;i++) Q[i]=+j.rad[i]; } if(j.lift!=null && !liftEdited) LIFT=Math.max(0,Math.min(0.44,+j.lift)); if(j.finger!=null && !gripEdited) GRIP=Math.max(0,Math.min(GRIP_MAX,+j.finger)); if(j.pitch!=null) PITCH=Math.max(0,Math.min(1.31,+j.pitch)); if(j.head_pitch!=null) PITCH=Math.max(0,Math.min(1.31,+j.head_pitch)); apply(); syncAll(); st.textContent=(j.status==='ok'?'🔗 跟随真机 · age '+(j.age!=null?j.age:''):('真机: '+(j.status||'?'))); }).catch(function(){ st.textContent='桥未连(:8796?)'; }); }
+var bFol=document.createElement('button'); bFol.textContent='🔗 跟随真机'; bFol.onclick=function(){ autoPaused=false; userEdited=false; liftEdited=false; gripEdited=false; if(resumeT){clearTimeout(resumeT);resumeT=null;} followOn=!followOn; bFol.textContent=followOn?'🔗 跟随中(点停)':'🔗 跟随真机'; if(followOn){ followTick(); if(!ftimer) ftimer=setInterval(followTick,700); } else { if(ftimer){clearInterval(ftimer);ftimer=null;} st.textContent=''; } }; bar.appendChild(bFol);
+var bRot=document.createElement('button'); bRot.textContent='🔄 自动旋转:关'; bRot.onclick=function(){ controls.autoRotate=!controls.autoRotate; bRot.textContent='🔄 自动旋转:'+(controls.autoRotate?'开':'关'); }; bar.appendChild(bRot);
+var sendReal=true;
+var bTe=document.createElement('button'); bTe.textContent='✋ 拖动设定目标:开'; bTe.onclick=function(){ sendReal=!sendReal; bTe.textContent='✋ 拖动设定目标:'+(sendReal?'开':'关'); st.textContent=sendReal?'✋ 拖动设定目标 → 点 ▶执行 移动机械臂':''; }; bar.appendChild(bTe);
+var bEx=document.createElement('button'); bEx.textContent='▶ 执行(到目标)'; bEx.style.borderColor='rgba(110,240,170,.65)'; bEx.style.color='#b9ffd6'; bEx.onclick=function(){ window.arm3dExec(); }; bar.appendChild(bEx);
+var READY_POSE=[0.186,2.694,2.150,-0.285,-1.065,0.0], CLEAR_POSE=[1.1,1.2,2.0,0,-0.8,0.0];
+function a3dMaxDiff(a,b){ var d=0; for(var i=0;i<6;i++) d=Math.max(d,Math.abs(+a[i]-+b[i])); return d; }
+function a3dPost(path,body){ return fetch('http://'+location.hostname+':8796'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json();}).catch(function(){return {ok:false};}); }
+function a3dWaitNear(target,timeoutS){ var n=Math.max(1,Math.round(timeoutS*4)); return new Promise(function(resolve){ var i=0;
+  function tick(){ if(i++>=n){resolve(false);return;} setTimeout(function(){ fetch('http://'+location.hostname+':8796/joints',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ if(j&&j.rad&&a3dMaxDiff(j.rad,target)<0.15) resolve(true); else tick(); }).catch(tick); },250); }
+  tick(); }); }
+var bReady=document.createElement('button'); bReady.textContent='🎯 抓取准备'; bReady.style.borderColor='rgba(110,240,170,.65)'; bReady.style.color='#b9ffd6';
+bReady.onclick=async function(){ if(window.__readyBusy) return; window.__readyBusy=true;
+  try{
+    var cur=null; try{ cur=await fetch('http://'+location.hostname+':8796/joints',{cache:'no-store'}).then(function(r){return r.json();}); }catch(e){}
+    if(cur&&cur.rad&&a3dMaxDiff(cur.rad,READY_POSE)<0.08){ st.textContent='🎯 已在抓取准备位'; return; }
+    st.textContent='🎯 抓取准备：慢速 + 先侧摆A…';
+    await a3dPost('/mode',{mode:{id:'slow',label:'慢速',vmax:0.8,amax:3.0,vmin:0.15,dead:0.02}});
+    var safe=null;
+    try{ safe=(window.arm3dPathSafeTo?window.arm3dPathSafeTo(READY_POSE,12):null); }catch(e){}
+    if(safe && safe.ok && safe.col>=0.03 && safe.ground>=0.02){ st.textContent='✅ 路径安全（柱 '+(safe.col*100).toFixed(1)+'cm），直接去准备位…'; }
+    else if(!cur||!cur.rad||a3dMaxDiff(cur.rad,CLEAR_POSE)>0.15){
+      await a3dPost('/jog',{rad:CLEAR_POSE});
+      if(!await a3dWaitNear(CLEAR_POSE,25)){ st.textContent='⚠ 侧摆A未到位，已中止'; return; }
+    }
+    await a3dPost('/jog',{rad:READY_POSE});
+    var ok=await a3dWaitNear(READY_POSE,25);
+    Q=READY_POSE.slice(); userEdited=true; apply(); syncAll();
+    st.textContent=ok?'✅ 已到抓取准备位':'⚠ 抓取准备位未完全到位';
+  }finally{
+    setTimeout(function(){ a3dPost('/mode',{mode:{id:'std',label:'标准',vmax:2.0,amax:6.0,vmin:0.15,dead:0.02}}); },800);
+    window.__readyBusy=false;
+  }
+};
+bar.appendChild(bReady);
+var bUp=document.createElement('button'); bUp.textContent='⬆ 立柱升'; bUp.onclick=function(){ LIFT=Math.min(0.44,LIFT+0.05); liftEdited=true; apply(); syncAll(); sendLiftReal(LIFT); }; bar.appendChild(bUp);
+var bDn=document.createElement('button'); bDn.textContent='⬇ 立柱降'; bDn.onclick=function(){ LIFT=Math.max(0,LIFT-0.05); liftEdited=true; apply(); syncAll(); sendLiftReal(LIFT); }; bar.appendChild(bDn);
+var bOp=document.createElement('button'); bOp.textContent='🖐 张爪'; bOp.onclick=function(){ GRIP=GRIP_MAX; apply(); syncAll(); sendGripReal(GRIP_MAX); }; bar.appendChild(bOp);
+var bCl=document.createElement('button'); bCl.textContent='✊ 合爪'; bCl.onclick=function(){ GRIP=0; apply(); syncAll(); sendGripReal(0.0); }; bar.appendChild(bCl);
+/* 拖动示教 v34：拖动只设定目标(不下发)；点“▶ 执行”后一次性下发 :8796/jog（平滑算法执行） */
+var dragJ=-1, dragA0=0, dragQ0=0, dragCx=0, dragCy=0, dragSgn=1, lastSent=0, dragAuto=false, dragR=80, dragTx=0, dragTy=0, dragP0x=0, dragP0y=0;
+var baseDrag=false;   /* 🚶 是否正在拖底盘(行走) */
+var baseDrag0x=0, baseDrag0y=0, baseDrag0yaw=0;
+function scrPt(i){ var n=nodes[i+2]; if(!n) return null; var v=new THREE.Vector3().setFromMatrixPosition(n.g.matrixWorld); v.project(camera); var el=renderer.domElement; return {x:(v.x*0.5+0.5)*el.clientWidth, y:(-v.y*0.5+0.5)*el.clientHeight}; }
+function evXY(e){ var r=renderer.domElement.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
+var ray=new THREE.Raycaster();
+function pickJoint(p){ var el=renderer.domElement; var ndc=new THREE.Vector2((p.x/el.clientWidth)*2-1, -(p.y/el.clientHeight)*2+1); ray.setFromCamera(ndc, camera); var hits=ray.intersectObjects(scene.children, true);
+  for(var i=0;i<hits.length;i++){ var o=hits[i].object; var d=o.userData&&o.userData.dof; if(d!=null && d!==undefined) return {dof:d}; }
+  var bi=-1, bd=70; for(var i2=0;i2<6;i2++){ var s=scrPt(i2); if(!s) continue; var dd=Math.hypot(p.x-s.x,p.y-s.y); if(dd<bd){ bd=dd; bi=i2; } }
+  return bi>=0?{dof:bi}:null; }
+function sendTeach(force){ if(!sendReal) return; var t=Date.now(); if(!force && t-lastSent<120) return; lastSent=t; try{ fetch("http://"+location.hostname+":8796/jog",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({rad:Q.slice(0,6)})}); }catch(e){} }
+/* v35: ▶执行 —— 目标一次性下发；≈当前位置时提示；执行后自动恢复跟随 */
+function execTarget(){ if(!sendReal){ st.textContent='先开启 ✋ 拖动设定目标'; return; } userEdited=false;
+  fetch("http://"+location.hostname+":8796/joints",{cache:"no-store"}).then(function(r){return r.json();}).then(function(j){
+    var d=0; if(j&&j.rad){ for(var i=0;i<6;i++){ d=Math.max(d,Math.abs(Q[i]-j.rad[i])); } }
+    resumeFollowSoon();
+    if(d<0.008){ st.textContent='⚠ 目标≈当前位置（无需移动）'; return; }
+    var _z=0; for(var _zi=0;_zi<6;_zi++){ _z+=Math.abs(Q[_zi]); }
+    if(_z<1e-6){ st.textContent='⚠ 目标为全 0（页面未同步姿态）→ 已拦截，请先对齐/拖动目标'; return; }
+    fetch("http://"+location.hostname+":8796/jog",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({rad:Q.slice(0,6)})});
+    st.textContent='▶ 已下发目标 Δ='+d.toFixed(3)+' rad · 机械臂按算法移动到位';
+  }).catch(function(){ st.textContent='读取真机状态失败(:8796)'; });
+}
+window.arm3dExec=execTarget;
+/* 🎛 运动模式：参数随选择即时下发到执行引擎(:8796/mode)；加新模式=在 A3D_MODES 加一行 */
+var A3D_MODES=[
+ {id:"std", label:"标准", desc:"S曲线 · 峰值2.0 · 日常", vmax:2.0, amax:6.0, vmin:0.15, dead:0.02},
+ {id:"slow", label:"慢速", desc:"S曲线 · 峰值0.8 · 超稳", vmax:0.8, amax:3.0, vmin:0.15, dead:0.02},
+ {id:"dance", label:"柔动", desc:"轻柔舞动 · 停闲时缓慢摇摆", vmax:2.0, amax:6.0, vmin:0.15, dead:0.02, dance:1},
+ {id:"wave", label:"波浪", desc:"全臂波浪 · 连绵流动", vmax:2.0, amax:6.0, vmin:0.15, dead:0.02, dance:1, wave:1, damp:0.7, dperiod:7.0}
+];
+var a3dModeId="std";
+function a3dModeOf(id){ for(var i=0;i<A3D_MODES.length;i++){ if(A3D_MODES[i].id===id) return A3D_MODES[i]; } return A3D_MODES[0]; }
+function a3dApplyMode(id, silent){ var m=a3dModeOf(id); a3dModeId=m.id;
+  try{ localStorage.setItem("a3dmode", m.id); }catch(e){}
+  try{ document.getElementById("modbtn").textContent="🎛 模式: "+m.label; }catch(e){}
+  try{ fetch("http://"+location.hostname+":8796/mode",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:{id:m.id,label:m.label,vmax:m.vmax,amax:m.amax,vmin:m.vmin,dead:m.dead,dance:(m.dance?1:0),wave:(m.wave?1:0),damp:(m.damp||1.0),dperiod:(m.dperiod||7.0)}})}); }catch(e){}
+  if(!silent){ st.textContent="🎛 已切换模式: "+m.label; }
+  a3dSyncWave();
+}
+window.a3dGetMode=function(){ return a3dModeId; };
+window.a3dApplyMode=a3dApplyMode;
+/* v42: 「🌊 波浪」一键开关（与 🎛 模式 面板 / 控制台按钮 同步） */
+function a3dSyncWave(){ var b=document.getElementById("wavebtn"); if(!b) return; var on=(a3dModeId==="wave"); b.textContent=on?"🌊 波浪 ✓ 开":"🌊 波浪"; if(on) b.classList.add("on"); else b.classList.remove("on"); }
+window.a3dToggleWave=function(){ a3dApplyMode(a3dModeId==="wave"?"std":"wave"); return a3dModeId; };
+(function(){ try{
+  var p=document.getElementById("modpanel"), b0=document.getElementById("modbtn");
+  A3D_MODES.forEach(function(m){ var b=document.createElement("button"); b.textContent=m.label+" · "+m.desc; b.onclick=function(){ a3dApplyMode(m.id); p.style.display="none"; }; p.appendChild(b); });
+  b0.onclick=function(){ p.style.display=(p.style.display==="block")?"none":"block"; };
+  var saved=null; try{ saved=localStorage.getItem("a3dmode"); }catch(e){}
+  if(saved){ a3dApplyMode(saved, true); } else { a3dSyncWave(); }
+  var wb=document.getElementById("wavebtn"); if(wb) wb.onclick=function(){ a3dToggleWave(); };
+}catch(e){} })();
+/* 爪尖拖动点 + IK（拖时只动模拟；松手不再下发，点 ▶执行 下发） */
+/* 夹爪尖的白色拖动球已删除 (v27)；爪尖拖动仍按 toolWorld() 的屏幕距离判定 */
+var tipDrag=false, tipPlane=null;
+function toolWorld(){ var n=nodes[8]; if(!n) return null; return new THREE.Vector3().setFromMatrixPosition(n.g.matrixWorld); }
+/* 🎯 爪尖（闭合夹爪两指端面中心的中点）—— 在 finger link 局部坐标里是固定材质点，随夹爪开合自动跟随 */
+var TIP_LOCAL_L=new THREE.Vector3(0.00733,-0.0004,0.09258);
+var TIP_LOCAL_R=new THREE.Vector3(-0.00743,-0.0005,0.09258);
+function tipWorld(){
+  var a=nodes[9], b=nodes[10];
+  if(!a||!b||!a.jn||!b.jn) return toolWorld();
+  var pa=TIP_LOCAL_L.clone().applyMatrix4(a.jn.matrixWorld);
+  var pb=TIP_LOCAL_R.clone().applyMatrix4(b.jn.matrixWorld);
+  return pa.add(pb).multiplyScalar(0.5);
+}
+/* 🎥 爪头防翻转：定点头只允许绕爪尖小幅转圈，夹爪姿态不能翻（保护爪上相机） */
+var HEADFIX_MAX_TILT=THREE.MathUtils.degToRad(45);  // 工具轴相对起始方向的倾角上限（管理员 2026-10-21：允许 45° 夹角）
+var HEADFIX_MAX_ROLL=THREE.MathUtils.degToRad(45);  // 绕工具轴的滚转上限（仍不允许翻转）
+var headFixAxis0=null, headFixY0=null;
+function gripAxes(){
+  var n=nodes[8]; if(!n||!n.g) return null;
+  var m=n.g.matrixWorld;
+  return {z:new THREE.Vector3(0,0,1).transformDirection(m),
+          y:new THREE.Vector3(0,1,0).transformDirection(m)};
+}
+function headFixOrient(){
+  var a=gripAxes();
+  if(!a||!headFixAxis0) return {ok:true, tilt:0, roll:0};
+  var tilt=headFixAxis0.angleTo(a.z);
+  var roll=headFixY0?headFixY0.angleTo(a.y):0;
+  return {ok:(tilt<=HEADFIX_MAX_TILT+1e-6 && roll<=HEADFIX_MAX_ROLL+1e-6),
+          tilt:tilt, roll:roll};
+}
+function headFixSetBaseOrient(){ var a=gripAxes(); headFixAxis0=a?a.z.clone():null; headFixY0=a?a.y.clone():null; }
+/* 检查 基座→候选 的整条关节插值路径，防止中途翻转 */
+function headFixPathOrientOk(base, cand, steps){
+  var keep=Q.slice(), ok=true; steps=steps||8;
+  for(var k=0;k<=steps;k++){
+    for(var i=0;i<6;i++) Q[i]=base[i]+(cand[i]-base[i])*k/steps;
+    apply(); scene.updateMatrixWorld(true);
+    if(!headFixOrient().ok){ ok=false; break; }
+  }
+  Q=keep; apply(); scene.updateMatrixWorld(true);
+  return ok;
+}
+function jwPos(j){ var n=nodes[j+2]; if(!n) return null; return new THREE.Vector3().setFromMatrixPosition(n.g.matrixWorld); }
+function jwAxis(j){ var c=CHAIN[j+2]; if(!c||!c.axis) return null; var a=new THREE.Vector3(c.axis[0],c.axis[1],c.axis[2]).normalize(); a.transformDirection(nodes[j+2].g.matrixWorld); return a; }
+function ikTo(tw, eeFn){ var G=eeFn||toolWorld; for(var it=0;it<45;it++){ for(var j=5;j>=0;j--){ scene.updateMatrixWorld(true); var o=jwPos(j), ee=G(); if(!o||!ee) return; var ax=jwAxis(j); var v1=ee.clone().sub(o), v2=tw.clone().sub(o); if(v1.length()<1e-4||v2.length()<1e-4) continue; var ang=Math.atan2(v1.clone().cross(v2).dot(ax), v1.dot(v2)); ang*=0.85; if(Math.abs(ang)<1e-3) continue; Q[j]=Math.max(-3.12,Math.min(3.12, Q[j]+ang)); apply(); } } scene.updateMatrixWorld(true); syncAll(); }
+function ikToN(tw, iters, eeFn){ var G=eeFn||toolWorld; for(var it=0;it<iters;it++){ for(var j=5;j>=0;j--){ scene.updateMatrixWorld(true); var o=jwPos(j), ee=G(); if(!o||!ee) return; var ax=jwAxis(j); var v1=ee.clone().sub(o), v2=tw.clone().sub(o); if(v1.length()<1e-4||v2.length()<1e-4) continue; var ang=Math.atan2(v1.clone().cross(v2).dot(ax), v1.dot(v2)); ang*=0.85; if(Math.abs(ang)<1e-3) continue; Q[j]=Math.max(-3.12,Math.min(3.12, Q[j]+ang)); apply(); } } scene.updateMatrixWorld(true); syncAll(); }
+/* 🎯 爪尖定点演示：固定爪尖（两指端面中点）世界坐标，改变力臂构型（仅仿真） */
+var headFixOn=false, headFixP0=null, headFixMarker=null, headFixRAF=0, headFixN=0;
+function headFixHud(txt){ var h=document.getElementById('headFixHud'); if(!h) return; if(txt==null){ h.style.display='none'; } else { h.style.display='block'; h.textContent=txt; } }
+function headFixCandidate(maxDiff){
+  var base=Q.slice();
+  for(var tries=0;tries<14;tries++){
+    /* 让转台/大臂负责“绕爪尖转圈”，腕部只做小修正 → 爪头不翻 */
+    var ampj=(tries<10?[1.1,0.9,0.9,0.35,0.35,0.25]:[0.6,0.5,0.5,0.2,0.2,0.15]);
+    var cand=base.map(function(v,i){ return v+(Math.random()-0.5)*ampj[i]; });
+    Q=cand.slice(); apply(); scene.updateMatrixWorld(true);
+    ikToN(headFixP0, 30, tipWorld);
+    var ee=tipWorld(); var err=ee?ee.distanceTo(headFixP0):9;
+    var diff=0; for(var i=0;i<6;i++) diff=Math.max(diff, Math.abs(Q[i]-base[i]));
+    if(err<0.008 && diff>0.22 && diff<=(maxDiff||9) && jointLimitOk(Q,2) && headFixOrient().ok
+       && headFixPathOrientOk(base, Q.slice(), 8)) return Q.slice();
+  }
+  Q=base.slice(); apply(); scene.updateMatrixWorld(true);
+  return null;
+}
+function headFixStop(){
+  headFixOn=false; if(headFixRAF){ cancelAnimationFrame(headFixRAF); headFixRAF=0; }
+  if(headFixMarker){ try{ scene.remove(headFixMarker); headFixMarker.geometry.dispose(); headFixMarker.material.dispose(); }catch(e){} headFixMarker=null; }
+  var b=document.getElementById('headfixbtn'); if(b){ b.textContent='🎯 定点头'; b.classList.remove('on'); }
+  headFixHud(null);
+}
+function headFixStep(){
+  if(!headFixOn) return;
+  headFixHud('爪尖定点 · 寻找构型…');
+  setTimeout(function(){
+    if(!headFixOn) return;
+    var startQ=Q.slice();
+    var target=headFixCandidate();
+    if(!target){ headFixHud('爪尖定点 · 未找到构型，继续寻找…'); setTimeout(headFixStep,500); return; }
+    headFixN++;
+    Q=startQ.slice(); apply(); scene.updateMatrixWorld(true);
+    var from=startQ, t0=performance.now(), dur=1100;
+    function frame(now){
+      if(!headFixOn) return;
+      var u=Math.min(1,(now-t0)/dur), e=u*u*(3-2*u);
+      for(var i=0;i<6;i++) Q[i]=from[i]+(target[i]-from[i])*e;
+      apply(); scene.updateMatrixWorld(true);
+      ikToN(headFixP0, 3, tipWorld);
+      var ee=tipWorld(); var err=ee?ee.distanceTo(headFixP0):9;
+      var ori=headFixOrient();
+      if(!ori.ok){ headFixHud('⚠ 爪头超 45°（倾 '+(ori.tilt*180/Math.PI).toFixed(0)+'° 转 '+(ori.roll*180/Math.PI).toFixed(0)+'°），换构型…'); setTimeout(headFixStep,300); return; }
+      headFixHud('爪尖定点 · 误差 '+(err*1000).toFixed(1)+' mm · 爪头 '+(ori.tilt*180/Math.PI).toFixed(0)+'°/'+(ori.roll*180/Math.PI).toFixed(0)+'° · 构型 #'+headFixN);
+      if(u<1) headFixRAF=requestAnimationFrame(frame); else setTimeout(headFixStep,260);
+    }
+    headFixRAF=requestAnimationFrame(frame);
+  },60);
+}
+function headFixStart(){
+  if(headFixOn){ headFixStop(); return; }
+  apply(); scene.updateMatrixWorld(true);
+  var p=tipWorld(); if(!p){ st.textContent='3D 模型未就绪'; return; }
+  headFixP0=p.clone(); headFixN=0;
+  headFixSetBaseOrient();
+  var geo=new THREE.SphereGeometry(0.018,12,10);
+  var mat=new THREE.MeshBasicMaterial({color:0xffd54f,wireframe:true});
+  headFixMarker=new THREE.Mesh(geo,mat); headFixMarker.position.copy(headFixP0); scene.add(headFixMarker);
+  headFixOn=true; var b=document.getElementById('headfixbtn'); if(b){ b.textContent='🎯 定点头 ✓'; b.classList.add('on'); }
+  if(typeof followOn!=='undefined' && followOn && typeof bFol!=='undefined'){ try{ bFol.click(); }catch(e){} }
+  userEdited=true; headFixHud('爪尖定点 · 准备…'); headFixStep();
+}
+var _hfb=document.getElementById('headfixbtn'); if(_hfb) _hfb.onclick=headFixStart;
+/* 🎯 真机定点头：固定爪尖，慢速摆臂（会动真机） */
+var headFixRealOn=false, headFixRealRAF=0, headFixRealN=0, headFixRealRetry=0;
+function headFixRealWait(target,timeoutS){
+  return new Promise(function(resolve){
+    var t0=Date.now();
+    (function poll(){
+      fetch('http://'+location.hostname+':8796/joints',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+        if(j&&j.rad&&a3dMaxDiff(j.rad,target)<0.12){ resolve(true); return; }
+        if(Date.now()-t0>timeoutS*1000){ resolve(false); return; }
+        setTimeout(poll,250);
+      }).catch(function(){ if(Date.now()-t0>timeoutS*1000) resolve(false); else setTimeout(poll,250); });
+    })();
+  });
+}
+function headFixRealStop(){
+  headFixRealOn=false;
+  if(headFixRealRAF){ cancelAnimationFrame(headFixRealRAF); headFixRealRAF=0; }
+  try{ a3dPost('/jog',{stop:true}); }catch(e){}
+  try{ a3dPost('/mode',{mode:{id:'std',label:'标准',vmax:2.0,amax:6.0,vmin:0.15,dead:0.02}}); }catch(e){}
+  if(headFixMarker){ try{ scene.remove(headFixMarker); headFixMarker.geometry.dispose(); headFixMarker.material.dispose(); }catch(e){} headFixMarker=null; }
+  var b=document.getElementById('headfixrealbtn'); if(b){ b.textContent='🎯 定点头·真机'; b.classList.remove('on'); }
+  headFixHud(null); st.textContent='';
+}
+async function headFixRealStep(){
+  if(!headFixRealOn) return;
+  var retry=headFixRealRetry||0;
+  headFixHud('真机定点头 · 寻找构型…'+(retry?(' 重试 #'+retry):''));
+  var startQ=Q.slice(), target=null, sawCand=false, lastCol=null;
+  var maxDiff = retry<4 ? 0.6 : (retry<10 ? 0.9 : 1.2);
+  for(var k=0;k<3;k++){
+    Q=startQ.slice(); apply(); scene.updateMatrixWorld(true);
+    var c=headFixCandidate(maxDiff);
+    if(!c) continue;
+    sawCand=true;
+    Q=startQ.slice(); apply(); scene.updateMatrixWorld(true);
+    var ps=window.arm3dPathSafeTo?window.arm3dPathSafeTo(c,8):null;
+    if(ps===null){
+      headFixRealRetry=retry+1;
+      headFixHud('碰撞模型未就绪 · 等待重试…');
+      setTimeout(headFixRealStep,800); return;
+    }
+    lastCol=ps.col;
+    if(ps&&ps.ok&&ps.col>=0.03&&ps.ground>=0.02){ target=c; break; }
+  }
+  if(!target){
+    headFixRealRetry=retry+1;
+    headFixHud((sawCand?('路径离柱 '+(lastCol!=null?(lastCol*100).toFixed(1):'?')+'cm，换构型重试…'):'未找到构型，继续寻找…')+'（'+(retry+1)+'）');
+    setTimeout(headFixRealStep,600);
+    return;
+  }
+  headFixRealRetry=0;
+  Q=startQ.slice(); apply(); syncAll();
+  await a3dPost('/jog',{rad:target});
+  headFixRealN++;
+  var _d=0; for(var _i=0;_i<6;_i++) _d=Math.max(_d, Math.abs(target[_i]-startQ[_i]));
+  var from=startQ.slice(), t0=performance.now(), dur=700+Math.max(0,Math.min(0.6,_d-0.6))*500;
+  (function frame(now){
+    if(!headFixRealOn) return;
+    var u=Math.min(1,(now-t0)/dur), e=u*u*(3-2*u);
+    for(var i=0;i<6;i++) Q[i]=from[i]+(target[i]-from[i])*e;
+    apply(); scene.updateMatrixWorld(true);
+    if(u<1) headFixRealRAF=requestAnimationFrame(frame); else headFixRealRAF=0;
+  })(performance.now());
+  var ok=await headFixRealWait(target,15);
+  if(!ok){
+    headFixRealRetry=(headFixRealRetry||0)+1;
+    headFixHud('真机未到位，继续尝试… #'+headFixRealRetry);
+    setTimeout(headFixRealStep,900);
+    return;
+  }
+  try{
+    var j=await fetch('http://'+location.hostname+':8796/joints',{cache:'no-store'}).then(function(r){return r.json();});
+    if(j&&j.rad){ Q=j.rad.slice(); if(j.lift!=null) LIFT=Math.max(0,Math.min(0.44,+j.lift)); if(j.finger!=null) GRIP=Math.max(0,Math.min(0.69,+j.finger)); apply(); scene.updateMatrixWorld(true); syncAll(); }
+  }catch(e){}
+  var ee=tipWorld(); var err=ee?ee.distanceTo(headFixP0):9;
+  headFixHud('真机定点头 · 爪尖固定 · 限位✓ · 误差 '+(err*1000).toFixed(1)+' mm · 构型 #'+headFixRealN);
+  setTimeout(headFixRealStep,180);
+}
+async function headFixRealStart(){
+  if(headFixRealOn){ headFixRealStop(); return; }
+  if(headFixOn) headFixStop();
+  try{
+    var j=await fetch('http://'+location.hostname+':8796/joints',{cache:'no-store'}).then(function(r){return r.json();});
+    if(!j||!j.rad||j.status!=='ok'){ st.textContent='机器人状态不正常，已中止'; return; }
+    Q=j.rad.slice(); if(j.lift!=null) LIFT=Math.max(0,Math.min(0.44,+j.lift)); if(j.finger!=null) GRIP=Math.max(0,Math.min(0.69,+j.finger)); userEdited=true; apply(); scene.updateMatrixWorld(true); syncAll();
+  }catch(e){ st.textContent='读取真机失败，已中止'; return; }
+  headFixHud('定点头 · 等待碰撞模型…（首次加载较慢）'); st.textContent='碰撞模型加载中…';
+  if(!(await waitLcReady(25))){ headFixHud('碰撞模型未就绪，请刷新/稍候再试'); st.textContent='碰撞模型未就绪'; return; }
+  var p=tipWorld(); if(!p){ st.textContent='3D 模型未就绪'; return; }
+  headFixP0=p.clone(); headFixRealN=0;
+  headFixSetBaseOrient();
+  var geo=new THREE.SphereGeometry(0.018,12,10);
+  var mat=new THREE.MeshBasicMaterial({color:0xffd54f,wireframe:true});
+  headFixMarker=new THREE.Mesh(geo,mat); headFixMarker.position.copy(headFixP0); scene.add(headFixMarker);
+  headFixRealOn=true; var b=document.getElementById('headfixrealbtn'); if(b){ b.textContent='🎯 定点头·真机 ✓'; b.classList.add('on'); }
+  if(typeof followOn!=='undefined'&&followOn&&typeof bFol!=='undefined'){ try{ bFol.click(); }catch(e){} }
+  await a3dPost('/mode',{mode:{id:'headfast',label:'定点头快速',vmax:1.6,amax:4.5,vmin:0.2,dead:0.03}});
+  headFixHud('真机定点头 · 准备…'); headFixRealStep();
+}
+var _hfrb=document.getElementById('headfixrealbtn'); if(_hfrb) _hfrb.onclick=headFixRealStart;
+function updateHandle(){ /* 球已移除 (v27) */ }
+function rayPlanePt(p, plane){ var el=renderer.domElement; var ndc=new THREE.Vector2((p.x/el.clientWidth)*2-1, -(p.y/el.clientHeight)*2+1); ray.setFromCamera(ndc,camera); var pt=new THREE.Vector3(); return ray.ray.intersectPlane(plane, pt); }
+/* 🚶 地面(z=0)射线交点：把屏幕点反投影到行走平面 */
+var floorPlane=new THREE.Plane(new THREE.Vector3(0,0,1),0);
+function rayFloorPt(p){ return rayPlanePt(p, floorPlane); }
+function screenOf(v3){ var v=v3.clone().project(camera); var el=renderer.domElement; return {x:(v.x*0.5+0.5)*el.clientWidth, y:(-v.y*0.5+0.5)*el.clientHeight}; }
+/* 视角球：拖它转视角 */
+/* 🌀 旋转固定点 = 立柱中心（x/y 取 lift_link 世界位置，z=0.5+升降高度）——拖拽旋转时立柱固定、镜头绕它转圈 */
+function colPivot(){ var v=new THREE.Vector3();
+  try{ if(nodes[0]&&nodes[0].g) nodes[0].g.getWorldPosition(v); else v.set(0,0,0); }catch(e){ v.set(0,0,0); }
+  v.z = 0.5 + LIFT; return v; }
+function rotateView(dx,dy){ var tgt=colPivot();
+  var q1=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), -dx*0.012); camera.position.sub(tgt).applyQuaternion(q1).add(tgt);
+  var right=new THREE.Vector3().subVectors(tgt,camera.position).cross(new THREE.Vector3(0,0,1)); if(right.lengthSq()>1e-8){ right.normalize();
+    var q2=new THREE.Quaternion().setFromAxisAngle(right, -dy*0.010); var np=camera.position.clone().sub(tgt).applyQuaternion(q2).add(tgt); if(np.z>tgt.z-0.02) camera.position.copy(np); }
+  camera.lookAt(tgt); controls.update(); }
+(function(){ var b=document.getElementById('ball'); if(!b) return; var on=false,lx=0,ly=0;
+  b.addEventListener('pointerdown',function(e){ on=true; lx=e.clientX; ly=e.clientY; controls.autoRotate=false; try{ b.setPointerCapture(e.pointerId); }catch(x){} e.preventDefault(); });
+  b.addEventListener('pointermove',function(e){ if(!on) return; var dx=e.clientX-lx, dy=e.clientY-ly; lx=e.clientX; ly=e.clientY; rotateView(dx,dy); });
+  ['pointerup','pointercancel'].forEach(function(ev){ b.addEventListener(ev,function(){ on=false; }); }); })();
+window.arm3dIK=function(x,y,z){ ikTo(new THREE.Vector3(x,y,z)); updateHandle(); };
+window.arm3dTipScreen=function(){ var ee=toolWorld(); return ee?screenOf(ee):null; };
+var el3d=renderer.domElement;
+el3d.addEventListener('pointerdown',function(e){ if(e.button!==0) return; var p=evXY(e);
+  var ee=toolWorld(); var tsp=ee?screenOf(ee):null;
+  if(tsp && Math.hypot(p.x-tsp.x,p.y-tsp.y)<72){ tipDrag=true; tipPlane=new THREE.Plane().setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), ee); dragAuto=controls.autoRotate; controls.enabled=false; controls.autoRotate=false; st.textContent='拖爪尖 · 设定目标…'; pauseFollowAuto(); try{ el3d.setPointerCapture(e.pointerId); }catch(x){} e.preventDefault(); return; }
+  /* 🚶 拖底盘圆盘 = 行走(移动底盘) */
+  /* v29: 底盘圆盘不再拦截拖动 —— 左键拖动统一=旋转视角；行走/升降用左上面板按钮或键盘 */
+  var bi=-1, bd=95; for(var i=0;i<6;i++){ var s=scrPt(i); if(!s) continue; var d=Math.hypot(p.x-s.x,p.y-s.y); if(d<bd){ bd=d; bi=i; } }
+  if(bi<0){ try{ controls.target.copy(colPivot()); }catch(e){} return; }   // 普通拖拽=旋转：先把旋转中心对准立柱（立柱固定转圈）
+  pauseFollowAuto(); dragJ=bi; var _s=scrPt(bi); dragCx=_s?_s.x:p.x; dragCy=_s?_s.y:p.y; dragA0=Math.atan2(p.y-dragCy,p.x-dragCx); dragQ0=Q[bi];
+  try{ var c=CHAIN[bi+2]; var ax=new THREE.Vector3(c.axis[0],c.axis[1],c.axis[2]).normalize().transformDirection(nodes[bi+2].g.matrixWorld); var fwd=new THREE.Vector3(); camera.getWorldDirection(fwd); dragSgn=ax.dot(fwd)>0?1:-1; }catch(x){ dragSgn=1; }
+  dragAuto=controls.autoRotate; controls.enabled=false; controls.autoRotate=false; st.textContent='握住 J'+(bi+1)+' 拖动(松手后点 ▶执行)…';
+  var _dx=p.x-dragCx, _dy=p.y-dragCy; dragR=Math.max(70, Math.hypot(_dx,_dy)); dragTx=-_dy/dragR; dragTy=_dx/dragR; dragP0x=p.x; dragP0y=p.y;
+  try{ if(el3d.setPointerCapture) el3d.setPointerCapture(e.pointerId); }catch(x){} e.preventDefault(); }, true);
+el3d.addEventListener('pointermove',function(e){ var p=evXY(e);
+  if(tipDrag && tipPlane){ var pt=rayPlanePt(p, tipPlane); if(pt){ var _b=Q.slice(); ikTo(pt); if(lcActive()){ var _q2=lcGuardMove(Q.slice(),_b); for(var _i=0;_i<6;_i++) Q[_i]=_q2[_i]; apply(); } userEdited=true; updateHandle(); notify(); } return; }
+  if(baseDrag){ var wpf=rayFloorPt(p); if(wpf){ BASE.x=wpf.x; BASE.y=wpf.y; applyBase(); } return; }
+  if(dragJ<0) return; var dq=(p.y-dragP0y)*0.007*dragSgn; var _cand=Q.slice(); _cand[dragJ]=Math.max(-3.12,Math.min(3.12, dragQ0+dq)); var _q3=lcActive()?lcGuardMove(_cand,Q.slice()):_cand; for(var _j=0;_j<6;_j++) Q[_j]=_q3[_j]; userEdited=true; apply(); syncAll(); notify(); }, true);
+['pointerup','pointercancel'].forEach(function(ev){ el3d.addEventListener(ev,function(){ if(baseDrag){ baseDrag=false; controls.enabled=true; controls.autoRotate=dragAuto; st.textContent=''; try{ var ddx=BASE.x-baseDrag0x, ddy=BASE.y-baseDrag0y, c=Math.cos(baseDrag0yaw), s=Math.sin(baseDrag0yaw); var fwd=ddx*c+ddy*s; if(Math.hypot(ddx,ddy)>0.03) a3dSend('chassis_move',{move_distance:+fwd.toFixed(3),move_angle:0}); }catch(x){} return; } if(tipDrag){ tipDrag=false; tipPlane=null; controls.enabled=true; controls.autoRotate=dragAuto; notify(); st.textContent='🎯 目标已设定 → 点 ▶执行'; return; } if(dragJ>=0){ dragJ=-1; controls.enabled=true; controls.autoRotate=dragAuto; notify(); st.textContent='🎯 目标已设定 → 点 ▶执行'; } }, true); });
+document.getElementById('tog').onclick=function(){ setBar(!bar.classList.contains('on')); };
+document.getElementById('exbtn').onclick=execTarget;
+/* 🖱 滚轮 = 朝鼠标位置缩放（zoom-to-cursor）：鼠标下的地面点固定在原位放大/缩小 */
+var _zplane=new THREE.Plane(), _zv=new THREE.Vector3(), _zpt=new THREE.Vector3();
+function wheelFocus(px,py){
+  var r=el3d.getBoundingClientRect(); var ndc=new THREE.Vector2((px/r.width)*2-1, -(py/r.height)*2+1);
+  ray.setFromCamera(ndc,camera); var o=ray.ray.origin, d=ray.ray.direction;
+  if(Math.abs(d.z)>1e-4){ var t=-o.z/d.z; if(t>0){ _zpt.copy(d).multiplyScalar(t).add(o); if(_zpt.distanceTo(controls.target) < controls.target.distanceTo(camera.position)*8) return _zpt; } }
+  _zv.subVectors(controls.target,camera.position).normalize(); _zplane.setFromNormalAndCoplanarPoint(_zv, controls.target);
+  return ray.ray.intersectPlane(_zplane,_zpt)? _zpt : controls.target.clone();
+}
+el3d.addEventListener('wheel',function(e){ if(controls.enabled===false) return; e.preventDefault();
+  var r=el3d.getBoundingClientRect(); var focus=wheelFocus(e.clientX-r.left, e.clientY-r.top).clone();
+  var d0=camera.position.distanceTo(controls.target); if(d0<1e-6) return;
+  var k=Math.exp((e.deltaY||0)*0.0012); var d1=d0*k;   // 上滚(deltaY<0)→k<1→拉近
+  if(d1<controls.minDistance) k=controls.minDistance/d0; else if(d1>controls.maxDistance) k=controls.maxDistance/d0;
+  camera.position.sub(focus).multiplyScalar(k).add(focus);
+  controls.target.sub(focus).multiplyScalar(k).add(focus);
+  controls.update();
+}, {passive:false});
+document.getElementById('anno').onclick=function(){ window.open('annotate.html','_blank'); };
+var _fsBtn=document.getElementById('fs'); if(_fsBtn) _fsBtn.onclick=function(){ var d=document; if(d.fullscreenElement){ d.exitFullscreen(); } else { var el=d.documentElement; (el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen||function(){}).call(el); } };
+function resize(){ var w=innerWidth, h=innerHeight; camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setPixelRatio(PR); renderer.setSize(w,h); }
+document.addEventListener('fullscreenchange',function(){ resize(); setTimeout(resize,60); setTimeout(resize,300); setTimeout(resize,700); });
+document.addEventListener('webkitfullscreenchange',function(){ setTimeout(resize,120); });
+window.arm3dSetJoints=function(rad){ _lastAct=performance.now(); if(userEdited) return; if(window.LC&&LC.demoOn) return; if(!rad||rad.length<6)return; for(var i=0;i<6;i++) Q[i]=+rad[i]; apply(); syncAll(); };
+window.arm3dGetJoints=function(){ return Q.slice(); };
+window.arm3dSetLift=function(v){ LIFT=Math.max(0,Math.min(0.44,+v||0)); apply(); syncAll(); };
+window.arm3dSetHeadPitch=function(v,push){ PITCH=Math.max(0,Math.min(1.31,+v||0)); apply(); syncAll(); if(push) sendHeadReal(PITCH); };
+window.arm3dGetHeadPitch=function(){ return PITCH; };
+window.arm3dSetGrip=function(g){ GRIP=Math.max(0,Math.min(GRIP_MAX,+g||0)); apply(); if(gripS) gripS.value=Math.round(GRIP/GRIP_MAX*100); };
+/* 外部预览专用：直接设置姿态并强制渲染一帧（舞蹈编辑器用） */
+window.arm3dPreviewPose=function(rad,lift,grip){
+  if(!rad||rad.length<6) return false;
+  Q=rad.slice(0,6).map(function(x){return +x;});
+  userEdited=true;
+  if(lift!=null) LIFT=Math.max(0,Math.min(0.44,+lift||0));
+  if(grip!=null) GRIP=Math.max(0,Math.min(0.69,+grip||0));
+  apply();
+  try{ renderer.render(scene,camera); }catch(e){}
+  return true;
+};
+window.arm3dDbg=function(){ var b=new THREE.Box3().setFromObject(scene); return { zmax:+b.max.z.toFixed(3), zmin:+b.min.z.toFixed(3), lift:+LIFT.toFixed(3), grip:+GRIP.toFixed(3), dragJ:dragJ }; };
+window.arm3dScreenJoints=function(){ var o=[]; for(var i=0;i<6;i++){ var s=scrPt(i); o.push(s?[Math.round(s.x),Math.round(s.y)]:null); } return o; };
+window.arm3dQ=function(){ return Q.slice(); };
+/* ================= 🚶 行走(底盘) + 🛗 立柱升降 (v27) ================= */
+window.__a3dWalkHud=function(){ var h=document.getElementById('walkHud'); if(h) h.textContent='x '+BASE.x.toFixed(2)+'  y '+BASE.y.toFixed(2)+'  yaw '+Math.round(BASE.yaw*180/Math.PI)+'\u00b0  · 立柱 '+Math.round(LIFT*100)+'cm'; var s=document.getElementById('walkSt'); if(s){ var R=a3dRoboSt(); s.textContent = robotCtl ? ('真机下发: '+(R?(R.busy?'机器人忙(单任务)':(R.ws?'已连接 → 会动真机':'WS未连接')):'(独立页面)')) : '真机下发: 关（仅模拟）'; } };
+/* 是否把行走/升降下发真机（🎮 开关） */
+var robotCtl=true;
+function a3dParent(){ try{ return (window.parent&&window.parent!==window)?window.parent:null; }catch(e){ return null; } }
+function a3dRoboSt(){ var P=a3dParent(); if(P&&typeof P.arm3dRoboSt==='function'){ try{ return P.arm3dRoboSt(); }catch(e){} } return null; }
+function a3dSend(name,data){ if(!robotCtl) return false; var P=a3dParent();
+  if(P&&typeof P.arm3dCmd==='function'){ try{ return !!P.arm3dCmd(name,data||{}); }catch(e){} }
+  try{ var body={ action:(name==='chassis_move'?'chassis':(name==='robot_height_ctrl'?'height':'stop')) }; if(data){ if(data.move_distance!=null)body.d=data.move_distance; if(data.move_angle!=null)body.a=data.move_angle; if(data.value!=null)body.value=data.value; }
+    fetch('http://'+location.hostname+':8792/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); return true; }catch(e){ return false; }
+}
+function walkStep(fwd,turn){ var c=Math.cos(BASE.yaw), s=Math.sin(BASE.yaw); BASE.x+=fwd*c; BASE.y+=fwd*s; BASE.yaw+=turn; applyBase(); a3dSend('chassis_move',{move_distance:+fwd.toFixed(3),move_angle:+turn.toFixed(3)}); }
+function a3dSetLift(m,push){ m=Math.max(0,Math.min(0.44,+m||0)); LIFT=m; apply(); if(liftS) liftS.value=Math.round(m*100); if(push) a3dSend('robot_height_ctrl',{value:+m.toFixed(3)}); if(window.__a3dWalkHud) window.__a3dWalkHud(); }
+/* 对齐接口：外部(控制台/机器人)设置底盘位姿 → 网格视图与真机/模拟对齐 */
+window.arm3dSetBase=function(b){ if(!b) return {x:BASE.x,y:BASE.y,yaw:BASE.yaw}; var ox=BASE.x, oy=BASE.y; if(b.x!=null)BASE.x=+b.x||0; if(b.y!=null)BASE.y=+b.y||0; if(b.yaw!=null)BASE.yaw=+b.yaw||0; applyBase(); var dx=BASE.x-ox, dy=BASE.y-oy; if(dx||dy){ camera.position.x+=dx; camera.position.y+=dy; controls.target.x+=dx; controls.target.y+=dy; try{ if(typeof g!=='undefined'&&g){ g.position.x+=dx; g.position.y+=dy; } }catch(e){} controls.update(); } return {x:BASE.x,y:BASE.y,yaw:BASE.yaw}; };
+window.arm3dGetBase=function(){ return {x:BASE.x,y:BASE.y,yaw:BASE.yaw}; };
+window.arm3dWalkBy=function(dx,dy,dth){ BASE.x+=(+dx||0); BASE.y+=(+dy||0); BASE.yaw+=(+dth||0); applyBase(); return {x:BASE.x,y:BASE.y,yaw:BASE.yaw}; };
+(function(){
+  var w=document.getElementById('walk'); if(!w) return;
+  w.addEventListener('click',function(e){ var b=e.target&&e.target.closest?e.target.closest('button'):null; if(!b) return; var a=b.getAttribute('data-w');
+    if(a==='fwd')walkStep(0.2,0); else if(a==='back')walkStep(-0.2,0);
+    else if(a==='tl')walkStep(0,0.35); else if(a==='tr')walkStep(0,-0.35);
+    else if(a==='home'){ BASE.x=0;BASE.y=0;BASE.yaw=0; applyBase(); }
+    else if(a==='liftup')a3dSetLift(LIFT+0.05,true); else if(a==='liftdn')a3dSetLift(LIFT-0.05,true); else if(a==='zero')a3dSetLift(0,true);
+    else if(a==='stop'){ a3dSend('stop_all',{}); }
+    if(window.__a3dWalkHud)window.__a3dWalkHud(); });
+  var c=document.getElementById('walkCtl');
+  if(c){ try{ var cv=localStorage.getItem('a3dCtl'); c.checked=(cv==null)?true:(cv==='1'); }catch(e){} robotCtl=c.checked;
+    c.onchange=function(){ robotCtl=c.checked; try{ localStorage.setItem('a3dCtl',c.checked?'1':'0'); }catch(e){} st.textContent=robotCtl?'🎮 控真机：开（行走/升降下发真机）':'🎮 控真机：关（仅模拟）'; if(window.__a3dWalkHud)window.__a3dWalkHud(); }; }
+  var f=document.getElementById('walkFollow');
+  if(f){ try{ f.checked=!!localStorage.getItem('a3dWalkFollow'); }catch(e){} window.__a3dFollowWalk=f.checked; f.onchange=function(){ window.__a3dFollowWalk=f.checked; try{ localStorage.setItem('a3dWalkFollow', f.checked?'1':'0'); }catch(e){} st.textContent=f.checked?'🚶 跟随真机行走（读 :8792/state pos）':''; }; }
+})();
+/* ⌨️ 键盘行走：W/S 前后 · A/D/Q/E 转向 · Shift 加速 */
+window.addEventListener('keydown',function(e){ if(e.target&&/input|textarea/i.test(e.target.tagName||'')) return; var k=(e.key||'').toLowerCase(); var f=e.shiftKey?0.4:0.15, t=e.shiftKey?0.6:0.3, hit=true;
+  if(k==='w'||k==='arrowup')walkStep(f,0); else if(k==='s'||k==='arrowdown')walkStep(-f,0);
+  else if(k==='a'||k==='arrowleft'||k==='q')walkStep(0,t); else if(k==='d'||k==='arrowright'||k==='e')walkStep(0,-t);
+  else hit=false; if(hit) e.preventDefault(); });
+setInterval(function(){ if(window.__a3dWalkHud) window.__a3dWalkHud(); }, 1500);
+/* 📊 电机实时数据（真机 角度/力矩/转速，每秒拉一次；面板与标签共用） */
+window.__a3dMotor=null;
+setInterval(function(){ fetch('http://'+location.hostname+':8796/joints',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ if(j&&j.rad){ window.__a3dMotor={vel:j.vel||null, eff:j.eff||null, ts:Date.now()}; } }).catch(function(){}); },1000);
+window.__a3dWalkHud();
+addEventListener('resize',resize);
+var fitted=false, _dt=0;
+var PR=MAXPR, _q=PR, _fpsT=performance.now(), _fpsN=0, _lastFT=0;
+(function loop(ts){ requestAnimationFrame(loop); if(document.hidden) return;
+  var _iv = (ts-_lastAct>2000)?200:32; if(ts-_lastFT < _iv) return; _lastFT=ts;
+  controls.update(); renderer.render(scene,camera); updateHandle();
+  _fpsN++; if(ts-_fpsT>2000){ var fps=_fpsN*1000/(ts-_fpsT); _fpsN=0; _fpsT=ts;
+    if(fps<20 && _q>1){ _q=Math.max(1,_q-0.25); PR=_q; renderer.setPixelRatio(PR); renderer.setSize(innerWidth,innerHeight); }
+    else if(fps>45 && _q<MAXPR){ _q=Math.min(MAXPR,_q+0.25); PR=_q; renderer.setPixelRatio(PR); renderer.setSize(innerWidth,innerHeight); }
+    try{ if(location.hash==='#fps') document.title='FPS '+fps.toFixed(1); }catch(e){}
+  }
+  var t=Date.now(); if(t-_dt>150){ _dt=t; updData(); updateJLabels(); } if(!fitted && total>0 && loaded>=total){ fitted=true; if(!savedCam) fit(); } })(0);
+/* ===== v43: 🛡 全位置限位保护（立柱/地面/底盘） + 红色警示 + 自我修正 + 限位演示 ===== */
+var LC={ready:false, redUntil:0, redSet:{}, marginCol:0.030, marginGround:0.020, marginChas:0.040,
+        demoOn:false, demoFrames:null, demoIdx:0, demoNext:0, lastStat:0, col:null, links:null, colLocal:null, _v:null, base:null};
+window.lcGuardOn=false;
+function lcActive(){ return !!(window.LC&&LC.ready&&window.lcGuardOn); }
+/* 等待碰撞模型（STL 网格 + LC 采样）就绪；定点头·真机启动前必须等 */
+function waitLcReady(timeoutS){
+  return new Promise(function(resolve){
+    var t0=Date.now(), ms=Math.max(1000,(timeoutS||15)*1000);
+    (function tick(){
+      if(window.LC&&LC.ready) return resolve(true);
+      if(Date.now()-t0>ms) return resolve(false);
+      setTimeout(tick,200);
+    })();
+  });
+}
+function lcMeshOf(jn){ var r=null; jn.children.forEach(function(ch){ if(ch.isMesh&&!r) r=ch; }); return r; }
+function lcSamp(mesh,maxN){ var pos=mesh.geometry.attributes.position; var n=pos.count; var stride=Math.max(1,Math.ceil(n/maxN)); var a=[]; for(var i=0;i<n;i+=stride){ a.push(pos.getX(i),pos.getY(i),pos.getZ(i)); } return new Float32Array(a); }
+function lcBuild(){
+  if(LC.ready||typeof loaded==='undefined'||loaded<total||nodes.length<11) return;
+  try{
+    LC.links=[];
+    for(var i=2;i<=10;i++){ var m=lcMeshOf(nodes[i].jn); if(m) LC.links.push({i:i, pts:lcSamp(m, i>=9?400:(i===8?600:800))}); }
+    var cm=lcMeshOf(nodes[0].jn); LC.colLocal=lcSamp(cm,4000);
+    apply(); scene.updateMatrixWorld(true);
+    var v=new THREE.Vector3(); var mn={x:1e9,y:1e9,z:1e9}, mx={x:-1e9,y:-1e9,z:-1e9}; var pts=[]; var mtx=nodes[0].jn.matrixWorld;
+    for(var k=0;k<LC.colLocal.length;k+=3){ v.set(LC.colLocal[k],LC.colLocal[k+1],LC.colLocal[k+2]).applyMatrix4(mtx); pts.push(v.x,v.y,v.z);
+      if(v.x<mn.x)mn.x=v.x; if(v.y<mn.y)mn.y=v.y; if(v.z<mn.z)mn.z=v.z; if(v.x>mx.x)mx.x=v.x; if(v.y>mx.y)mx.y=v.y; if(v.z>mx.z)mx.z=v.z; }
+    var cx=(mn.x+mx.x)/2, cy=(mn.y+mx.y)/2, rs=[];
+    for(var k2=0;k2<pts.length;k2+=3){ var z=pts[k2+2]; if(z>mn.z+0.05&&z<mx.z-0.02){ rs.push(Math.hypot(pts[k2]-cx,pts[k2+1]-cy)); } }
+    rs.sort(function(a,b){return a-b;});
+    LC.col={cx:cx,cy:cy,z0:mn.z,z1:mx.z,rc:(rs.length?rs[Math.floor(rs.length*0.9)]:0.09)};
+    LC.lift0=LIFT;
+    LC.ready=true;
+  }catch(e){}
+}
+function lcPoseQ(q){
+  for(var i=0;i<6;i++){ var n=nodes[i+2], c=CHAIN[i+2]; if(n&&c&&c.dof!=null){ n.jn.quaternion.setFromAxisAngle(new THREE.Vector3(c.axis[0],c.axis[1],c.axis[2]).normalize(), q[i]); } }
+  if(nodes[9]&&CHAIN[9].grip!=null){ var c9=CHAIN[9]; nodes[9].jn.quaternion.setFromAxisAngle(new THREE.Vector3(c9.axis[0],c9.axis[1],c9.axis[2]).normalize(), GRIP-GRIP_OFF); }
+  if(nodes[10]&&CHAIN[10].grip!=null){ var c10=CHAIN[10]; nodes[10].jn.quaternion.setFromAxisAngle(new THREE.Vector3(c10.axis[0],c10.axis[1],c10.axis[2]).normalize(), GRIP-GRIP_OFF); }
+  if(nodes[0]&&CHAIN[0].lift){ nodes[0].g.position.z=CHAIN[0].xyz[2]+LIFT; }
+  robot.updateMatrixWorld(true);
+}
+function lcMeasure(){
+  try{ robot.updateMatrixWorld(true); }catch(e){}
+  var v=LC._v||(LC._v=new THREE.Vector3()); var C=LC.col; if(!C) return {ok:true,minZ:9,colClear:9,chasClear:9,colLink:-1,bad:{},chasBad:false};
+  var dz=LIFT-(LC.lift0||0);
+  var z0=C.z0+dz, z1=C.z1+dz, zT=z1+0.03;
+  var minZ=1e9, colClear=1e9, chasClear=1e9, colLink=-1, bad={};
+  for(var li=0;li<LC.links.length;li++){ var L=LC.links[li]; var mtx=nodes[L.i].jn.matrixWorld; var p=L.pts; var lz=1e9, lc=1e9;
+    for(var k=0;k<p.length;k+=3){ v.set(p[k],p[k+1],p[k+2]).applyMatrix4(mtx);
+      if(v.z<lz) lz=v.z;
+      if(v.z>z0&&v.z<zT){ var d=Math.hypot(v.x-C.cx,v.y-C.cy)-C.rc; if(d<lc) lc=d; }
+      if(v.z<0.22){ var d2=Math.hypot(v.x,v.y)-0.24; if(d2<chasClear) chasClear=d2; } }
+    if(lz<minZ) minZ=lz;
+    if(lc<colClear){ colClear=lc; colLink=L.i; }
+    if(lz<LC.marginGround) bad[L.i]='地面'; else if(lc<LC.marginCol) bad[L.i]='立柱';
+  }
+  var chasBad=(chasClear<LC.marginChas);
+  var ok=(minZ>=LC.marginGround)&&(colClear>=LC.marginCol)&&(!chasBad);
+  return {ok:ok,minZ:minZ,colClear:colClear,chasClear:chasClear,colLink:colLink,bad:bad,chasBad:chasBad};
+}
+function lcMix(a,b,t){ var q=new Array(6); for(var i=0;i<6;i++) q[i]=a[i]+(b[i]-a[i])*t; return q; }
+/* 评估从当前 Q 直线插值到目标 rad 的路径是否安全（不动机器人，仅仿真计算） */
+window.arm3dPathSafeTo=function(rad, samples){
+  if(!LC.ready || !rad || rad.length<6) return null;
+  samples=Math.max(4, Math.min(30, samples||12));
+  var start=Q.slice(), ok=true, worstCol=9, worstGround=9;
+  try{
+    for(var i=0;i<=samples;i++){
+      var qi=lcMix(start, rad, i/samples);
+      if(!jointLimitOk(qi,0.5)){ ok=false; break; }
+      lcPoseQ(qi);
+      var m=lcMeasure();
+      worstCol=Math.min(worstCol, m.colClear);
+      worstGround=Math.min(worstGround, m.minZ);
+      if(!m.ok){ ok=false; break; }
+    }
+  }catch(e){ ok=false; }
+  lcPoseQ(start); apply(); scene.updateMatrixWorld(true);
+  return {ok:ok, col:worstCol, ground:worstGround};
+};
+function lcGuardMove(cand, prev){
+  if(!lcActive()) return cand.slice();
+  lcPoseQ(cand); var m=lcMeasure();
+  if(m.ok) return cand.slice();
+  var lo=0, hi=1, mid;
+  for(var it=0; it<7; it++){ mid=(lo+hi)/2; lcPoseQ(lcMix(prev,cand,mid)); if(lcMeasure().ok) lo=mid; else hi=mid; }
+  var q=lcMix(prev,cand,lo);
+  lcPoseQ(q);
+  try{ lcMarkRed(m, cand, q); }catch(e){}
+  return q;
+}
+function lcPaintRed(set){
+  set=set||{}; LC.redSet=set;
+  for(var i=2;i<=10;i++){ var n=nodes[i]; if(!n) continue; n.jn.children.forEach(function(ch){
+    if(!ch.isMesh) return;
+    if(!ch.userData._om) ch.userData._om=ch.material||null;
+    if(set[i]){ if(!ch.userData._rm){ var src=ch.userData._om||new THREE.MeshStandardMaterial({color:0x16303f}); var rm=src.clone(); try{ rm.color=new THREE.Color(0xff2222); if(rm.emissive) rm.emissive=new THREE.Color(0x700000); }catch(e){} ch.userData._rm=rm; } ch.material=ch.userData._rm; }
+    else if(ch.userData._om){ ch.material=ch.userData._om; }
+  }); }
+  var g=document.getElementById('limglow'); if(g) g.style.display=(Object.keys(LC.redSet).length?'block':'none');
+}
+function lcMarkRed(m,cand,q){
+  LC.redUntil=Date.now()+1100;
+  var set={}, any=false; for(var k in m.bad){ set[k]=1; any=true; }
+  if(m.chasBad){ for(var i=2;i<=10;i++) set[i]=1; any=true; }
+  if(!any){ for(var i2=2;i2<=10;i2++) set[i2]=1; }
+  lcPaintRed(set);
+  var rs=[]; for(var k2 in m.bad){ if(rs.indexOf(m.bad[k2])<0) rs.push(m.bad[k2]); }
+  if(m.chasBad&&rs.indexOf('底盘')<0) rs.push('底盘');
+  var fx=[]; for(var j=0;j<6;j++){ if(Math.abs(q[j]-cand[j])>0.008) fx.push('J'+(j+1)+' '+Math.round(cand[j]*57.3)+'°→'+Math.round(q[j]*57.3)+'°'); }
+  var b=document.getElementById('limban');
+  if(b){ b.style.display='block'; b.textContent='⚠ 超出限位（'+(rs.join('/')||'障碍')+'）：已自动修正'+(fx.length?(' · '+fx.join(', ')):''); }
+}
+function lcStatText(){ if(!LC.ready) return '限位：构建中…'; var m=lcMeasure(); return '限位 · 柱 '+(m.colClear*100).toFixed(1)+'cm · 地 '+(m.minZ*100).toFixed(0)+'cm'+(m.chasClear<0.9?(' · 壳 '+(m.chasClear*100).toFixed(0)+'cm'):''); }
+function lcDemoBuild(){
+  var base=LC.base||Q.slice(); var F=[];
+  var AMP=[0.16,0.19,0.22,0.16,0.26,0.30], LAG=0.30;
+  var JLOj=[-178.8,-178.8,-169.0,-178.8,-178.8,-178.8], JHIj=[178.8,178.8,189.1,178.8,178.8,178.8];
+  var NAMES=['J1 转台','J2 大臂','J3 小臂','J4 腕转','J5 腕摆','J6 爪转'];
+  function clampL(j,v){ var lo=JLOj[j]*Math.PI/180, hi=JHIj[j]*Math.PI/180; return Math.max(lo,Math.min(hi,v)); }
+  function swp(j,a,b,ms,lbl){
+    var steps=Math.max(6, Math.ceil(Math.abs(b-a)/0.07));
+    for(var k=0;k<=steps;k++){ var q=base.slice(); q[j]=a+(b-a)*k/steps; F.push({q:q, ms:ms, j:j, label:lbl}); }
+  }
+  var b2=base[1];
+  var A2=clampL(1, Math.min(b2-2.4, 0.15)), B2=clampL(1, Math.max(b2+0.8, 3.0));
+  swp(1, base[1], A2, 42, 'J2 大臂 · 向地面方向扫');
+  swp(1, A2, B2, 42, 'J2 大臂 · 全行程向上扫');
+  swp(1, B2, base[1], 42, 'J2 大臂 · 回位');
+  var order=[0,2,3,4,5];
+  for(var i=order.length-1;i>0;i--){ var r=Math.floor(Math.random()*(i+1)); var t=order[i]; order[i]=order[r]; order[r]=t; }
+  for(var oi=0; oi<order.length; oi++){
+    var j=order[oi];
+    var A=clampL(j, base[j]-2.3), B=clampL(j, base[j]+2.3);
+    if(j===2){ A=clampL(2, base[2]-2.6); B=clampL(2, base[2]+1.2); }
+    swp(j, base[j], A, 42, NAMES[j]+' · 反向扫');
+    swp(j, A, B, 42, NAMES[j]+' · 全行程扫');
+    swp(j, B, base[j], 42, NAMES[j]+' · 回位');
+  }
+  function wp(th,amp){ var o=[]; for(var i=0;i<6;i++){ var vv=amp*AMP[i]*(0.75*Math.sin(th-i*LAG)+0.25*Math.sin(2*th-2*i*LAG)); if(i===5) vv+=amp*0.17*Math.sin(2.6*th+0.4); o.push(base[i]+vv); } return o; }
+  for(var k4=0;k4<120;k4++){ F.push({q:wp(k4/120*6.283185307,1.0), ms:70, j:null, label:'波浪采样（全幅）'}); }
+  return F;
+}
+function lcDemoStart(){ try{ if(!LC.ready) lcBuild(); }catch(e){}
+  LC.demoPending=false; LC.base=Q.slice(); LC.demoFrames=lcDemoBuild(); LC.demoIdx=0; LC.demoOn=true; LC.demoFromQ=null; LC.demoT0=0; LC._lastStep=0; LC.demoAlarm=0; LC.wasBad=false; var _ban=document.getElementById('limban'); if(_ban) _ban.style.display='none';
+  try{ if(typeof followOn!=='undefined'&&followOn&&typeof bFol!=='undefined') bFol.click(); }catch(e){}
+  var h=document.getElementById('limhud'); if(h) h.style.display='block';
+  var lb=document.getElementById('limbtn'); if(lb) lb.textContent='🧪 检测中…点停';
+  try{ st.textContent='🧪 限位检测中（模拟）…真机不会动'; }catch(e){}
+  return true; }
+function lcDemoStop(){ LC.demoOn=false; LC.demoPending=false; try{ lcPaintRed(null); }catch(e){} var _b2=document.getElementById('limban'); if(_b2) _b2.style.display='none'; var h=document.getElementById('limhud'); if(h) h.style.display='none';
+  var b=document.getElementById('limbtn'); if(b) b.textContent='🧪 限位检测';
+  try{ st.textContent=''; }catch(e){} }
+function lcDemoStep(now){
+  if(!LC.demoOn) return;
+  if(now-(LC._lastStep||0)<24) return;
+  LC._lastStep=now;
+  if(!LC.demoFrames||!LC.demoFrames.length) return;
+  if(!LC.demoT0) LC.demoT0=now;
+  if(!LC.demoFromQ) LC.demoFromQ=Q.slice();
+  var f=LC.demoFrames[LC.demoIdx]; if(!f){ lcDemoStop(); return; }
+  var dur=Math.max(40, f.ms||70);
+  var u=(now-LC.demoT0)/dur;
+  if(u>=1){
+    LC.demoFromQ=f.q.slice(); LC.demoT0=now; LC.demoIdx++;
+    if(LC.demoIdx>=LC.demoFrames.length) LC.demoIdx=0;
+    f=LC.demoFrames[LC.demoIdx]; u=0;
+  }
+  if(u<0) u=0;
+  var sm=u*u*(3-2*u);
+  for(var i=0;i<6;i++) Q[i]=LC.demoFromQ[i]+(f.q[i]-LC.demoFromQ[i])*sm;
+  apply(); syncAll();
+  var lbl=f.label; if(f.j!=null) lbl+=' · '+Math.round(Q[f.j]*57.3)+'°';
+  var hud=document.getElementById('limhud');
+  if(LC.ready){
+    var m2=lcMeasure();
+    var badSet={}, any=false;
+    for(var k in m2.bad){ badSet[k]=1; any=true; }
+    if(m2.chasBad){ any=true; for(var i2=2;i2<=10;i2++) badSet[i2]=1; }
+    if(any){ LC.redUntil=Date.now()+400; lcPaintRed(badSet); } else { if(Object.keys(LC.redSet).length) lcPaintRed(null); }
+    var ban=document.getElementById('limban');
+    if(any){
+      if(!LC.wasBad) LC.demoAlarm=(LC.demoAlarm||0)+1;
+      if(ban){ ban.style.display='block'; ban.textContent='⚠ 限位告警：'+(m2.minZ<LC.marginGround?'接近地面':'接近立柱')+' · 柱'+(m2.colClear*100).toFixed(0)+'cm 地'+(m2.minZ*100).toFixed(0)+'cm'+(LC.demoAlarm>1?' · 第'+LC.demoAlarm+'次':''); }
+    } else if(ban && LC.demoOn){ ban.style.display='none'; }
+    LC.wasBad=any;
+    if(hud) hud.textContent='🧪 '+lbl+'  ['+(LC.demoIdx+1)+'/'+LC.demoFrames.length+'] · 柱'+(m2.colClear*100).toFixed(0)+'cm 地'+(m2.minZ*100).toFixed(0)+'cm · 告警'+(LC.demoAlarm||0)+(any?' ⚠':'');
+  } else if(hud){
+    hud.textContent='🧪 '+lbl+'  ['+(LC.demoIdx+1)+'/'+LC.demoFrames.length+']';
+  }
+}
+(function(){
+  var gb=document.getElementById('guardbtn');
+  function pg(){ if(gb){ gb.textContent='🛡 拖拽保护: '+(window.lcGuardOn?'开':'关'); gb.style.opacity=window.lcGuardOn?'1':'0.55'; } }
+  if(gb) gb.onclick=function(){ window.lcGuardOn=!window.lcGuardOn; pg();
+    if(!window.lcGuardOn){ try{ lcPaintRed(null); }catch(e){} var ban=document.getElementById('limban'); if(ban) ban.style.display='none'; var gl=document.getElementById('limglow'); if(gl) gl.style.display='none'; }
+  };
+  pg();
+  var lb=document.getElementById('limbtn');
+  if(lb) lb.onclick=function(){ if(LC.demoOn||LC.demoPending){ lcDemoStop(); } else { lcDemoStart(); } };
+})();
+(function(){
+  var b=document.getElementById('bgbtn'); if(!b) return;
+  function paint(){ var w=document.body.classList.contains('bgwhite'); b.textContent=w?'◻ 白底':'◾ 默认'; b.title=w?'当前：白底（点击切回默认暗色）':'当前：默认暗色（点击切白底）'; }
+  b.onclick=function(){ var w=!document.body.classList.contains('bgwhite'); document.body.classList.toggle('bgwhite',w); document.documentElement.classList.toggle('bgwhite',w); try{ localStorage.setItem('a3dbg', w?'white':'dark'); }catch(e){} paint(); };
+  try{ if(localStorage.getItem('a3dbg')==='white'){ document.body.classList.add('bgwhite'); document.documentElement.classList.add('bgwhite'); } }catch(e){}
+  paint();
+})();
+setInterval(function(){
+  if(!LC.ready) lcBuild();
+  if(LC.demoPending&&LC.ready) lcDemoStart();
+  if(!LC.ready) return;
+  var now=Date.now();
+  if(Object.keys(LC.redSet).length&&now>LC.redUntil){ lcPaintRed(null); var b=document.getElementById('limban'); if(b) b.style.display='none'; }
+  if(now-LC.lastStat>280){ LC.lastStat=now; var s=document.getElementById('limstat'); if(s) s.textContent=lcStatText(); }
+}, 60);
+setInterval(function(){ if(LC.demoOn){ try{ lcDemoStep(Date.now()); }catch(e){} } }, 33);
+(function(){ var raf=window.requestAnimationFrame||function(cb){ return setTimeout(function(){ cb(Date.now()); }, 30); };
+  function tick(){ if(LC.demoOn){ try{ lcDemoStep(Date.now()); }catch(e){} } raf(tick); }
+  raf(tick); })();
+window.lcDebug={ ready:function(){return LC.ready;}, measure:lcMeasure, guard:lcGuardMove,
+  setQ:function(q){ for(var i=0;i<6;i++) Q[i]=q[i]; apply(); syncAll(); }, demo:function(){ return lcDemoStart(); }, stop:function(){ lcDemoStop(); },
+  state:function(){ return {ready:LC.ready, demo:LC.demoOn, red:Object.keys(LC.redSet).length, guard:window.lcGuardOn}; } };
+</script>
+<script>
+/* v55: 📷 实拍组（头部 :8797 / 爪子 :8798 / 识别过程 :8799） */
+(function(){
+  var HN=location.hostname||'127.0.0.1';
+  var feeds=[
+    {img:'camimg',  base:'http://'+HN+':8799', timer:null, live:false},
+    {img:'camimg3', base:'http://'+HN+':8800', timer:null, live:false}
+  ];
+  var boxes=['campip','campip3'];
+  var hide=document.getElementById('camhide'), show=document.getElementById('camshow');
+  function setSrc(f){ var im=document.getElementById(f.img); if(im) im.src=f.base+'/cam.mjpg?t='+Date.now(); }
+  function probe(f){ var prev=f.live; var x=new XMLHttpRequest(); x.open('GET',f.base+'/snap.jpg?t='+Date.now(),true); x.timeout=2500;
+    x.onload=function(){ if(x.status===200){ if(!prev) setSrc(f); f.live=true; } else { f.live=false; } };
+    x.onerror=x.ontimeout=function(){ f.live=false; };
+    try{x.send()}catch(e){} }
+  function open(){ boxes.forEach(function(id){var b=document.getElementById(id); if(b) b.classList.add('on');});
+    if(show) show.classList.remove('on'); try{localStorage.setItem('a3dcam','1')}catch(e){}
+    feeds.forEach(function(f){ setSrc(f); if(f.timer)clearInterval(f.timer); f.timer=setInterval(function(){probe(f)},5000); probe(f); }); }
+  function close(){ boxes.forEach(function(id){var b=document.getElementById(id); if(b) b.classList.remove('on');});
+    if(show) show.classList.add('on'); try{localStorage.setItem('a3dcam','0')}catch(e){}
+    feeds.forEach(function(f){ var im=document.getElementById(f.img); if(im) im.src=''; if(f.timer){clearInterval(f.timer); f.timer=null;} }); }
+  if(hide) hide.onclick=close; if(show) show.onclick=open;
+  var pref=null; try{pref=localStorage.getItem('a3dcam')}catch(e){}
+  if(pref!=='0'){ open(); } else { close(); }
+})();
+
+/* v54: 📦 识别物体显示 —— 读 objects.json，在场景里画半透明盒（中心/尺寸/偏航角，base_link 系） */
+(function(){
+  if(typeof scene==='undefined'||typeof THREE==='undefined') return;
+  var G=new THREE.Group(); G.name='objGroup'; scene.add(G);
+  var curKey='';
+  function clear(){ while(G.children.length){ var c=G.children.pop(); try{ if(c.geometry)c.geometry.dispose(); if(c.material)c.material.dispose(); }catch(e){} } }
+  function build(o){
+    curKey=JSON.stringify(o);
+    clear();
+    var sz=o.size||[0.1,0.1,0.05];
+    var geo=new THREE.BoxGeometry(sz[0],sz[1],sz[2]);
+    var mat=new THREE.MeshStandardMaterial({color:0x36d399,transparent:true,opacity:0.38,roughness:0.6,metalness:0.05});
+    var m=new THREE.Mesh(geo,mat); m.raycast=function(){};
+    m.position.set(o.center[0],o.center[1],o.center[2]);
+    m.rotation.z=(o.yaw||0)*Math.PI/180;
+    G.add(m);
+    var eg=new THREE.EdgesGeometry(geo); var em=new THREE.LineBasicMaterial({color:0x6ef2b8});
+    var e=new THREE.LineSegments(eg,em); e.raycast=function(){};
+    e.position.copy(m.position); e.rotation.copy(m.rotation); G.add(e);
+  }
+  function poll(){
+    var x=new XMLHttpRequest(); x.open('GET','objects.json?t='+Date.now(),true); x.timeout=3000;
+    x.onload=function(){
+      try{ var d=JSON.parse(x.responseText); var arr=(d&&d.objects)||[];
+        if(!arr.length){ if(curKey!=='none'){ curKey='none'; clear(); } return; }
+        var k=JSON.stringify(arr[0]); if(k!==curKey) build(arr[0]);
+      }catch(e){}
+    };
+    x.onerror=x.ontimeout=function(){};
+    try{x.send()}catch(e){}
+  }
+  poll(); setInterval(poll,2000);
+  window.a3dObj={ set:function(o){ build(o); }, clear:clear };
+})();
+
+/* __diag v51 (临时)：远程诊断，经 8790 访问日志回传 */
+(function(){
+  var last=0;
+  function be(tag){ try{ var n=Date.now(); if(n-last<700) return; last=n;
+    new Image().src='/__diag?tag='+encodeURIComponent(tag)+'&ts='+Math.floor(n/1000)+'&r='+Math.random(); }catch(e){} }
+  var rc=0, ic=0, raf=(window.requestAnimationFrame||function(cb){return setTimeout(cb,30);});
+  (function loop(){ rc++; raf(loop); })();
+  setInterval(function(){ ic++; }, 100);
+  function st(){ var o={}; try{
+    o.v=(document.getElementById('title')||{}).textContent;
+    o.lc=!!window.LC; o.rd=!!(window.LC&&LC.ready); o.dm=!!(window.LC&&LC.demoOn);
+    o.idx=window.LC?LC.demoIdx:null; o.n=window.LC&&LC.demoFrames?LC.demoFrames.length:null;
+    o.q1=(typeof Q!=='undefined'&&Q&&Q.length)?+Q[1].toFixed(2):null;
+    o.al=window.LC?LC.demoAlarm:null; o.vis=document.visibilityState; o.raf=rc; o.iv=ic;
+    o.ban=(document.getElementById('limban')||{}).style?document.getElementById('limban').style.display:'?';
+    o.hud=(document.getElementById('limhud')||{}).textContent||'';
+  }catch(e){ o.e=String(e); } return o; }
+  window.__diagState=st;
+  window.addEventListener('error', function(e){ be('ERR|'+(e.message||'')+'|'+(e.filename||'').split('/').pop()+':'+(e.lineno||0)); });
+  window.addEventListener('unhandledrejection', function(e){ try{ be('REJ|'+((e.reason&&e.reason.message)||e.reason||'')); }catch(x){} });
+  setTimeout(function(){ be('LOAD|'+JSON.stringify(st())); }, 2500);
+  setInterval(function(){ try{ if(window.LC&&LC.demoOn) be('TICK|'+JSON.stringify(st())); }catch(e){} }, 1000);
+  document.addEventListener('click', function(e){ var id=(e.target&&e.target.id)||'(x)'; be('CLICK|'+id+'|'+JSON.stringify(st())); }, true);
+  window.addEventListener('keydown', function(e){
+    if(e.target&&/input|textarea|select/i.test((e.target.tagName||''))) return;
+    var k=(e.key||'').toLowerCase();
+    if(k==='l'&&window.lcDebug){ be('KEYL'); if(window.LC&&LC.demoOn){ lcDebug.stop(); } else { lcDebug.demo(); } e.preventDefault(); }
+  });
+})();
+</script>
+
+
+<script>
+/* v58: 抓取日志面板（左区）——轮询 Jetson 代理 :8794/log */
+(function(){
+  var el=document.getElementById('glbody'), st=document.getElementById('glst'), btn=document.getElementById('glrun');
+  if(!el) return;
+  var base='http://'+location.hostname+':8794';
+  var lastN=0, timer=null;
+  function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  function paint(d){
+    var lines=(d.log||[]);
+    st.textContent = d.running ? ('运行中 '+ (d.dt||0) +'s') : (d.ok===true?'✅ 成功':(d.ok===false?'✗ 失败':'待命'));
+    st.style.color = d.running ? '#8ff0d0' : (d.ok===true?'#7dffc2':(d.ok===false?'#ff9a9a':'#7fd0c0'));
+    if(lines.length!==lastN){
+      el.innerHTML = lines.map(function(l){
+        var cls='';
+        if(/✅|成功/.test(l)) cls='ok'; else if(/✗|失败|ERR|collision/.test(l)) cls='bad';
+        else if(/策略|翻立|绕行|滑脱/.test(l)) cls='warn'; else if(/^\[/.test(l)) cls='dim';
+        return '<div class="'+cls+'">'+esc(l)+'</div>';
+      }).join('');
+      lastN=lines.length; el.scrollTop=el.scrollHeight;
+    }
+  }
+  function tick(){
+    fetch(base+'/log',{cache:'no-store'}).then(function(r){return r.json();}).then(paint).catch(function(){ st.textContent='代理未连上'; st.style.color='#ff9a9a'; });
+  }
+  btn.onclick=function(){
+    btn.disabled=true; btn.textContent='启动中…';
+    fetch(base+'/start',{cache:'no-store'}).then(function(r){return r.json();}).then(function(){ btn.textContent='▶ 抓取'; btn.disabled=false; tick(); })
+      .catch(function(){ btn.textContent='▶ 抓取'; btn.disabled=false; });
+  };
+  timer=setInterval(tick, 1500); tick();
+})();
+</script>
+
+
+<script>
+/* v60: 面板拖动（位置记忆到 localStorage: a3dpanels） */
+(function(){
+  var ids=['walk','data','glog','campip','campip3','limstat'];
+  var KEY='a3dpanels', saved={};
+  try{ saved=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){ saved={}; }
+  ids.forEach(function(id){
+    var el=document.getElementById(id); if(!el) return;
+    if(saved[id]){ el.style.left=saved[id][0]+'px'; el.style.top=saved[id][1]+'px'; el.style.right='auto'; el.style.bottom='auto'; }
+    var drag=null;
+    el.addEventListener('pointerdown', function(e){
+      if(e.target.closest('button')) return;            /* 按钮不拖 */
+      try{ e.preventDefault(); }catch(x){}              /* 阻止原生图片拖拽 */
+      drag={x:e.clientX,y:e.clientY,r:el.getBoundingClientRect(),moved:false};
+      try{ el.setPointerCapture(e.pointerId); }catch(x){}
+      el.style.zIndex=30; e.stopPropagation();
+    });
+    el.addEventListener('pointermove', function(e){
+      if(!drag) return;
+      var dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+      if(!drag.moved && Math.sqrt(dx*dx+dy*dy)<4) return;
+      drag.moved=true;
+      el.style.left=(drag.r.left+dx)+'px'; el.style.top=(drag.r.top+dy)+'px';
+      el.style.right='auto'; el.style.bottom='auto';
+      e.stopPropagation();
+    });
+    function end(e){
+      if(!drag) return;
+      var moved=drag.moved; drag=null;
+      if(moved){ var r=el.getBoundingClientRect();
+        saved[id]=[Math.round(r.left),Math.round(r.top)];
+        try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(x){}
+      }
+    }
+    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+  });
+})();
+</script>
+
+<script>
+/* 嵌入式预览：隐藏 3D 页自带控件，只保留模型画面 */
+(function(){
+  if(!/[?&]embed=1\b/.test(location.search)) return;
+  ['bar','tools','title','cap','walk','glog','campip','campip3','limstat','limban','limhud','limglow','camshow'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.style.display='none';
+  });
+  /* 嵌入主控制台时：避开父级右侧按钮列，执行按钮由父级提供 */
+  var ss=document.getElementById('sideStack'); if(ss) ss.style.right='230px';
+  var ex=document.getElementById('exbtn'); if(ex) ex.style.display='none';
+})();
+</script>
+
+<script>
+/* 🖱 右侧标签可拖动/自定义位置（保存到 localStorage；Shift+双击复位） */
+(function(){
+  var KEY='a3dSideBtnPos';
+  var ids=['bgbtn','limbtn','guardbtn','modbtn','wavebtn','headfixbtn','headfixrealbtn'];
+  var saved={}; try{ saved=JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){}
+  function place(b,id,x,y){
+    b.classList.add('dragged');
+    b.style.left=Math.max(0,Math.min(window.innerWidth-160,x))+'px';
+    b.style.top=Math.max(0,Math.min(window.innerHeight-42,y))+'px';
+  }
+  function setup(b,id){
+    var drag=null;
+    function move(e){
+      if(!drag) return;
+      var dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+      if(!drag.moved && Math.hypot(dx,dy)<4) return;
+      drag.moved=true; b.__dragMoved=true;
+      b.classList.add('dragged');
+      b.style.left=Math.max(0,Math.min(window.innerWidth-160,drag.l+dx))+'px';
+      b.style.top=Math.max(0,Math.min(window.innerHeight-42,drag.t+dy))+'px';
+      e.preventDefault();
+    }
+    function end(e){
+      if(!drag) return;
+      document.removeEventListener('pointermove',move,true);
+      document.removeEventListener('pointerup',end,true);
+      document.removeEventListener('pointercancel',end,true);
+      if(drag.moved){
+        saved[id]=[Math.round(parseFloat(b.style.left)),Math.round(parseFloat(b.style.top))];
+        try{ localStorage.setItem(KEY,JSON.stringify(saved)); }catch(x){}
+        e.preventDefault(); e.stopPropagation();
+      }
+      drag=null;
+    }
+    b.addEventListener('pointerdown',function(e){
+      if(e.button!==0) return;
+      var r=b.getBoundingClientRect();
+      drag={x:e.clientX,y:e.clientY,l:r.left,t:r.top,moved:false};
+      b.__dragMoved=false;
+      try{ b.setPointerCapture(e.pointerId); }catch(x){}
+      document.addEventListener('pointermove',move,true);
+      document.addEventListener('pointerup',end,true);
+      document.addEventListener('pointercancel',end,true);
+    });
+    b.addEventListener('click',function(e){ if(b.__dragMoved){ b.__dragMoved=false; e.preventDefault(); e.stopPropagation(); } },true);
+    if(saved[id]) place(b,id,saved[id][0],saved[id][1]);
+    b.addEventListener('dblclick',function(e){ if(!e.shiftKey) return; delete saved[id]; try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(x){} b.classList.remove('dragged'); b.style.left=''; b.style.top=''; e.preventDefault(); });
+  }
+  ids.forEach(function(id){ var b=document.getElementById(id); if(b) setup(b,id); });
+})();
+</script>
+
+<script>
+/* 模拟视图内快捷操作：优先复用父页面(index.html)的按钮逻辑；独立打开时本地执行 */
+(function(){
+  function parentClick(id){
+    try{ if(window.parent && window.parent!==window){ var b=window.parent.document.getElementById(id); if(b){ b.click(); return true; } } }catch(e){}
+    return false;
+  }
+  var fs=document.getElementById('qfs');
+  fs.onclick=function(){ if(document.fullscreenElement){ document.exitFullscreen(); } else { var el=document.documentElement; (el.requestFullscreen||el.webkitRequestFullscreen||function(){}).call(el); } };
+  document.getElementById('qready').onclick=function(){ if(parentClick('arm6ReadySim')) return; if(window.bReady) bReady.click(); };
+  document.getElementById('qsync').onclick=function(){
+    var self=this, label=self.textContent; self.textContent='⏳ 同步中…';
+    fetch('http://'+location.hostname+':8796/joints',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+      if(!j||!j.rad) throw new Error('no joints');
+      Q=j.rad.slice(0,6);
+      if(j.lift!=null) LIFT=Math.max(0,Math.min(0.44,+j.lift));
+      if(j.pitch!=null) PITCH=Math.max(0,Math.min(1.31,+j.pitch));
+      if(j.finger!=null) GRIP=Math.max(0,Math.min(0.69,+j.finger));
+      userEdited=false; liftEdited=false; apply(); syncAll();
+      try{ if(window.parent&&window.parent!==window){ if(window.parent.arm6On3DJoints) window.parent.arm6On3DJoints(Q.slice()); if(window.parent.arm6On3DLift) window.parent.arm6On3DLift(LIFT); if(window.parent.arm6On3DGrip) window.parent.arm6On3DGrip(GRIP/GRIP_MAX); if(window.parent.arm6Push3D) window.parent.arm6Push3D(); } }catch(e){}
+      self.textContent='✅ 已同步'; setTimeout(function(){ self.textContent=label; },1500);
+    }).catch(function(){ self.textContent='❌ 桥未连'; setTimeout(function(){ self.textContent=label; },1800); });
+  };
+  document.getElementById('qexec').onclick=function(){ if(parentClick('arm6Exec')) return; if(window.arm3dExec) window.arm3dExec(); };
+  document.getElementById('qstop').onclick=function(){ try{ a3dPost('/jog',{stop:true}); }catch(e){} if(parentClick('arm6Halt')) return; try{ a3dSend('stop_all',{}); }catch(e){} };
+})();
+</script>
+<script src="nav.js"></script>
+</body></html>
